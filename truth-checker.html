@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Truth Checker — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0818;--surface:#120f22;--card:#1a1530;--accent:#818cf8;--accent2:#c084fc;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(129,140,248,0.1) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 60px;display:flex;flex-direction:column;gap:16px;}
+
+/* PRIVATE BADGE */
+.private-badge{background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.2);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--accent);display:inline-flex;align-items:center;gap:6px;align-self:center;}
+
+/* STEPS */
+.step{display:none;flex-direction:column;gap:14px;animation:fadeIn .4s ease;}
+.step.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* PROGRESS */
+.progress-row{display:flex;gap:6px;}
+.prog-dot{flex:1;height:6px;border-radius:20px;background:rgba(255,255,255,.08);transition:background .3s;}
+.prog-dot.done{background:var(--accent);}
+.prog-dot.active{background:var(--accent2);}
+
+/* STEP CARD */
+.step-card{background:var(--card);border:2px solid rgba(129,140,248,.15);border-radius:var(--radius);padding:22px 20px;}
+.step-num{font-size:11px;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.step-q{font-family:var(--font-display);font-size:20px;color:var(--text);margin-bottom:8px;line-height:1.3;}
+.step-hint{font-size:13px;font-weight:700;color:var(--text-muted);line-height:1.5;margin-bottom:12px;}
+.step-textarea{width:100%;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px;font-size:15px;color:var(--text);font-family:var(--font-main);resize:none;outline:none;min-height:90px;transition:border-color .2s;line-height:1.5;}
+.step-textarea:focus{border-color:var(--accent);}
+.step-textarea::placeholder{color:rgba(255,255,255,.2);}
+
+/* CHIP OPTIONS */
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip-btn{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);transition:all .2s;}
+.chip-btn:hover{border-color:var(--accent);color:var(--text);}
+.chip-btn.selected{border-color:var(--accent);background:rgba(129,140,248,.15);color:var(--text);}
+
+/* REFRAME PROMPT */
+.reframe-prompt{background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.15);border-radius:var(--radius-sm);padding:14px;font-size:13px;font-weight:700;color:var(--accent);line-height:1.5;display:none;}
+.reframe-prompt.show{display:block;animation:fadeIn .3s ease;}
+
+/* NEXT BTN */
+.next-btn{width:100%;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:16px;font-size:16px;font-weight:900;color:#fff;cursor:pointer;font-family:var(--font-main);transition:all .2s;box-shadow:0 4px 20px rgba(129,140,248,.3);}
+.next-btn:hover{transform:translateY(-1px);}
+.skip-btn{background:none;border:none;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);padding:6px;text-align:center;width:100%;}
+.skip-btn:hover{color:var(--text);}
+
+/* DONE */
+.done-card{background:linear-gradient(135deg,rgba(129,140,248,.15),rgba(192,132,252,.08));border:2px solid rgba(129,140,248,.2);border-radius:var(--radius);padding:24px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;}
+.done-emoji{font-size:56px;}
+.done-title{font-family:var(--font-display);font-size:24px;color:var(--accent);}
+.done-sub{font-size:14px;font-weight:700;color:var(--text-muted);line-height:1.5;max-width:280px;}
+.done-kind{font-size:15px;font-weight:800;color:var(--text);font-style:italic;background:rgba(129,140,248,.08);border-radius:var(--radius-sm);padding:12px 16px;width:100%;}
+.done-btns{display:flex;flex-direction:column;gap:8px;width:100%;}
+.d-btn{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:var(--font-main);color:var(--text);transition:all .2s;text-decoration:none;text-align:center;display:block;}
+.d-btn:hover{border-color:var(--accent);color:var(--accent);}
+.d-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">📝 Truth Checker</div>
+</div>
+<main class="page">
+
+  <div class="private-badge">🔐 Just for you — always private</div>
+
+  <!-- Progress dots -->
+  <div class="progress-row" id="progressRow"></div>
+
+  <!-- STEP 0: What happened? -->
+  <div class="step active" id="step0">
+    <div class="step-card">
+      <div class="step-num">Step 1 of 4</div>
+      <div class="step-q">What happened?</div>
+      <div class="step-hint">Something happened that's making you feel bad. What was it? You can write as much or as little as you want.</div>
+      <textarea class="step-textarea" id="s0input" placeholder="Something happened..."></textarea>
+    </div>
+    <button class="next-btn" id="s0next">Next →</button>
+    <button class="skip-btn" onclick="goStep(1)">Skip this step</button>
+  </div>
+
+  <!-- STEP 1: What am I telling myself? -->
+  <div class="step" id="step1">
+    <div class="step-card">
+      <div class="step-num">Step 2 of 4</div>
+      <div class="step-q">What am I telling myself?</div>
+      <div class="step-hint">Sometimes when something bad happens, our brain tells us really big, scary things. Which of these sounds like what's happening in your head?</div>
+      <div class="chip-row" id="thoughtChips"></div>
+      <textarea class="step-textarea" id="s1input" placeholder="Or write your own thought..." style="margin-top:12px;min-height:60px;"></textarea>
+      <div class="reframe-prompt" id="reframePrompt"></div>
+    </div>
+    <button class="next-btn" id="s1next">Next →</button>
+  </div>
+
+  <!-- STEP 2: What might also be true? -->
+  <div class="step" id="step2">
+    <div class="step-card">
+      <div class="step-num">Step 3 of 4</div>
+      <div class="step-q">What might also be true?</div>
+      <div class="step-hint">Your feelings are completely real. AND sometimes there are other things that are also true at the same time. What else might be true?</div>
+      <div class="chip-row" id="alsoTrueChips"></div>
+      <textarea class="step-textarea" id="s2input" placeholder="Something else that might be true..." style="margin-top:12px;min-height:60px;"></textarea>
+    </div>
+    <button class="next-btn" id="s2next">Next →</button>
+    <button class="skip-btn" onclick="goStep(3)">Skip this step</button>
+  </div>
+
+  <!-- STEP 3: Something kind -->
+  <div class="step" id="step3">
+    <div class="step-card">
+      <div class="step-num">Step 4 of 4</div>
+      <div class="step-q">Say something kind to yourself</div>
+      <div class="step-hint">What would you say to a friend who was feeling this way? Say it to yourself.</div>
+      <div class="chip-row" id="kindChips"></div>
+      <textarea class="step-textarea" id="s3input" placeholder="Something kind..." style="margin-top:12px;min-height:60px;"></textarea>
+    </div>
+    <button class="next-btn" id="s3done">I'm done 💜</button>
+  </div>
+
+  <!-- DONE -->
+  <div class="step" id="stepDone">
+    <div class="done-card">
+      <span class="done-emoji">💜</span>
+      <div class="done-title">You did it.</div>
+      <div class="done-sub">That took courage. Working through hard thoughts is one of the bravest things you can do.</div>
+      <div class="done-kind" id="doneKindDisplay"></div>
+      <div class="done-btns">
+        <a class="d-btn primary" href="feelings-hub.html">← Back to Feelings Hub</a>
+        <a class="d-btn" href="wins.html">Add this as a win ⭐</a>
+        <button class="d-btn" onclick="startOver()">Do it again</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-truthchecker-app">
+/* ============================================================
+   TRUTH CHECKER — 10yo only, fully private
+   Parents see: used/timestamp only
+   Content: never stored with parent access
+============================================================ */
+let profileId = null;
+let currentStep = 0;
+let responses   = {};
+const TOTAL_STEPS = 4;
+
+const THOUGHT_CHIPS = [
+  'Everyone hates me', 'I ruined everything', 'Nobody cares about me',
+  'I\'m so stupid', 'I always mess things up', 'I\'m the worst',
+  'Nobody wants me around', 'I can\'t do anything right', 'It\'s all my fault',
+  'Things will never get better',
+];
+
+const ALSO_TRUE_CHIPS = [
+  'One bad thing doesn\'t mean everything is bad',
+  'People who care about me still exist',
+  'I have gotten through hard things before',
+  'My feelings are real AND they will pass',
+  'Making a mistake doesn\'t make me a bad person',
+  'One person\'s opinion isn\'t everyone\'s opinion',
+  'I am more than this one moment',
+  'Tomorrow might feel different',
+];
+
+const KIND_CHIPS = [
+  'I am doing my best',
+  'I am allowed to feel this way',
+  'I am worthy of kindness',
+  'This is really hard and that\'s okay',
+  'I am braver than I think',
+  'I matter, even on hard days',
+  'I don\'t have to be perfect',
+];
+
+const REFRAMES = {
+  'Everyone hates me':         'Can you think of even one person who doesn\'t? That matters.',
+  'I ruined everything':       'Most things can be repaired. What would fixing it look like?',
+  'Nobody cares about me':     'Is that really true? Who in your life shows they care, even quietly?',
+  'I\'m so stupid':            'Making mistakes is how everyone learns — including adults.',
+  'I always mess things up':   '"Always" is a very big word. When did you NOT mess something up?',
+  'Things will never get better': 'Feelings are like weather — they change. This won\'t last forever.',
+};
+
+function buildProgress() {
+  const row = document.getElementById('progressRow');
+  row.innerHTML = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.createElement('div');
+    dot.className = `prog-dot${i < currentStep ? ' done' : i === currentStep ? ' active' : ''}`;
+    row.appendChild(dot);
+  }
+}
+
+function buildChips(containerId, chips, onSelect) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  chips.forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'chip-btn';
+    btn.textContent = text;
+    btn.addEventListener('click', () => {
+      // Multi-select for also-true, single for others
+      if (containerId === 'alsoTrueChips') {
+        btn.classList.toggle('selected');
+      } else {
+        wrap.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      }
+      onSelect(text, btn.classList.contains('selected'));
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(n === 'done' ? 'stepDone' : `step${n}`);
+  el?.classList.add('active');
+  currentStep = typeof n === 'number' ? n : TOTAL_STEPS;
+  buildProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function saveEntry() {
+  // Save privately — NEVER accessible to parents
+  const entries = Store.getProfile(profileId, 'truth-checker-private', []);
+  entries.unshift({
+    id:        Date.now(),
+    date:      new Date().toISOString(),
+    // Stored privately — break glass needed to access
+    responses,
+  });
+  Store.setProfile(profileId, 'truth-checker-private', entries.slice(0, 50));
+
+  // Parent-visible audit: only used=true + timestamp, NO content
+  const auditLog = Store.getProfile(profileId, 'truth-checker-audit', []);
+  auditLog.unshift({ date: new Date().toISOString(), used: true });
+  Store.setProfile(profileId, 'truth-checker-audit', auditLog.slice(0, 200));
+
+  // Points
+  Points.add(profileId, 8, 'Used Truth Checker 💜', 'private');
+}
+
+function startOver() {
+  responses   = {};
+  currentStep = 0;
+  document.getElementById('s0input').value = '';
+  document.getElementById('s1input').value = '';
+  document.getElementById('s2input').value = '';
+  document.getElementById('s3input').value = '';
+  document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
+  goStep(0);
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || session.profileId !== 'elder') {
+    // 10yo only
+    window.location.href = 'index.html';
+    return;
+  }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+  buildProgress();
+
+  // Build chips
+  let selectedThought = '';
+  buildChips('thoughtChips', THOUGHT_CHIPS, (text, selected) => {
+    if (selected) {
+      selectedThought = text;
+      document.getElementById('s1input').value = text;
+      const reframe = REFRAMES[text];
+      const rEl     = document.getElementById('reframePrompt');
+      if (reframe) { rEl.textContent = `💭 ${reframe}`; rEl.classList.add('show'); }
+      else rEl.classList.remove('show');
+    }
+  });
+
+  buildChips('alsoTrueChips', ALSO_TRUE_CHIPS, () => {});
+  buildChips('kindChips', KIND_CHIPS, (text, selected) => {
+    if (selected) document.getElementById('s3input').value = text;
+  });
+
+  // Step navigation
+  document.getElementById('s0next').addEventListener('click', () => {
+    responses.whatHappened = document.getElementById('s0input').value;
+    goStep(1);
+  });
+
+  document.getElementById('s1next').addEventListener('click', () => {
+    const chips    = [...document.querySelectorAll('#thoughtChips .chip-btn.selected')].map(b => b.textContent);
+    const freetext = document.getElementById('s1input').value;
+    responses.thoughts = chips.length ? chips : [freetext];
+    goStep(2);
+  });
+
+  document.getElementById('s2next').addEventListener('click', () => {
+    const chips    = [...document.querySelectorAll('#alsoTrueChips .chip-btn.selected')].map(b => b.textContent);
+    const freetext = document.getElementById('s2input').value;
+    responses.alsoTrue = [...chips, freetext].filter(Boolean);
+    goStep(3);
+  });
+
+  document.getElementById('s3done').addEventListener('click', () => {
+    const chips    = [...document.querySelectorAll('#kindChips .chip-btn.selected')].map(b => b.textContent);
+    const freetext = document.getElementById('s3input').value;
+    responses.kind = chips[0] || freetext || 'I am doing my best.';
+
+    document.getElementById('doneKindDisplay').textContent = `"${responses.kind}"`;
+    saveEntry();
+    goStep('done');
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'feelings-hub.html');
+}
+
+window.goStep   = goStep;
+window.startOver = startOver;
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

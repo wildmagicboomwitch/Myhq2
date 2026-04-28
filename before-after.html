@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Before & After — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d1a;--surface:#12122a;--card:#1a1a3e;--accent:#34d399;--accent2:#a78bfa;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(52,211,153,0.1) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);color:#052e16;}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:16px;}
+
+/* STEPS */
+.step{display:none;flex-direction:column;gap:16px;animation:fadeIn .4s ease;}
+.step.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ACTIVITY PICKER (step 0) */
+.act-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.act-tile{background:var(--card);border:2px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .2s;text-align:center;}
+.act-tile:hover{border-color:var(--accent);transform:scale(1.03);}
+.act-tile.selected{border-color:var(--accent);background:rgba(52,211,153,.1);box-shadow:0 0 12px rgba(52,211,153,.2);}
+.at-emoji{font-size:32px;display:block;margin-bottom:8px;}
+.at-label{font-size:14px;font-weight:800;}
+
+.custom-act-wrap{display:flex;gap:10px;}
+.custom-act-input{flex:1;background:var(--card);border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 16px;font-size:15px;color:var(--text);font-family:var(--font-main);outline:none;transition:border-color .2s;}
+.custom-act-input:focus{border-color:var(--accent);}
+
+/* MOOD PICKER (before/after) */
+.phase-label{text-align:center;}
+.phase-icon{font-size:48px;display:block;margin-bottom:6px;}
+.phase-title{font-family:var(--font-display);font-size:22px;color:var(--accent);margin-bottom:4px;}
+.phase-sub{font-size:13px;font-weight:700;color:var(--text-muted);}
+.phase-act{font-size:14px;font-weight:800;color:var(--text);background:rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:8px 14px;display:inline-block;margin-top:4px;}
+
+.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.mood-btn{background:rgba(255,255,255,.04);border:2px solid transparent;border-radius:var(--radius-sm);padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;font-family:var(--font-main);}
+.mood-btn:hover{border-color:var(--accent);transform:scale(1.05);}
+.mood-btn.selected{border-color:var(--mb-color,var(--accent));background:var(--mb-bg,rgba(52,211,153,.15));transform:scale(1.08);box-shadow:0 0 10px var(--mb-color,var(--accent));}
+.mb-emoji{font-size:26px;display:block;margin-bottom:4px;}
+.mb-label{font-size:10px;font-weight:800;color:var(--text-muted);}
+.mood-btn.selected .mb-label{color:var(--text);}
+
+/* NEXT BUTTON */
+.next-btn{width:100%;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:18px;font-family:var(--font-display);font-size:20px;color:#052e16;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(52,211,153,.3);}
+.next-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(52,211,153,.4);}
+.next-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* RESULT (step 3) */
+.result-card{background:var(--card);border-radius:var(--radius);padding:24px;text-align:center;border:2px solid rgba(255,255,255,.06);}
+.result-comparison{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:16px;}
+.rc-side{text-align:center;}
+.rc-emoji{font-size:44px;display:block;margin-bottom:6px;}
+.rc-label{font-size:12px;font-weight:800;color:var(--text-muted);}
+.rc-mood{font-size:14px;font-weight:900;}
+.rc-arrow{font-size:28px;color:var(--text-muted);}
+.result-insight{font-family:var(--font-display);font-size:20px;color:var(--accent);margin-bottom:8px;}
+.result-sub{font-size:13px;font-weight:700;color:var(--text-muted);line-height:1.5;}
+.result-btns{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+.r-btn{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font-main);color:var(--text);transition:all .2s;text-decoration:none;text-align:center;display:block;}
+.r-btn:hover{border-color:var(--accent);color:var(--accent);}
+.r-btn.primary{background:var(--accent);border-color:var(--accent);color:#052e16;}
+
+/* HISTORY */
+.history-list{display:flex;flex-direction:column;gap:8px;}
+.hist-item{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.hi-activity{font-size:20px;flex-shrink:0;}
+.hi-info{flex:1;}
+.hi-label{font-size:13px;font-weight:800;}
+.hi-moods{font-size:12px;font-weight:700;color:var(--text-muted);}
+.hi-date{font-size:11px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
+.hi-delta{font-size:12px;font-weight:900;flex-shrink:0;}
+.hi-delta.up{color:var(--success);}
+.hi-delta.down{color:var(--danger);}
+.hi-delta.same{color:var(--text-muted);}
+
+/* SECTION */
+.section-title{font-family:var(--font-display);font-size:18px;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">✨ Before & After</div>
+</div>
+<main class="page">
+
+  <!-- STEP 0: Pick activity -->
+  <div class="step active" id="step0">
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:8px;">✨</div>
+      <div style="font-family:var(--font-display);font-size:22px;color:var(--accent);margin-bottom:6px;">What are you about to do?</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);">Pick an activity to track how it makes you feel</div>
+    </div>
+
+    <div class="act-grid" id="actGrid"></div>
+
+    <div style="font-size:12px;font-weight:800;color:var(--text-muted);text-align:center;">or type your own:</div>
+    <div class="custom-act-wrap">
+      <input type="text" class="custom-act-input" id="customAct" placeholder="Something else..." maxlength="30">
+      <button class="next-btn" style="width:auto;padding:12px 20px;font-size:14px;" id="customActBtn">→</button>
+    </div>
+  </div>
+
+  <!-- STEP 1: Before mood -->
+  <div class="step" id="step1">
+    <div class="phase-label">
+      <span class="phase-icon">🌱</span>
+      <div class="phase-title">Before</div>
+      <div class="phase-sub">How do you feel RIGHT NOW, before starting?</div>
+      <div class="phase-act" id="beforeActLabel">Activity</div>
+    </div>
+    <div class="mood-grid" id="beforeMoodGrid"></div>
+    <button class="next-btn" id="beforeNextBtn" disabled>Starting! →</button>
+  </div>
+
+  <!-- STEP 2: After mood -->
+  <div class="step" id="step2">
+    <div class="phase-label">
+      <span class="phase-icon">🌟</span>
+      <div class="phase-title">After</div>
+      <div class="phase-sub">How do you feel NOW, after finishing?</div>
+      <div class="phase-act" id="afterActLabel">Activity</div>
+    </div>
+    <div class="mood-grid" id="afterMoodGrid"></div>
+    <button class="next-btn" id="afterNextBtn" disabled>See the result! ✨</button>
+  </div>
+
+  <!-- STEP 3: Result -->
+  <div class="step" id="step3">
+    <div class="result-card" id="resultCard"></div>
+    <div class="section-title">Your patterns 📊</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+</main>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item active" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-beforeafter-app">
+/* ============================================================
+   BEFORE & AFTER
+============================================================ */
+let profileId     = null;
+let selectedAct   = null;
+let beforeMood    = null;
+let afterMood     = null;
+
+const ACTIVITIES = [
+  { id:'homework', emoji:'📚', label:'Homework'     },
+  { id:'chores',   emoji:'✅', label:'Chores'       },
+  { id:'screen',   emoji:'📱', label:'Screen time'  },
+  { id:'outside',  emoji:'🌳', label:'Go outside'   },
+  { id:'reading',  emoji:'📖', label:'Reading'      },
+  { id:'gaming',   emoji:'🎮', label:'Gaming'       },
+  { id:'exercise', emoji:'🏃', label:'Exercise'     },
+  { id:'bedtime',  emoji:'🌙', label:'Bedtime'      },
+];
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(`step${n}`).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildActGrid() {
+  const grid = document.getElementById('actGrid');
+  ACTIVITIES.forEach(act => {
+    const tile = document.createElement('div');
+    tile.className = 'act-tile';
+    tile.innerHTML = `<span class="at-emoji">${act.emoji}</span><span class="at-label">${act.label}</span>`;
+    tile.addEventListener('click', () => {
+      document.querySelectorAll('.act-tile').forEach(t => t.classList.remove('selected'));
+      tile.classList.add('selected');
+      selectedAct = act;
+    });
+    tile.addEventListener('dblclick', () => {
+      selectActivity(act);
+    });
+    tile.addEventListener('touchend', (() => {
+      let last = 0;
+      return () => {
+        const now = Date.now();
+        if (now - last < 300) selectActivity(act);
+        last = now;
+      };
+    })());
+    grid.appendChild(tile);
+  });
+
+  // Single tap selects, button advances
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = 'Check in before starting →';
+  nextBtn.style.marginTop = '8px';
+  nextBtn.addEventListener('click', () => {
+    if (!selectedAct) { alert('Pick an activity first!'); return; }
+    selectActivity(selectedAct);
+  });
+  document.getElementById('step0').appendChild(nextBtn);
+}
+
+function selectActivity(act) {
+  selectedAct = act;
+  document.getElementById('beforeActLabel').textContent = `${act.emoji} ${act.label}`;
+  document.getElementById('afterActLabel').textContent  = `${act.emoji} ${act.label}`;
+  buildMoodGrid('beforeMoodGrid', 'before');
+  buildMoodGrid('afterMoodGrid',  'after');
+  goStep(1);
+}
+
+function buildMoodGrid(gridId, phase) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  MYHQ.MOODS.forEach(mood => {
+    const btn = document.createElement('button');
+    btn.className = 'mood-btn';
+    btn.style.setProperty('--mb-color', mood.color);
+    btn.style.setProperty('--mb-bg',    mood.color + '22');
+    btn.innerHTML = `<span class="mb-emoji">${mood.emoji}</span><span class="mb-label">${mood.label}</span>`;
+    btn.addEventListener('click', () => {
+      grid.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      if (phase === 'before') {
+        beforeMood = mood;
+        document.getElementById('beforeNextBtn').disabled = false;
+      } else {
+        afterMood = mood;
+        document.getElementById('afterNextBtn').disabled = false;
+      }
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function showResult() {
+  // Determine delta
+  const beforeIdx = MYHQ.MOODS.findIndex(m => m.id === beforeMood.id);
+  const afterIdx  = MYHQ.MOODS.findIndex(m => m.id === afterMood.id);
+  // Lower index = more positive (rad, good...)
+  const delta     = beforeIdx - afterIdx; // positive = improved
+
+  let insight, sub;
+  if (delta > 1) {
+    insight = `${selectedAct.emoji} ${selectedAct.label} makes you feel better!`;
+    sub     = 'That\'s great to know. Remember this next time!';
+  } else if (delta < -1) {
+    insight = `${selectedAct.emoji} ${selectedAct.label} is tough for you right now.`;
+    sub     = 'That\'s okay. You did it anyway — that\'s brave.';
+  } else {
+    insight = `Your mood stayed about the same.`;
+    sub     = 'Good to know! Every piece of data helps you understand yourself.';
+  }
+
+  document.getElementById('resultCard').innerHTML = `
+    <div class="result-comparison">
+      <div class="rc-side">
+        <span class="rc-emoji">${beforeMood.emoji}</span>
+        <div class="rc-label">Before</div>
+        <div class="rc-mood" style="color:${beforeMood.color}">${beforeMood.label}</div>
+      </div>
+      <div class="rc-arrow">→</div>
+      <div class="rc-side">
+        <span class="rc-emoji">${afterMood.emoji}</span>
+        <div class="rc-label">After</div>
+        <div class="rc-mood" style="color:${afterMood.color}">${afterMood.label}</div>
+      </div>
+    </div>
+    <div class="result-insight">${insight}</div>
+    <div class="result-sub">${sub}</div>
+    <div class="result-btns">
+      <button class="r-btn primary" onclick="startNew()">Track another activity ✨</button>
+      <a class="r-btn" href="feelings-hub.html">← Feelings Hub</a>
+    </div>
+  `;
+
+  // Save entry
+  const entries = Store.getProfile(profileId, 'before-after-entries', []);
+  entries.unshift({
+    id:         Date.now(),
+    activity:   selectedAct,
+    beforeMood: beforeMood.id,
+    afterMood:  afterMood.id,
+    delta,
+    date:       new Date().toISOString(),
+  });
+  Store.setProfile(profileId, 'before-after-entries', entries.slice(0, 100));
+
+  buildHistory();
+  goStep(3);
+}
+
+function buildHistory() {
+  const entries   = Store.getProfile(profileId, 'before-after-entries', []).slice(0, 6);
+  const container = document.getElementById('historyList');
+  container.innerHTML = '';
+
+  entries.forEach(e => {
+    const before = MYHQ.MOODS.find(m => m.id === e.beforeMood);
+    const after  = MYHQ.MOODS.find(m => m.id === e.afterMood);
+    const deltaClass = e.delta > 1 ? 'up' : e.delta < -1 ? 'down' : 'same';
+    const deltaLabel = e.delta > 1 ? '↑ better' : e.delta < -1 ? '↓ harder' : '→ same';
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+    const el = document.createElement('div');
+    el.className = 'hist-item';
+    el.innerHTML = `
+      <span class="hi-activity">${e.activity?.emoji || '✨'}</span>
+      <div class="hi-info">
+        <div class="hi-label">${e.activity?.label || 'Activity'}</div>
+        <div class="hi-moods">${before?.emoji || '?'} → ${after?.emoji || '?'}</div>
+      </div>
+      <span class="hi-delta ${deltaClass}">${deltaLabel}</span>
+      <span class="hi-date">${dateStr}</span>
+    `;
+    container.appendChild(el);
+  });
+
+  if (entries.length === 0) container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;font-weight:700;">No entries yet — this was your first!</div>';
+}
+
+function startNew() {
+  beforeMood  = null;
+  afterMood   = null;
+  selectedAct = null;
+  document.querySelectorAll('.act-tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('beforeNextBtn').disabled = true;
+  document.getElementById('afterNextBtn').disabled  = true;
+  goStep(0);
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  buildActGrid();
+
+  document.getElementById('customActBtn').addEventListener('click', () => {
+    const val = document.getElementById('customAct').value.trim();
+    if (!val) return;
+    selectActivity({ id:'custom', emoji:'✨', label:val });
+  });
+
+  document.getElementById('customAct').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('customActBtn').click();
+  });
+
+  document.getElementById('beforeNextBtn').addEventListener('click', () => goStep(2));
+  document.getElementById('afterNextBtn').addEventListener('click',  showResult);
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'feelings-hub.html');
+
+  // Check for auto-prompt (from URL param)
+  const params = new URLSearchParams(window.location.search);
+  const autoAct = params.get('activity');
+  if (autoAct) {
+    const act = ACTIVITIES.find(a => a.id === autoAct);
+    if (act) setTimeout(() => selectActivity(act), 300);
+  }
+}
+
+window.startNew = startNew;
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

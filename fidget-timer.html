@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fidget Timer — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#060d18;--surface:#0a1220;--card:#101c30;--accent:#60a5fa;--accent2:#34d399;--text:#f1f5f9;--text-muted:#64748b;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:22px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(96,165,250,0.08) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+.page{width:100%;padding:16px 20px 100px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+
+.topbar{width:100%;padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+
+/* ACTIVITY PICKER */
+.activity-section{width:100%;}
+.activity-label{font-size:12px;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.activity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.act-btn{
+  background:var(--card);border:2px solid rgba(255,255,255,.06);
+  border-radius:var(--radius-sm);padding:14px 8px;
+  text-align:center;cursor:pointer;transition:all .2s;
+  font-family:var(--font-main);
+}
+.act-btn:hover{border-color:var(--act-color,var(--accent));transform:scale(1.03);}
+.act-btn.selected{border-color:var(--act-color,var(--accent));background:rgba(96,165,250,.1);box-shadow:0 0 12px var(--act-color,var(--accent));}
+.act-emoji{font-size:28px;display:block;margin-bottom:6px;}
+.act-name{font-size:12px;font-weight:800;color:var(--text-muted);}
+.act-btn.selected .act-name{color:var(--text);}
+
+/* DURATION PICKER */
+.dur-section{width:100%;}
+.dur-row{display:flex;gap:10px;}
+.dur-btn{
+  flex:1;background:var(--card);border:2px solid rgba(255,255,255,.06);
+  border-radius:var(--radius-sm);padding:14px;text-align:center;
+  cursor:pointer;transition:all .2s;font-family:var(--font-main);
+}
+.dur-btn:hover{border-color:var(--accent);}
+.dur-btn.selected{border-color:var(--accent);background:rgba(96,165,250,.12);}
+.dur-btn .dur-mins{font-family:var(--font-display);font-size:22px;color:var(--accent);display:block;margin-bottom:2px;}
+.dur-btn .dur-label{font-size:11px;font-weight:800;color:var(--text-muted);}
+.dur-btn.selected .dur-label{color:var(--text);}
+
+/* START BUTTON */
+.start-btn{
+  width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:var(--radius);padding:20px;
+  font-family:var(--font-display);font-size:22px;color:#fff;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 24px rgba(96,165,250,.3);
+}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(96,165,250,.4);}
+.start-btn:active{transform:scale(.98);}
+
+/* TIMER SCREEN */
+.timer-screen{
+  width:100%;display:none;flex-direction:column;align-items:center;
+  gap:20px;animation:fadeIn .4s ease;
+}
+.timer-screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* RING TIMER */
+.ring-wrap{position:relative;width:240px;height:240px;margin:8px auto;}
+.ring-svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:12;}
+.ring-progress{fill:none;stroke:url(#ringGrad);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .5s ease;}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+}
+.ring-activity{font-size:48px;}
+.ring-time{font-family:var(--font-display);font-size:42px;color:var(--accent);line-height:1;}
+.ring-label{font-size:12px;font-weight:800;color:var(--text-muted);}
+
+/* PROMPT TEXT */
+.prompt-text{
+  font-family:var(--font-display);font-size:22px;color:var(--text);
+  text-align:center;line-height:1.3;max-width:320px;
+  animation:promptPulse 3s ease-in-out infinite;
+}
+@keyframes promptPulse{0%,100%{opacity:.8}50%{opacity:1}}
+
+/* STOP BUTTON */
+.stop-btn{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px 28px;font-size:15px;font-weight:900;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.stop-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+/* DONE SCREEN */
+.done-screen{
+  width:100%;display:none;flex-direction:column;align-items:center;
+  gap:20px;text-align:center;animation:fadeIn .4s ease;
+}
+.done-screen.active{display:flex;}
+.done-emoji{font-size:72px;animation:doneBounce .6s ease infinite alternate;}
+@keyframes doneBounce{from{transform:scale(1)}to{transform:scale(1.1)}}
+.done-title{font-family:var(--font-display);font-size:28px;color:var(--accent);}
+.done-sub{font-size:15px;font-weight:700;color:var(--text-muted);line-height:1.5;}
+.done-pts{background:rgba(251,191,36,.12);border:2px solid rgba(251,191,36,.25);border-radius:var(--radius-sm);padding:12px 20px;font-size:15px;font-weight:900;color:var(--star);}
+.done-btns{display:flex;flex-direction:column;gap:10px;width:100%;}
+.done-btn{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px;font-size:15px;font-weight:900;color:var(--text);cursor:pointer;font-family:var(--font-main);transition:all .2s;text-decoration:none;text-align:center;display:block;}
+.done-btn:hover{border-color:var(--accent);color:var(--accent);}
+.done-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.done-btn.primary:hover{opacity:.9;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.06);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">⏱️ Fidget Timer</div>
+</div>
+
+<main class="page">
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;">
+
+    <div style="text-align:center;padding-top:8px;">
+      <div style="font-size:52px;margin-bottom:8px;">⏱️</div>
+      <div style="font-family:var(--font-display);font-size:24px;color:var(--accent);">Take a break!</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-top:4px;line-height:1.5;">Pick what you want to do, then pick how long.<br>Your brain needs breaks to work well!</div>
+    </div>
+
+    <!-- Activity picker -->
+    <div class="activity-section">
+      <div class="activity-label">What do you want to do?</div>
+      <div class="activity-grid" id="activityGrid"></div>
+    </div>
+
+    <!-- Duration picker -->
+    <div class="dur-section">
+      <div class="activity-label">How long?</div>
+      <div class="dur-row">
+        <div class="dur-btn selected" data-mins="5">
+          <span class="dur-mins">5</span>
+          <span class="dur-label">minutes</span>
+        </div>
+        <div class="dur-btn" data-mins="10">
+          <span class="dur-mins">10</span>
+          <span class="dur-label">minutes</span>
+        </div>
+        <div class="dur-btn" data-mins="15">
+          <span class="dur-mins">15</span>
+          <span class="dur-label">minutes</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="start-btn" id="startBtn">Start my break! 🚀</button>
+
+  </div>
+
+  <!-- TIMER SCREEN -->
+  <div class="timer-screen" id="timerScreen">
+
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 240 240">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#60a5fa"/>
+            <stop offset="100%" stop-color="#34d399"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-track"    cx="120" cy="120" r="104"/>
+        <circle class="ring-progress" cx="120" cy="120" r="104" id="ringProgress"
+          style="stroke-dasharray:653;stroke-dashoffset:0;"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-activity" id="timerActivity">⏱️</span>
+        <span class="ring-time"     id="timerDisplay">05:00</span>
+        <span class="ring-label">remaining</span>
+      </div>
+    </div>
+
+    <div class="prompt-text" id="promptText">Go for it! 🚀</div>
+
+    <button class="stop-btn" id="stopBtn">Stop early</button>
+
+  </div>
+
+  <!-- DONE SCREEN -->
+  <div class="done-screen" id="doneScreen">
+    <span class="done-emoji" id="doneEmoji">🎉</span>
+    <div class="done-title">Break done!</div>
+    <div class="done-sub" id="doneSub">Great job taking a break for yourself.</div>
+    <div class="done-pts">+5 ⭐ earned for taking a break!</div>
+    <div class="done-btns">
+      <button class="done-btn primary" id="goBackBtn">Go back to what I was doing 💪</button>
+      <a class="done-btn" href="calm-corner.html">🌿 Stay in Calm Corner</a>
+      <a class="done-btn" href="index.html">🏠 Home</a>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-fidget-app">
+/* ============================================================
+   FIDGET TIMER
+============================================================ */
+
+let profileId       = null;
+let selectedActivity = null;
+let selectedMins    = 5;
+let timerInterval   = null;
+let secondsLeft     = 0;
+let totalSeconds    = 0;
+const CIRCUMFERENCE = 653; // 2 * PI * 104
+
+const ACTIVITIES = [
+  { id:'jump',    emoji:'🏃', name:'Jump around',   color:'#f87171', prompts:['Jump as high as you can!','Try to touch the ceiling!','Do 10 jumping jacks!','Keep going, you\'re doing great!'] },
+  { id:'dance',   emoji:'💃', name:'Dance it out',  color:'#e879f9', prompts:['Dance to your favourite song!','Move however feels good!','Shake your whole body!','You\'re a star! 💃'] },
+  { id:'shake',   emoji:'🤸', name:'Shake it out',  color:'#fbbf24', prompts:['Shake your hands!','Shake your whole body!','Wiggle everything!','Let it all out!'] },
+  { id:'fidget',  emoji:'🎮', name:'Fidget toy',    color:'#60a5fa', prompts:['Use your fidget toy','Focus on how it feels','Keep going...','Almost done!'] },
+  { id:'walk',    emoji:'🚶', name:'Walk around',   color:'#34d399', prompts:['Walk around the room','Notice what you see','Keep moving!','Great job moving your body!'] },
+  { id:'sing',    emoji:'🎵', name:'Sing a song',   color:'#a78bfa', prompts:['Sing your favourite song!','Hum if you want','Any song is fine!','You sound amazing!'] },
+  { id:'draw',    emoji:'🎨', name:'Doodle',        color:'#fb923c', prompts:['Draw anything you want','No rules, just draw!','Make squiggles or shapes','Whatever feels good!'] },
+  { id:'rest',    emoji:'😌', name:'Just rest',     color:'#818cf8', prompts:['Close your eyes','Breathe slowly','No pressure to do anything','You deserve rest 💜'] },
+  { id:'squeeze', emoji:'🧸', name:'Comfort item',  color:'#f472b6', prompts:['Hold your comfort item','Squeeze it tight','Notice how it feels','You\'re safe 💜'] },
+];
+
+function buildActivityGrid() {
+  const grid = document.getElementById('activityGrid');
+  ACTIVITIES.forEach(act => {
+    const btn = document.createElement('div');
+    btn.className = 'act-btn';
+    btn.style.setProperty('--act-color', act.color);
+    btn.dataset.id = act.id;
+    btn.innerHTML = `<span class="act-emoji">${act.emoji}</span><span class="act-name">${act.name}</span>`;
+    btn.addEventListener('click', () => {
+      grid.querySelectorAll('.act-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedActivity = act;
+    });
+    grid.appendChild(btn);
+  });
+  // Default select first
+  grid.querySelector('.act-btn')?.click();
+}
+
+function startTimer() {
+  if (!selectedActivity) { return; }
+
+  totalSeconds  = selectedMins * 60;
+  secondsLeft   = totalSeconds;
+
+  // Set up display
+  document.getElementById('timerActivity').textContent = selectedActivity.emoji;
+  updateTimerDisplay();
+  updateRing();
+
+  // Start prompt rotation
+  showPrompt(0);
+
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('timerScreen').classList.add('active');
+
+  timerInterval = setInterval(tick, 1000);
+}
+
+function tick() {
+  secondsLeft--;
+  updateTimerDisplay();
+  updateRing();
+
+  // Cycle prompts every 30s
+  const promptIdx = Math.floor((totalSeconds - secondsLeft) / 30) % selectedActivity.prompts.length;
+  showPrompt(promptIdx);
+
+  if (secondsLeft <= 0) {
+    clearInterval(timerInterval);
+    showDone();
+  }
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  document.getElementById('timerDisplay').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function updateRing() {
+  const pct    = secondsLeft / totalSeconds;
+  const offset = CIRCUMFERENCE * (1 - pct);
+  document.getElementById('ringProgress').style.strokeDashoffset = offset;
+}
+
+function showPrompt(idx) {
+  const prompts = selectedActivity?.prompts || ['Keep going!'];
+  document.getElementById('promptText').textContent = prompts[idx % prompts.length];
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('timerScreen').classList.remove('active');
+  document.getElementById('setupScreen').style.display = '';
+}
+
+function showDone() {
+  document.getElementById('timerScreen').classList.remove('active');
+  document.getElementById('doneScreen').classList.add('active');
+
+  document.getElementById('doneEmoji').textContent = selectedActivity?.emoji || '🎉';
+  document.getElementById('doneSub').textContent =
+    `You took a ${selectedMins} minute ${selectedActivity?.name.toLowerCase() || 'break'}. Your brain thanks you!`;
+
+  // Award points
+  Points.add(profileId, 5, `Fidget break: ${selectedActivity?.name} ⏱️`, 'fidget');
+  WinJar.addWin(profileId, `Took a ${selectedMins} min break — ${selectedActivity?.name}! 🎉`, 'calm');
+
+  // Confetti
+  const emojis = ['⭐','🎉','💫','✨','🌟'];
+  if (!document.querySelector('#confetti-style')) {
+    const s = document.createElement('style');
+    s.id = 'confetti-style';
+    s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  for (let i=0; i<30; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*14+14}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1}s ease-in forwards;`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }, Math.random()*800);
+  }
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) {
+    window.location.href = 'index.html'; return;
+  }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  buildActivityGrid();
+
+  // Duration buttons
+  document.querySelectorAll('.dur-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedMins = parseInt(btn.dataset.mins);
+    });
+  });
+
+  document.getElementById('startBtn').addEventListener('click', startTimer);
+  document.getElementById('stopBtn').addEventListener('click',  stopTimer);
+  document.getElementById('goBackBtn').addEventListener('click', () => history.back());
+  document.getElementById('backBtn').addEventListener('click', () => {
+    clearInterval(timerInterval);
+    history.length > 1 ? history.back() : window.location.href = 'calm-corner.html';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+window.addEventListener('beforeunload', () => clearInterval(timerInterval));
+</script>
+</body>
+</html>

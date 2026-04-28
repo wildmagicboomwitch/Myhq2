@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Settings — Parent HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="p-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#080c18;--surface:#0d1220;--card:#131929;--card2:#1a2235;--border:rgba(255,255,255,0.07);--accent:#818cf8;--accent2:#34d399;--danger:#f87171;--success:#4ade80;--elder:#e94560;--younger:#c084fc;--text:#f1f5f9;--text-muted:#64748b;--radius:18px;--radius-sm:10px;--font-main:'Nunito',sans-serif;--font-disp:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 50% 30% at 60% 0%,rgba(129,140,248,.08) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:640px;margin:0 auto;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(12px);}
+.back-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text-muted);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font-main);}
+.back-btn:hover{color:var(--text);border-color:var(--accent);}
+.topbar-title{font-family:var(--font-disp);font-size:20px;color:var(--accent);flex:1;}
+.page{padding:16px 16px 100px;display:flex;flex-direction:column;gap:18px;}
+/* SECTIONS */
+.section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.section-title{font-family:var(--font-disp);font-size:18px;color:var(--accent);margin-bottom:14px;}
+.section-sub{font-size:13px;font-weight:700;color:var(--text-muted);margin-top:-10px;margin-bottom:14px;line-height:1.5;}
+/* PROFILE CARDS */
+.profile-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.prof-card{background:var(--card2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:border-color .2s;}
+.prof-card.elder{border-color:rgba(233,69,96,.15);} .prof-card.younger{border-color:rgba(192,132,252,.15);}
+.prof-name{font-size:14px;font-weight:900;margin-bottom:10px;}
+.prof-name.elder{color:var(--elder);} .prof-name.younger{color:var(--younger);}
+/* FORM ELEMENTS */
+.f-row{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.f-label{font-size:11px;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+.f-input,.f-select{width:100%;background:rgba(255,255,255,.04);border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:15px;color:var(--text);font-family:var(--font-main);outline:none;transition:border-color .2s;}
+.f-input:focus,.f-select:focus{border-color:var(--accent);} .f-select option{background:var(--surface);}
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:13px;font-weight:700;flex:1;}
+.toggle-sub{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:1px;}
+.toggle-info{flex:1;}
+.toggle-sw{width:40px;height:22px;background:rgba(255,255,255,.1);border-radius:20px;position:relative;cursor:pointer;flex-shrink:0;}
+.toggle-sw.on{background:var(--accent);}
+.toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;}
+.toggle-sw.on::after{transform:translateX(18px);}
+/* SAVE BTN */
+.save-btn{width:100%;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:14px;font-size:16px;font-weight:900;color:#fff;cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.save-btn:hover{transform:translateY(-1px);}
+/* STEP LIST */
+.step-list{display:flex;flex-direction:column;gap:8px;}
+.step-item{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.step-drag{color:var(--text-muted);cursor:grab;font-size:16px;flex-shrink:0;}
+.step-emoji{font-size:22px;flex-shrink:0;}
+.step-name{font-size:14px;font-weight:800;flex:1;}
+.step-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--text-muted);}
+.step-del{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px;transition:color .2s;}
+.step-del:hover{color:var(--danger);}
+/* CHART */
+.chart-bar-wrap{display:flex;align-items:center;gap:10px;margin:6px 0;}
+.chart-label{font-size:12px;font-weight:800;width:64px;flex-shrink:0;color:var(--text-muted);}
+.chart-bar-bg{flex:1;background:rgba(255,255,255,.06);border-radius:20px;height:10px;overflow:hidden;}
+.chart-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease;}
+.chart-val{font-size:12px;font-weight:900;color:var(--accent);width:32px;text-align:right;flex-shrink:0;}
+/* SCORE PILL */
+.score-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;}
+.sp-emoji{font-size:22px;} .sp-info{flex:1;} .sp-label{font-size:13px;font-weight:800;} .sp-sub{font-size:11px;color:var(--text-muted);}
+.sp-val{font-family:var(--font-disp);font-size:22px;color:var(--accent);}
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:640px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.bnav-item .bn-emoji{font-size:20px;}.bnav-item .bn-label{font-size:9px;font-weight:800;text-transform:uppercase;}
+.bnav-item.active{color:var(--accent);}
+#tw{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;width:90%;max-width:400px;pointer-events:none;}
+@keyframes tIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateY(8px)}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" onclick="location.href='parent.html'">← Parent HQ</button>
+  <div class="topbar-title">⚙️ Settings</div>
+</div>
+<main class="page">
+
+    <div class="section">
+      <div class="section-title">Push Notifications 🔔</div>
+      <div class="section-sub">What sends a push notification to your device</div>
+      <div id="notifToggles"></div>
+      <button class="save-btn" id="saveNotifs" style="margin-top:14px">Save Notification Settings</button>
+    </div>
+    <div class="section">
+      <div class="section-title">Before &amp; After Prompts ✨</div>
+      <div class="section-sub">Which activities automatically prompt a mood check before and after</div>
+      <div id="baToggles"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Family Space 🏠</div>
+      <div class="section-sub">Control what appears in the shared family area</div>
+      <div id="familyToggles"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Parent PINs 🔐</div>
+      <div class="section-sub">Change your parent PINs. Both current PINs required to change either.</div>
+      <div class="f-row"><div class="f-label">Current Parent A PIN</div><input type="number" class="f-input" id="curPinA" placeholder="••••" maxlength="4"></div>
+      <div class="f-row"><div class="f-label">Current Parent B PIN</div><input type="number" class="f-input" id="curPinB" placeholder="••••" maxlength="4"></div>
+      <div class="f-row"><div class="f-label">New PIN (leave blank to keep)</div><input type="number" class="f-input" id="newPinA" placeholder="New Parent A PIN" maxlength="4"></div>
+      <button class="save-btn" id="savePinsBtn">Update PINs 🔐</button>
+    </div>
+
+</main>
+<nav class="bottom-nav">
+  <a class="bnav-item" href="parent.html"><span class="bn-emoji">🏠</span><span class="bn-label">Home</span></a>
+  <a class="bnav-item" href="parent-alerts.html"><span class="bn-emoji">🔔</span><span class="bn-label">Alerts</span></a>
+  <a class="bnav-item" href="parent-chores.html"><span class="bn-emoji">✅</span><span class="bn-label">Chores</span></a>
+  <a class="bnav-item" href="parent-rewards.html"><span class="bn-emoji">⭐</span><span class="bn-label">Rewards</span></a>
+  <a class="bnav-item active" href="parent-settings.html"><span class="bn-emoji">⚙️</span><span class="bn-label">Settings</span></a>
+</nav>
+<div id="tw"></div>
+</div>
+<script>
+
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+
+/* ============================================================
+   SCHOOL DATA LAYER
+============================================================ */
+const School = {
+  SUBJECTS: [
+    { id:'math',    label:'Math',          emoji:'➕', color:'#60a5fa' },
+    { id:'reading', label:'Reading',       emoji:'📖', color:'#a78bfa' },
+    { id:'writing', label:'Writing',       emoji:'✏️',  color:'#f472b6' },
+    { id:'science', label:'Science',       emoji:'🔬', color:'#34d399' },
+    { id:'social',  label:'Social Studies',emoji:'🌎', color:'#fb923c' },
+    { id:'art',     label:'Art',           emoji:'🎨', color:'#e879f9' },
+    { id:'music',   label:'Music',         emoji:'🎵', color:'#fbbf24' },
+    { id:'pe',      label:'PE',            emoji:'🏃', color:'#4ade80' },
+    { id:'other',   label:'Other',         emoji:'📋', color:'#94a3b8' },
+  ],
+
+  getHomework(pid)  { return Store.getProfile(pid, 'homework', []); },
+  getTests(pid)     { return Store.getProfile(pid, 'tests', []); },
+  getProjects(pid)  { return Store.getProfile(pid, 'projects', []); },
+
+  saveHomework(pid, hw) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === hw.id);
+    const item = { ...hw, id: hw.id || `hw-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'homework', all);
+    return item;
+  },
+
+  saveTest(pid, test) {
+    const all = this.getTests(pid);
+    const idx = all.findIndex(x => x.id === test.id);
+    const item = { ...test, id: test.id || `test-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'tests', all);
+    return item;
+  },
+
+  saveProject(pid, proj) {
+    const all = this.getProjects(pid);
+    const idx = all.findIndex(x => x.id === proj.id);
+    const item = { ...proj, id: proj.id || `proj-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'projects', all);
+    return item;
+  },
+
+  deleteHomework(pid, id) {
+    Store.setProfile(pid, 'homework', this.getHomework(pid).filter(x => x.id !== id));
+  },
+  deleteTest(pid, id) {
+    Store.setProfile(pid, 'tests', this.getTests(pid).filter(x => x.id !== id));
+  },
+  deleteProject(pid, id) {
+    Store.setProfile(pid, 'projects', this.getProjects(pid).filter(x => x.id !== id));
+  },
+
+  markHomeworkDone(pid, id) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      all[idx].done = true;
+      all[idx].doneAt = new Date().toISOString();
+      Store.setProfile(pid, 'homework', all);
+      Points.add(pid, 5, `Homework done: ${all[idx].title}`, 'school');
+      WinJar.addWin(pid, `Finished homework: ${all[idx].title} 📚`, 'school');
+    }
+  },
+
+  getDueToday(pid) {
+    const today = new Date().toDateString();
+    return [
+      ...this.getHomework(pid).filter(x => !x.done && x.dueDate && new Date(x.dueDate).toDateString() === today),
+      ...this.getTests(pid).filter(x => !x.done && x.date && new Date(x.date).toDateString() === today),
+    ];
+  },
+
+  getUpcoming(pid, days = 7) {
+    const cutoff = new Date(Date.now() + days * 86400000);
+    const today  = new Date();
+    const filter = (items, dateKey) => items.filter(x =>
+      !x.done && x[dateKey] && new Date(x[dateKey]) >= today && new Date(x[dateKey]) <= cutoff
+    );
+    return {
+      homework: filter(this.getHomework(pid), 'dueDate'),
+      tests:    filter(this.getTests(pid),    'date'),
+      projects: filter(this.getProjects(pid), 'dueDate'),
+    };
+  },
+
+  subjectById(id) { return this.SUBJECTS.find(s => s.id === id) || this.SUBJECTS[this.SUBJECTS.length - 1]; },
+};
+
+/* ============================================================
+   REWARD STORE DATA LAYER
+============================================================ */
+const RewardStore = {
+  getRewards()     { return Store.get('reward-store', []); },
+  getRedemptions(pid) { return Store.getProfile(pid, 'redemptions', []); },
+
+  saveReward(reward) {
+    const all = this.getRewards();
+    const idx = all.findIndex(r => r.id === reward.id);
+    const item = { ...reward, id: reward.id || `reward-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.push(item);
+    Store.set('reward-store', all);
+    return item;
+  },
+
+  deleteReward(id) {
+    Store.set('reward-store', this.getRewards().filter(r => r.id !== id));
+  },
+
+  requestRedemption(pid, rewardId) {
+    const reward  = this.getRewards().find(r => r.id === rewardId);
+    if (!reward) return false;
+    const balance = Points.getBalance(pid);
+    if (balance < reward.cost) return false;
+
+    const redemption = {
+      id:       `redeem-${Date.now()}`,
+      profileId: pid,
+      rewardId,
+      rewardName: reward.name,
+      cost:     reward.cost,
+      status:   'pending',
+      requestedAt: new Date().toISOString(),
+    };
+
+    // Hold points (deduct immediately, refund if denied)
+    Points.spend(pid, reward.cost, `Reward request: ${reward.name}`);
+
+    // Add to pending
+    const all = Store.get('reward-redemptions', []);
+    all.unshift(redemption);
+    Store.set('reward-redemptions', all.slice(0, 200));
+
+    // Alert parents
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({
+      id: Date.now(), profileId: pid,
+      type: 'reward-request',
+      data: redemption,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    Store.set('parent-alerts', alerts.slice(0, 200));
+
+    return redemption;
+  },
+
+  approveRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      all[idx].status = 'approved';
+      all[idx].approvedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+    }
+  },
+
+  denyRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      const r = all[idx];
+      r.status = 'denied';
+      r.deniedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+      // Refund points
+      Points.add(r.profileId, r.cost, `Refund: ${r.rewardName}`, 'refund');
+    }
+  },
+
+  getPending()  { return Store.get('reward-redemptions', []).filter(r => r.status === 'pending'); },
+  getForProfile(pid) { return Store.get('reward-redemptions', []).filter(r => r.profileId === pid); },
+
+  seedDefaults() {
+    if (this.getRewards().length === 0) {
+      const defaults = [
+        { id:'r1', name:'30 min extra screen time', emoji:'📱', cost:20,  category:'screen'   },
+        { id:'r2', name:'Choose dinner tonight',     emoji:'🍽️',  cost:30,  category:'food'     },
+        { id:'r3', name:'Stay up 15 min late',       emoji:'🌙', cost:25,  category:'bedtime'  },
+        { id:'r4', name:'Movie night pick',          emoji:'🎬', cost:50,  category:'activity' },
+        { id:'r5', name:'Small treat from store',    emoji:'🍬', cost:40,  category:'treat'    },
+        { id:'r6', name:'Skip one chore (once)',     emoji:'🎉', cost:35,  category:'chores'   },
+        { id:'r7', name:'Friend sleepover',          emoji:'🏕️',  cost:100, category:'social'   },
+        { id:'r8', name:'Game time with a parent',   emoji:'🎮', cost:15,  category:'activity' },
+      ];
+      defaults.forEach(d => this.saveReward(d));
+    }
+  },
+};
+
+/* ============================================================
+   THOUGHT JAR DATA LAYER
+============================================================ */
+const ThoughtJar = {
+  TYPES: [
+    { id:'idea',    emoji:'💡', label:'Idea',    color:'#fbbf24' },
+    { id:'feeling', emoji:'💜', label:'Feeling', color:'#a78bfa' },
+    { id:'worry',   emoji:'😰', label:'Worry',   color:'#f87171' },
+    { id:'win',     emoji:'🏆', label:'Win',     color:'#4ade80' },
+    { id:'question',emoji:'❓', label:'Question',color:'#60a5fa' },
+    { id:'vent',    emoji:'🌋', label:'Vent',    color:'#fb923c' },
+  ],
+
+  getEntries(pid) { return Store.getProfile(pid, 'thoughts', []); },
+
+  add(pid, text, type = 'idea', isUrgent = false) {
+    const entries = this.getEntries(pid);
+    const entry = {
+      id:        `thought-${Date.now()}`,
+      text,
+      type,
+      isUrgent,
+      date:      new Date().toISOString(),
+      routed:    false,
+    };
+    entries.unshift(entry);
+    Store.setProfile(pid, 'thoughts', entries.slice(0, 300));
+
+    if (isUrgent) {
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id: Date.now(), profileId: pid, type: 'urgent-thought', data: entry, date: new Date().toISOString(), read: false });
+      Store.set('parent-alerts', alerts.slice(0, 200));
+    }
+    return entry;
+  },
+
+  delete(pid, id) {
+    Store.setProfile(pid, 'thoughts', this.getEntries(pid).filter(e => e.id !== id));
+  },
+
+  markRouted(pid, id) {
+    const entries = this.getEntries(pid);
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) { entries[idx].routed = true; Store.setProfile(pid, 'thoughts', entries); }
+  },
+};
+
+/* Expose new globals */
+window.School      = School;
+window.RewardStore = RewardStore;
+window.ThoughtJar  = ThoughtJar;
+
+</script>
+<script id="p-script">
+
+const NOTIF_SETTINGS=[
+  {key:'volcano_high',label:'Volcano danger zone hit',sub:'Levels 3-5 (7yo) or 7-10 (10yo)',default:true},
+  {key:'bully_flag',label:'Bully/hurt feelings flag',sub:'From Reset Toolkit stage 5',default:true},
+  {key:'needs_help',label:'"I need help right now" tapped',sub:'Highest priority alert',default:true},
+  {key:'checkin_distress',label:'Hard check-in flagged',sub:'Low mood + energy at check-in',default:false},
+  {key:'reward_request',label:'Reward requested',sub:'When a girl requests a reward',default:true},
+  {key:'reset_complete',label:'Reset Toolkit completed',sub:'Optional celebratory notice',default:false},
+  {key:'sensory_flag',label:'Sensory flag raised',sub:'From body check scan',default:false},
+];
+const BA_ACTIVITIES=[
+  {key:'homework',label:'Homework'},
+  {key:'screen',label:'Screen time'},
+  {key:'chores',label:'Chore completion'},
+  {key:'bedtime',label:'Bedtime routine start'},
+  {key:'outside',label:'Going outside'},
+  {key:'exercise',label:'Exercise'},
+];
+const FAMILY_TOGGLES=[
+  {key:'share_wins',label:'Girls can share wins to Family Wall',default:true},
+  {key:'show_chores',label:'Chore progress visible in Family Space',default:true},
+  {key:'sister_notes',label:'Sister notes (always girls-only)',default:true,locked:true},
+];
+function toast(m,t='info'){const c=document.getElementById('tw');const el=document.createElement('div');el.style.cssText=`background:var(--card);color:var(--text);border:2px solid ${t==='success'?'#4ade80':'#818cf8'};border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;pointer-events:all;animation:tIn .3s ease;width:100%;font-family:var(--font-main);`;el.innerHTML=`<span>${t==='success'?'✅':'⚙️'}</span><span>${m}</span>`;c.appendChild(el);setTimeout(()=>{el.style.animation='tOut .3s ease forwards';setTimeout(()=>el.remove(),300);},3000);}
+function getSettings(){return Store.get('parent-notification-settings',{});}
+function buildToggles(containerId, items, storageKey){
+  const saved=Store.get(storageKey,{});
+  const el=document.getElementById(containerId);el.innerHTML='';
+  items.forEach(item=>{
+    const val=saved[item.key]??item.default??false;
+    const row=document.createElement('div');row.className='toggle-row';
+    row.innerHTML=`<div class="toggle-info"><div class="toggle-label">${item.label}</div><div class="toggle-sub">${item.sub||''}</div></div><div class="toggle-sw${val?' on':''}${item.locked?' locked':''}" data-key="${item.key}" style="${item.locked?'opacity:.4;pointer-events:none':''}"></div>`;
+    if(!item.locked)row.querySelector('.toggle-sw').onclick=function(){this.classList.toggle('on');};
+    el.appendChild(row);
+  });
+}
+function saveToggles(containerId, storageKey){
+  const vals={};document.getElementById(containerId).querySelectorAll('.toggle-sw[data-key]').forEach(sw=>{vals[sw.dataset.key]=sw.classList.contains('on');});
+  Store.set(storageKey,vals);toast('Saved! ✅','success');
+}
+document.getElementById('saveNotifs').onclick=()=>saveToggles('notifToggles','parent-notification-settings');
+document.getElementById('savePinsBtn').onclick=()=>{
+  const ca=document.getElementById('curPinA').value;
+  const cb=document.getElementById('curPinB').value;
+  if(!Auth.verifyBothParentPins(ca,cb)){toast('Current PINs incorrect','error');return;}
+  const na=document.getElementById('newPinA').value;
+  if(na&&na.length===4){Auth.setPin('parent-a',na);toast('PIN A updated! 🔐','success');}
+  else toast('PIN unchanged (leave blank to keep)','info');
+};
+function init(){
+  const s=Auth.getSession();if(!s||s.profileId!=='parent'){location.href='parent.html';return;}
+  buildToggles('notifToggles',NOTIF_SETTINGS,'parent-notification-settings');
+  buildToggles('baToggles',BA_ACTIVITIES,'parent-ba-settings');
+  buildToggles('familyToggles',FAMILY_TOGGLES,'parent-family-settings');
+  document.querySelectorAll('#baToggles .toggle-sw[data-key]').forEach(sw=>sw.onclick=function(){this.classList.toggle('on');Store.set('parent-ba-settings',{...Store.get('parent-ba-settings',{}),[sw.dataset.key]:sw.classList.contains('on')});});
+  document.querySelectorAll('#familyToggles .toggle-sw[data-key]').forEach(sw=>sw.onclick=function(){this.classList.toggle('on');Store.set('parent-family-settings',{...Store.get('parent-family-settings',{}),[sw.dataset.key]:sw.classList.contains('on')});});
+}
+document.addEventListener('DOMContentLoaded',init);
+
+</script>
+</body>
+</html>

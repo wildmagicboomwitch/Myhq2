@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sticker Book — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d1a;--surface:#12122a;--card:#1a1a3e;--accent:#fbbf24;--accent2:#f472b6;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(251,191,36,0.08) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);color:#431407;}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:16px;}
+
+/* STATS */
+.stats-row{display:flex;gap:10px;}
+.stat-chip{flex:1;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.stat-num{font-family:var(--font-display);font-size:26px;color:var(--accent);}
+.stat-label{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+
+/* CATEGORY FILTER */
+.cat-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.cat-row::-webkit-scrollbar{display:none;}
+.cat-chip{flex-shrink:0;background:var(--card);border:2px solid rgba(255,255,255,.06);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);transition:all .2s;}
+.cat-chip:hover{border-color:var(--accent);}
+.cat-chip.active{background:var(--accent);border-color:var(--accent);color:#431407;}
+
+/* STICKER GRID */
+.sticker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+
+.sticker-slot{
+  aspect-ratio:1;border-radius:var(--radius-sm);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+
+/* Earned sticker */
+.sticker-slot.earned{
+  background:var(--card);border:2px solid var(--sl-color,rgba(251,191,36,.3));
+  box-shadow:0 0 12px var(--sl-glow,rgba(251,191,36,.1));
+}
+.sticker-slot.earned:hover{transform:scale(1.06);box-shadow:0 0 20px var(--sl-glow,rgba(251,191,36,.2));}
+
+/* Locked sticker */
+.sticker-slot.locked{
+  background:rgba(255,255,255,.03);
+  border:2px dashed rgba(255,255,255,.08);
+  cursor:default;
+}
+.sticker-slot.locked:hover{transform:none;}
+
+.sticker-emoji{font-size:32px;filter:var(--sl-filter,none);}
+.sticker-slot.locked .sticker-emoji{font-size:28px;opacity:.2;filter:grayscale(1);}
+.sticker-name{font-size:9px;font-weight:800;color:var(--text-muted);text-align:center;padding:0 4px;line-height:1.2;}
+.sticker-slot.earned .sticker-name{color:var(--sl-color,var(--accent));}
+.sticker-lock{font-size:16px;opacity:.2;}
+
+/* NEW badge */
+.new-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;border-radius:20px;padding:1px 5px;font-size:8px;font-weight:900;}
+
+/* STICKER DETAIL MODAL */
+.sticker-modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.sticker-modal.open{display:flex;}
+.modal-card{background:var(--surface);border-radius:var(--radius);padding:32px 24px;max-width:300px;width:90%;text-align:center;animation:modalIn .3s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-emoji{font-size:72px;display:block;margin-bottom:12px;animation:sparkle 1s ease infinite alternate;}
+@keyframes sparkle{from{filter:drop-shadow(0 0 8px gold)}to{filter:drop-shadow(0 0 20px gold) brightness(1.2)}}
+.modal-name{font-family:var(--font-display);font-size:24px;color:var(--accent);margin-bottom:6px;}
+.modal-desc{font-size:13px;font-weight:700;color:var(--text-muted);line-height:1.5;margin-bottom:6px;}
+.modal-earned{font-size:11px;font-weight:800;color:var(--success);}
+.modal-close{margin-top:16px;background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 24px;font-size:14px;font-weight:800;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);transition:all .2s;width:100%;}
+.modal-close:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SECTION TITLE */
+.section-title{font-family:var(--font-display);font-size:18px;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">📖 Sticker Book</div>
+</div>
+<main class="page">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-chip"><div class="stat-num" id="statEarned">0</div><div class="stat-label">Earned</div></div>
+    <div class="stat-chip"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total</div></div>
+    <div class="stat-chip"><div class="stat-num" id="statPct">0%</div><div class="stat-label">Complete</div></div>
+  </div>
+
+  <!-- Category filter -->
+  <div class="cat-row" id="catRow"></div>
+
+  <!-- Sticker grid -->
+  <div class="section-title" id="gridTitle">All Stickers</div>
+  <div class="sticker-grid" id="stickerGrid"></div>
+
+</main>
+</div>
+
+<!-- Sticker detail modal -->
+<div class="sticker-modal" id="stickerModal">
+  <div class="modal-card">
+    <span class="modal-emoji" id="modalEmoji">⭐</span>
+    <div class="modal-name"   id="modalName">Sticker</div>
+    <div class="modal-desc"   id="modalDesc">Description</div>
+    <div class="modal-earned" id="modalEarned"></div>
+    <button class="modal-close" id="modalClose">Close</button>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item active" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-stickers-app">
+/* ============================================================
+   STICKER BOOK
+   Stickers are TROPHIES — earned, never spent
+   Awarded automatically by the system, never lost
+============================================================ */
+let profileId   = null;
+let activeFilter = 'all';
+
+/* ── STICKER DEFINITIONS ── */
+const STICKERS = [
+  // Bravery
+  { id:'first-checkin',   cat:'brave',    emoji:'💜', name:'First Check-In',     desc:'Did your very first feelings check-in!',         color:'#a78bfa', glow:'rgba(167,139,250,.2)', trigger:'checkin_count>=1'     },
+  { id:'brave-3',         cat:'brave',    emoji:'💪', name:'3 Days Strong',       desc:'Checked in 3 days in a row!',                    color:'#f87171', glow:'rgba(248,113,113,.2)', trigger:'checkin_streak>=3'    },
+  { id:'reset-first',     cat:'brave',    emoji:'🌈', name:'Brave Heart',         desc:'Used the Reset Toolkit for the first time!',     color:'#fb923c', glow:'rgba(251,146,60,.2)',  trigger:'reset_used>=1'        },
+  { id:'sos-survivor',    cat:'brave',    emoji:'🆘', name:'Asked for Help',       desc:'Pressed the SOS button when things got hard.',   color:'#f87171', glow:'rgba(248,113,113,.2)', trigger:'sos_used>=1'          },
+  // Calm
+  { id:'firefly-1',       cat:'calm',     emoji:'🌿', name:'Firefly Catcher',     desc:'Caught your first 30 fireflies!',                color:'#4ade80', glow:'rgba(74,222,128,.2)',  trigger:'firefly_30>=1'        },
+  { id:'breathing-done',  cat:'calm',     emoji:'🫁', name:'Breath Master',       desc:'Completed a full breathing exercise!',           color:'#34d399', glow:'rgba(52,211,153,.2)',  trigger:'breathing_complete>=1'},
+  { id:'fidget-5',        cat:'calm',     emoji:'⏱️',  name:'Break Taker',         desc:'Used the Fidget Timer 5 times!',                 color:'#60a5fa', glow:'rgba(96,165,250,.2)',  trigger:'fidget_sessions>=5'   },
+  { id:'bubble-50',       cat:'calm',     emoji:'🫧', name:'Bubble Queen',        desc:'Popped 50 bubbles in one session!',              color:'#60a5fa', glow:'rgba(96,165,250,.2)',  trigger:'bubbles_50>=1'        },
+  // Feelings
+  { id:'mood-week',       cat:'feelings', emoji:'🗺️', name:'Week of Color',       desc:'Checked in every day for a whole week!',         color:'#a78bfa', glow:'rgba(167,139,250,.2)', trigger:'checkin_streak>=7'    },
+  { id:'before-after-3',  cat:'feelings', emoji:'✨', name:'Pattern Spotter',      desc:'Did 3 Before & After sessions!',                 color:'#34d399', glow:'rgba(52,211,153,.2)',  trigger:'before_after>=3'      },
+  { id:'toolkit-5',       cat:'feelings', emoji:'🧰', name:'Toolkit Star',        desc:'Used your Calm Toolkit 5 times!',                color:'#818cf8', glow:'rgba(129,140,248,.2)', trigger:'toolkit_used>=5'      },
+  { id:'truth-check',     cat:'feelings', emoji:'📝', name:'Honest Heart',        desc:'Used the Truth Checker. That took courage.',     color:'#818cf8', glow:'rgba(129,140,248,.2)', trigger:'truth_checker>=1'     },
+  // School
+  { id:'hw-5',            cat:'school',   emoji:'📚', name:'Homework Hero',       desc:'Completed 5 pieces of homework!',                color:'#60a5fa', glow:'rgba(96,165,250,.2)',  trigger:'homework_done>=5'     },
+  { id:'hw-20',           cat:'school',   emoji:'🏆', name:'Study Champion',      desc:'Completed 20 pieces of homework!',               color:'#fbbf24', glow:'rgba(251,191,36,.2)',  trigger:'homework_done>=20'    },
+  { id:'test-done',       cat:'school',   emoji:'✅', name:'Test Taker',          desc:'Finished a test you were dreading!',             color:'#4ade80', glow:'rgba(74,222,128,.2)',  trigger:'tests_done>=1'        },
+  // Chores
+  { id:'chore-7',         cat:'chores',   emoji:'🌟', name:'Super Helper',        desc:'Did chores 7 days in a row!',                    color:'#fbbf24', glow:'rgba(251,191,36,.2)',  trigger:'chore_streak>=7'      },
+  { id:'chore-50',        cat:'chores',   emoji:'👑', name:'Chore Champion',      desc:'Completed 50 chores total!',                     color:'#fbbf24', glow:'rgba(251,191,36,.2)',  trigger:'chores_total>=50'     },
+  { id:'bonus-done',      cat:'chores',   emoji:'⚡', name:'Bonus Boss',          desc:'Completed a bonus chore!',                       color:'#fb923c', glow:'rgba(251,146,60,.2)',  trigger:'bonus_chores>=1'      },
+  // Wins
+  { id:'win-10',          cat:'wins',     emoji:'🏅', name:'10 Wins!',            desc:'Added 10 things to your Win Jar!',               color:'#fbbf24', glow:'rgba(251,191,36,.2)',  trigger:'wins_total>=10'       },
+  { id:'win-50',          cat:'wins',     emoji:'🥇', name:'Win Collector',       desc:'Added 50 things to your Win Jar! AMAZING.',      color:'#fbbf24', glow:'rgba(251,191,36,.2)',  trigger:'wins_total>=50'       },
+  { id:'hard-day-win',    cat:'wins',     emoji:'🌈', name:'Survived a Hard Day', desc:'Got through a really hard day. You did it.',     color:'#818cf8', glow:'rgba(129,140,248,.2)', trigger:'hard_day_wins>=1'     },
+  // Special
+  { id:'first-day',       cat:'special',  emoji:'🎉', name:'First Day!',          desc:'Opened My HQ for the very first time!',          color:'#f472b6', glow:'rgba(244,114,182,.2)', trigger:'auto'                 },
+  { id:'full-checkin',    cat:'special',  emoji:'💫', name:'Triple Check-In',     desc:'Did all 3 check-ins in one day!',                color:'#a78bfa', glow:'rgba(167,139,250,.2)', trigger:'checkin_all_3>=1'     },
+];
+
+const CATEGORIES = [
+  { id:'all',      label:'All'      },
+  { id:'brave',    label:'💪 Brave'  },
+  { id:'calm',     label:'🌿 Calm'   },
+  { id:'feelings', label:'💜 Feelings'},
+  { id:'school',   label:'📚 School' },
+  { id:'chores',   label:'✅ Chores' },
+  { id:'wins',     label:'⭐ Wins'   },
+  { id:'special',  label:'🎉 Special'},
+];
+
+/* ── CHECK EARNED ── */
+function checkEarned(sticker) {
+  const earned = Store.getProfile(profileId, 'stickers-earned', {});
+  return earned[sticker.id] || null;
+}
+
+function awardSticker(stickerId) {
+  const earned = Store.getProfile(profileId, 'stickers-earned', {});
+  if (earned[stickerId]) return false;
+  earned[stickerId] = { date: new Date().toISOString(), isNew: true };
+  Store.setProfile(profileId, 'stickers-earned', earned);
+  return true;
+}
+
+/* ── AUTO-CHECK TRIGGERS ── */
+function autoCheckTriggers() {
+  const earned = Store.getProfile(profileId, 'stickers-earned', {});
+
+  // First day
+  if (!earned['first-day']) awardSticker('first-day');
+
+  // Check-in count
+  const checkinCount = Store.getProfile(profileId, 'total-checkins', 0);
+  if (checkinCount >= 1) awardSticker('first-checkin');
+
+  // Wins total
+  const wins = WinJar.getWins(profileId).length;
+  if (wins >= 10) awardSticker('win-10');
+  if (wins >= 50) awardSticker('win-50');
+  const hardDayWins = WinJar.getWins(profileId).filter(w => w.category === 'hard_day').length;
+  if (hardDayWins >= 1) awardSticker('hard-day-win');
+
+  // Chores total
+  const choresHistory = Store.getProfile(profileId, 'chores-total-done', 0);
+  if (choresHistory >= 50) awardSticker('chore-50');
+
+  // Homework
+  const hwDone = Store.getProfile(profileId, 'homework-done-total', 0);
+  if (hwDone >= 5)  awardSticker('hw-5');
+  if (hwDone >= 20) awardSticker('hw-20');
+
+  // Fidget sessions
+  const fidget = Store.getProfile(profileId, 'fidget-sessions', 0);
+  if (fidget >= 5) awardSticker('fidget-5');
+
+  // Toolkit
+  const toolkitCount = Store.getProfile(profileId, 'toolkit-total-used', 0);
+  if (toolkitCount >= 5) awardSticker('toolkit-5');
+
+  // Before/after
+  const baEntries = Store.getProfile(profileId, 'before-after-entries', []).length;
+  if (baEntries >= 3) awardSticker('before-after-3');
+
+  // Truth checker
+  const tcAudit = Store.getProfile(profileId, 'truth-checker-audit', []).length;
+  if (tcAudit >= 1) awardSticker('truth-check');
+}
+
+/* ── BUILD FILTERS ── */
+function buildFilters() {
+  const row = document.getElementById('catRow');
+  row.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const chip = document.createElement('button');
+    chip.className = `cat-chip${cat.id === activeFilter ? ' active' : ''}`;
+    chip.textContent = cat.label;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeFilter = cat.id;
+      renderGrid();
+    });
+    row.appendChild(chip);
+  });
+}
+
+/* ── RENDER GRID ── */
+function renderGrid() {
+  const grid    = document.getElementById('stickerGrid');
+  const allEarned = Store.getProfile(profileId, 'stickers-earned', {});
+  const filtered  = activeFilter === 'all' ? STICKERS : STICKERS.filter(s => s.cat === activeFilter);
+
+  // Sort: earned first, then locked
+  const sorted = [...filtered].sort((a, b) => {
+    const ae = !!allEarned[a.id], be = !!allEarned[b.id];
+    return be - ae;
+  });
+
+  document.getElementById('gridTitle').textContent = activeFilter === 'all' ? 'All Stickers' :
+    CATEGORIES.find(c => c.id === activeFilter)?.label || 'Stickers';
+
+  grid.innerHTML = '';
+  sorted.forEach(sticker => {
+    const earnedData = allEarned[sticker.id];
+    const isEarned   = !!earnedData;
+    const isNew      = earnedData?.isNew;
+
+    const slot = document.createElement('div');
+    slot.className = `sticker-slot ${isEarned ? 'earned' : 'locked'}`;
+    if (isEarned) {
+      slot.style.setProperty('--sl-color', sticker.color);
+      slot.style.setProperty('--sl-glow',  sticker.glow);
+    }
+
+    slot.innerHTML = isEarned
+      ? `${isNew ? '<div class="new-badge">NEW!</div>' : ''}
+         <span class="sticker-emoji">${sticker.emoji}</span>
+         <div class="sticker-name">${sticker.name}</div>`
+      : `<span class="sticker-emoji">${sticker.emoji}</span>
+         <div class="sticker-lock">🔒</div>`;
+
+    if (isEarned) {
+      slot.addEventListener('click', () => showModal(sticker, earnedData));
+      // Clear new flag on view
+      if (isNew) {
+        const e = Store.getProfile(profileId, 'stickers-earned', {});
+        e[sticker.id].isNew = false;
+        Store.setProfile(profileId, 'stickers-earned', e);
+      }
+    }
+
+    grid.appendChild(slot);
+  });
+
+  // Update stats
+  const totalEarned = Object.keys(allEarned).length;
+  document.getElementById('statEarned').textContent = totalEarned;
+  document.getElementById('statTotal').textContent  = STICKERS.length;
+  document.getElementById('statPct').textContent    = Math.round(totalEarned/STICKERS.length*100) + '%';
+}
+
+/* ── MODAL ── */
+function showModal(sticker, earnedData) {
+  document.getElementById('modalEmoji').textContent   = sticker.emoji;
+  document.getElementById('modalName').textContent    = sticker.name;
+  document.getElementById('modalDesc').textContent    = sticker.desc;
+  const date = new Date(earnedData.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('modalEarned').textContent  = `✅ Earned on ${date}`;
+  document.getElementById('stickerModal').classList.add('open');
+}
+
+/* ── INIT ── */
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  autoCheckTriggers();
+  buildFilters();
+  renderGrid();
+
+  document.getElementById('modalClose').addEventListener('click', () => document.getElementById('stickerModal').classList.remove('open'));
+  document.getElementById('stickerModal').addEventListener('click', e => { if (e.target === document.getElementById('stickerModal')) document.getElementById('stickerModal').classList.remove('open'); });
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'index.html');
+}
+
+/* Expose for other pages to award stickers */
+window.StickerBook = { award: awardSticker };
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

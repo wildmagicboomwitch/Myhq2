@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Routines — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d1a;--surface:#12122a;--card:#1a1a3e;--accent:#60a5fa;--accent2:#34d399;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(96,165,250,0.08) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:14px;}
+
+/* ROUTINE TABS */
+.routine-tabs{display:flex;background:var(--card);border-radius:var(--radius-sm);padding:4px;gap:4px;}
+.rtab{flex:1;background:transparent;border:none;border-radius:8px;padding:10px 4px;font-size:12px;font-weight:800;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);transition:all .2s;text-align:center;}
+.rtab.active{background:var(--accent);color:#fff;}
+
+/* PROGRESS BAR */
+.routine-progress-wrap{background:rgba(255,255,255,.06);border-radius:20px;height:10px;overflow:hidden;}
+.routine-progress-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease;width:0%;}
+.routine-progress-label{font-size:12px;font-weight:800;color:var(--text-muted);text-align:right;margin-top:4px;}
+
+/* STEP CARDS */
+.steps-list{display:flex;flex-direction:column;gap:8px;}
+.step-card{
+  background:var(--card);border:2px solid rgba(255,255,255,.06);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  display:flex;align-items:center;gap:14px;
+  transition:all .25s;cursor:pointer;position:relative;
+}
+.step-card.done{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.25);}
+.step-card.done .step-label{text-decoration:line-through;color:var(--text-muted);}
+.step-card:hover:not(.done){border-color:var(--accent);}
+.step-check{
+  width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.15);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;font-size:16px;
+}
+.step-card.done .step-check{background:var(--success);border-color:var(--success);color:#052e16;}
+.step-card:not(.done):hover .step-check{border-color:var(--accent);}
+.step-emoji{font-size:24px;flex-shrink:0;}
+.step-info{flex:1;}
+.step-label{font-size:15px;font-weight:800;margin-bottom:2px;}
+.step-sub{font-size:12px;font-weight:600;color:var(--text-muted);}
+.step-hygiene{position:absolute;top:6px;right:10px;font-size:10px;font-weight:900;color:var(--text-muted);background:rgba(255,255,255,.06);padding:2px 6px;border-radius:20px;}
+
+/* FREE CHOICE */
+.free-choice-card{background:rgba(251,191,36,.08);border:2px solid rgba(251,191,36,.2);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.fc-emoji{font-size:28px;flex-shrink:0;}
+.fc-info{flex:1;}
+.fc-title{font-size:15px;font-weight:900;color:var(--star);}
+.fc-sub{font-size:12px;font-weight:600;color:var(--text-muted);margin-top:2px;}
+.fc-btn{background:var(--star);border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:900;color:#431407;cursor:pointer;font-family:var(--font-main);transition:all .2s;flex-shrink:0;}
+.fc-btn:hover{transform:scale(1.04);}
+.fc-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* DONE BANNER */
+.done-banner{background:linear-gradient(135deg,rgba(52,211,153,.15),rgba(96,165,250,.08));border:2px solid rgba(52,211,153,.25);border-radius:var(--radius);padding:20px;text-align:center;display:none;}
+.done-banner.show{display:block;animation:fadeIn .4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.done-banner-emoji{font-size:52px;display:block;margin-bottom:8px;}
+.done-banner-title{font-family:var(--font-display);font-size:22px;color:var(--accent2);}
+.done-banner-sub{font-size:13px;font-weight:700;color:var(--text-muted);margin-top:4px;}
+
+/* DEEP CLEAN */
+.deep-clean-banner{background:rgba(251,146,60,.08);border:2px solid rgba(251,146,60,.2);border-radius:var(--radius);padding:16px;display:none;align-items:center;gap:12px;}
+.deep-clean-banner.show{display:flex;animation:fadeIn .4s ease;}
+.dc-icon{font-size:32px;flex-shrink:0;}
+.dc-info{flex:1;}
+.dc-title{font-size:15px;font-weight:900;color:#fb923c;}
+.dc-sub{font-size:12px;font-weight:600;color:var(--text-muted);margin-top:2px;}
+.dc-start-btn{background:#fb923c;border:none;border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;font-weight:900;color:#fff;cursor:pointer;font-family:var(--font-main);transition:all .2s;flex-shrink:0;}
+.dc-start-btn:hover{transform:scale(1.04);}
+
+/* CLEAN STEPS */
+.clean-steps{display:flex;flex-direction:column;gap:8px;display:none;}
+.clean-steps.show{display:flex;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title" id="pageTitle">📋 My Routines</div>
+</div>
+<main class="page">
+
+  <div class="routine-tabs" id="routineTabs">
+    <button class="rtab active" data-routine="morning">🌅 Morning</button>
+    <button class="rtab"        data-routine="afterschool">🎒 After School</button>
+    <button class="rtab"        data-routine="bedtime">🌙 Bedtime</button>
+  </div>
+
+  <!-- Progress -->
+  <div>
+    <div class="routine-progress-wrap"><div class="routine-progress-bar" id="progressBar"></div></div>
+    <div class="routine-progress-label" id="progressLabel">0 of 0 done</div>
+  </div>
+
+  <!-- Deep clean banner (parent trigger) -->
+  <div class="deep-clean-banner" id="deepCleanBanner">
+    <span class="dc-icon">🧹</span>
+    <div class="dc-info">
+      <div class="dc-title">Room clean time!</div>
+      <div class="dc-sub">A parent has sent a room cleaning guide for you</div>
+    </div>
+    <button class="dc-start-btn" id="dcStartBtn">Let's go! 🧹</button>
+  </div>
+
+  <!-- Clean steps (OOO protocol) -->
+  <div class="clean-steps" id="cleanSteps"></div>
+
+  <!-- Routine steps -->
+  <div class="steps-list" id="stepsList"></div>
+
+  <!-- Free choice slot -->
+  <div class="free-choice-card" id="freeChoiceCard" style="display:none">
+    <span class="fc-emoji">🎉</span>
+    <div class="fc-info">
+      <div class="fc-title">Free Choice</div>
+      <div class="fc-sub" id="freeChoiceSub">You have 1 free choice today!</div>
+    </div>
+    <button class="fc-btn" id="freeChoiceBtn">Use it!</button>
+  </div>
+
+  <!-- Done banner -->
+  <div class="done-banner" id="doneBanner">
+    <span class="done-banner-emoji">🌟</span>
+    <div class="done-banner-title" id="doneBannerTitle">Routine complete!</div>
+    <div class="done-banner-sub">Every single step. That's amazing.</div>
+  </div>
+
+</main>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-routines-app">
+/* ============================================================
+   MY ROUTINES — morning / after school / bedtime
+   Deep Clean trigger integrated
+============================================================ */
+let profileId      = null;
+let activeRoutine  = 'morning';
+let doneSteps      = new Set();
+let cleanStepsDone = new Set();
+
+/* ── DEFAULT ROUTINE STEPS (parent customises in parent-routines.html) ── */
+const DEFAULT_ROUTINES = {
+  morning: [
+    { id:'wake',     emoji:'⏰', label:'Wake up',           sub:'',                     hygiene:false },
+    { id:'toilet',   emoji:'🚽', label:'Use the toilet',    sub:'',                     hygiene:true  },
+    { id:'brush-am', emoji:'🦷', label:'Brush teeth',       sub:'2 minutes!',           hygiene:true  },
+    { id:'wash-face',emoji:'🫧', label:'Wash face',         sub:'',                     hygiene:true  },
+    { id:'get-dress',emoji:'👕', label:'Get dressed',       sub:'Clothes ready the night before?', hygiene:false },
+    { id:'breakfast',emoji:'🥣', label:'Eat breakfast',     sub:'',                     hygiene:false },
+    { id:'bag',      emoji:'🎒', label:'Pack school bag',   sub:'Homework? Lunch?',     hygiene:false },
+    { id:'meds-am',  emoji:'💊', label:'Take medication',   sub:'If applicable',        hygiene:true  },
+  ],
+  afterschool: [
+    { id:'snack',    emoji:'🍎', label:'Have a snack',      sub:'',                     hygiene:false },
+    { id:'unpack',   emoji:'🎒', label:'Unpack bag',        sub:'Put things away',      hygiene:false },
+    { id:'hw',       emoji:'📚', label:'Homework time',     sub:'',                     hygiene:false, link:'school.html' },
+    { id:'outside',  emoji:'🌳', label:'Get some fresh air',sub:'Even 10 minutes!',     hygiene:false },
+    { id:'checkin',  emoji:'💜', label:'Quick check-in',    sub:'How was your day?',    hygiene:false, link:'checkin.html' },
+    { id:'prep-bag', emoji:'📋', label:'Prep bag for tomorrow', sub:'Pack tonight!',    hygiene:false },
+  ],
+  bedtime: [
+    { id:'dinner',   emoji:'🍽️', label:'Dinner & tidy up',  sub:'',                     hygiene:false },
+    { id:'bath',     emoji:'🛁', label:'Bath or shower',    sub:'',                     hygiene:true  },
+    { id:'brush-pm', emoji:'🦷', label:'Brush teeth',       sub:'2 minutes!',           hygiene:true  },
+    { id:'pj',       emoji:'🌙', label:'Put on pyjamas',    sub:'',                     hygiene:false },
+    { id:'bag-pm',   emoji:'🎒', label:'School bag ready?', sub:'Check it now',         hygiene:false },
+    { id:'meds-pm',  emoji:'💊', label:'Evening medication',sub:'If applicable',        hygiene:true  },
+    { id:'read',     emoji:'📖', label:'Reading time',      sub:'20 minutes',           hygiene:false },
+    { id:'lights',   emoji:'💡', label:'Lights out',        sub:'',                     hygiene:false },
+  ],
+};
+
+/* ── OOO CLEAN STEPS ── */
+const CLEAN_STEPS = [
+  { id:'c1', emoji:'🗑️', label:'Step 1: Rubbish',     sub:'Pick up any rubbish and throw it away' },
+  { id:'c2', emoji:'📦', label:'Step 2: Out of place', sub:'Put things back where they belong'     },
+  { id:'c3', emoji:'🛏️', label:'Step 3: Surfaces',     sub:'Clear your desk, bed, and floor'       },
+  { id:'c4', emoji:'🧽', label:'Step 4: Wipe down',   sub:'Wipe surfaces top to bottom'           },
+  { id:'c5', emoji:'🧹', label:'Step 5: Sweep/vacuum',sub:'Sweep or vacuum the floor'              },
+  { id:'c6', emoji:'🫧', label:'Step 6: Mop',         sub:'Mop if needed'                         },
+  { id:'c7', emoji:'✅', label:'Step 7: Put away',    sub:'Put cleaning stuff away & done!'        },
+];
+
+function getRoutineSteps() {
+  return Store.getProfile(profileId, `routine-${activeRoutine}`, DEFAULT_ROUTINES[activeRoutine]);
+}
+
+function getStorageKey() {
+  return `routine-done-${activeRoutine}-${new Date().toDateString()}`;
+}
+
+function loadDoneSteps() {
+  doneSteps = new Set(Store.getProfile(profileId, getStorageKey(), []));
+}
+
+function saveDoneSteps() {
+  Store.setProfile(profileId, getStorageKey(), [...doneSteps]);
+}
+
+/* ── RENDER STEPS ── */
+function renderSteps() {
+  const steps    = getRoutineSteps();
+  const list     = document.getElementById('stepsList');
+  const isWeekend = [0,6].includes(new Date().getDay());
+  const freeUsed  = Store.getProfile(profileId, `free-choice-${activeRoutine}-${new Date().toDateString()}`, false);
+  list.innerHTML = '';
+
+  steps.forEach(step => {
+    const done = doneSteps.has(step.id);
+    const card = document.createElement('div');
+    card.className = `step-card${done ? ' done' : ''}`;
+
+    card.innerHTML = `
+      <div class="step-check">${done ? '✓' : ''}</div>
+      <span class="step-emoji">${step.emoji}</span>
+      <div class="step-info">
+        <div class="step-label">${step.label}</div>
+        ${step.sub ? `<div class="step-sub">${step.sub}</div>` : ''}
+      </div>
+      ${step.hygiene ? '<div class="step-hygiene">🦷 hygiene</div>' : ''}
+    `;
+
+    if (!done) {
+      card.addEventListener('click', () => {
+        doneSteps.add(step.id);
+        saveDoneSteps();
+        if (step.link) {
+          setTimeout(() => { window.location.href = step.link; }, 300);
+        }
+        renderSteps();
+        updateProgress();
+        checkAllDone();
+      });
+    } else {
+      card.addEventListener('click', () => {
+        doneSteps.delete(step.id);
+        saveDoneSteps();
+        renderSteps();
+        updateProgress();
+        document.getElementById('doneBanner').classList.remove('show');
+      });
+    }
+    list.appendChild(card);
+  });
+
+  // Free choice slot (bedtime only, 1/day weekdays, 2/day weekends)
+  const fcCard = document.getElementById('freeChoiceCard');
+  if (activeRoutine === 'bedtime') {
+    const maxFree = isWeekend ? 2 : 1;
+    const usedFree = Store.getProfile(profileId, `free-choice-count-${new Date().toDateString()}`, 0);
+    fcCard.style.display = '';
+    document.getElementById('freeChoiceSub').textContent =
+      usedFree >= maxFree
+        ? `Free choices used today (${maxFree} max)`
+        : `${maxFree - usedFree} free choice${maxFree-usedFree>1?'s':''} left today!`;
+    const btn = document.getElementById('freeChoiceBtn');
+    btn.disabled = usedFree >= maxFree;
+    btn.onclick = () => {
+      Store.setProfile(profileId, `free-choice-count-${new Date().toDateString()}`, usedFree+1);
+      btn.disabled = true;
+      btn.textContent = 'Used! 🎉';
+    };
+  } else {
+    fcCard.style.display = 'none';
+  }
+}
+
+function updateProgress() {
+  const steps = getRoutineSteps();
+  const done  = steps.filter(s => doneSteps.has(s.id)).length;
+  const pct   = steps.length ? Math.round(done/steps.length*100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} of ${steps.length} done`;
+}
+
+function checkAllDone() {
+  const steps = getRoutineSteps();
+  const allDone = steps.every(s => doneSteps.has(s.id));
+  if (allDone) {
+    const banner = document.getElementById('doneBanner');
+    const titles = { morning:'Morning routine done! 🌅', afterschool:'After school routine done! 🎒', bedtime:'Bedtime routine done! 🌙' };
+    document.getElementById('doneBannerTitle').textContent = titles[activeRoutine] || 'All done!';
+    banner.classList.add('show');
+    Points.add(profileId, 10, `${activeRoutine} routine complete! ✅`, 'routine');
+    WinJar.addWin(profileId, `Finished my ${activeRoutine} routine! ✅`, 'chore');
+  }
+}
+
+/* ── DEEP CLEAN ── */
+function checkDeepClean() {
+  const pending = Store.getProfile(profileId, 'deep-clean-pending', false);
+  const banner  = document.getElementById('deepCleanBanner');
+  banner.classList.toggle('show', pending);
+}
+
+function startDeepClean() {
+  const list  = document.getElementById('cleanSteps');
+  list.classList.add('show');
+  list.innerHTML = '';
+  document.getElementById('deepCleanBanner').classList.remove('show');
+
+  CLEAN_STEPS.forEach(step => {
+    const done = cleanStepsDone.has(step.id);
+    const card = document.createElement('div');
+    card.className = `step-card${done ? ' done' : ''}`;
+    card.style.borderColor = done ? 'rgba(251,146,60,.3)' : '';
+    card.innerHTML = `
+      <div class="step-check" style="${done ? 'background:#fb923c;border-color:#fb923c' : ''}">${done ? '✓' : ''}</div>
+      <span class="step-emoji">${step.emoji}</span>
+      <div class="step-info">
+        <div class="step-label">${step.label}</div>
+        <div class="step-sub">${step.sub}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      cleanStepsDone.has(step.id) ? cleanStepsDone.delete(step.id) : cleanStepsDone.add(step.id);
+      startDeepClean();
+      if (cleanStepsDone.size === CLEAN_STEPS.length) {
+        // All clean steps done
+        Store.setProfile(profileId, 'deep-clean-pending', false);
+        Points.add(profileId, 20, 'Cleaned my room! 🧹', 'clean');
+        WinJar.addWin(profileId, 'Cleaned my whole room! 🧹✨', 'chore');
+      }
+    });
+    list.appendChild(card);
+  });
+}
+
+/* ── SWITCH ROUTINE ── */
+function switchRoutine(name) {
+  activeRoutine = name;
+  loadDoneSteps();
+  renderSteps();
+  updateProgress();
+  document.getElementById('doneBanner').classList.remove('show');
+  document.getElementById('cleanSteps').classList.remove('show');
+}
+
+/* ── INIT ── */
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  // Pick routine from hash or time of day
+  const hour = new Date().getHours();
+  if (window.location.hash === '#bedtime')     activeRoutine = 'bedtime';
+  else if (window.location.hash === '#morning') activeRoutine = 'morning';
+  else if (hour < 12)  activeRoutine = 'morning';
+  else if (hour < 17)  activeRoutine = 'afterschool';
+  else                 activeRoutine = 'bedtime';
+
+  // Set active tab
+  document.querySelectorAll('.rtab').forEach(t => {
+    t.classList.toggle('active', t.dataset.routine === activeRoutine);
+  });
+
+  loadDoneSteps();
+  renderSteps();
+  updateProgress();
+  checkDeepClean();
+
+  document.querySelectorAll('.rtab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      switchRoutine(tab.dataset.routine);
+    });
+  });
+
+  document.getElementById('dcStartBtn').addEventListener('click', startDeepClean);
+  document.getElementById('backBtn').addEventListener('click',    () => window.location.href = 'index.html');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

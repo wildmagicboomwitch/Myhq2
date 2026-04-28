@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Reset Toolkit — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a1a; --surface: #111128; --card: #1a1a38;
+  --accent: #a78bfa; --accent2: #34d399; --text: #f1f5f9;
+  --text-muted: #94a3b8; --star: #fbbf24; --danger: #f87171;
+  --success: #4ade80; --radius: 24px; --radius-sm: 14px;
+  --font-main: 'Nunito', sans-serif; --font-display: 'Fredoka One', cursive;
+}
+html, body { min-height: 100vh; font-family: var(--font-main); background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+/* STARS BG (calming) */
+.stars-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.star-p { position: absolute; border-radius: 50%; background: white; animation: tw var(--d,3s) ease-in-out infinite; animation-delay: var(--dl,0s); opacity: 0; }
+@keyframes tw { 0%,100%{opacity:0;transform:scale(.5)} 50%{opacity:var(--o,.5);transform:scale(1)} }
+
+/* BACK BTN */
+.back-btn-fixed {
+  position: fixed; top: 16px; left: 16px; z-index: 100;
+  background: rgba(255,255,255,0.1); border: none; border-radius: 12px;
+  padding: 10px 16px; color: var(--text); font-size: 15px; font-weight: 800;
+  cursor: pointer; font-family: var(--font-main); backdrop-filter: blur(8px);
+  transition: all 0.2s;
+}
+.back-btn-fixed:hover { background: rgba(255,255,255,0.2); }
+
+/* MAIN */
+#app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+.page { max-width: 520px; width: 100%; padding: 60px 20px 100px; display: flex; flex-direction: column; align-items: center; }
+
+/* STAGES */
+.stage { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; animation: stageIn 0.4s ease; text-align: center; }
+.stage.active { display: flex; }
+@keyframes stageIn { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+/* STAGE INDICATOR */
+.stage-dots { display: flex; gap: 8px; margin-bottom: 8px; }
+.stage-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+.stage-dot.active { background: var(--accent); transform: scale(1.3); box-shadow: 0 0 8px var(--accent); }
+.stage-dot.done   { background: var(--success); }
+
+/* MASCOT */
+.stage-mascot { font-size: 80px; filter: drop-shadow(0 8px 20px rgba(0,0,0,0.4)); }
+.stage-mascot.breathe { animation: breatheAnim 4s ease-in-out infinite; }
+@keyframes breatheAnim {
+  0%,100% { transform: scale(1);    filter: drop-shadow(0 8px 20px rgba(167,139,250,0.3)); }
+  50%      { transform: scale(1.15); filter: drop-shadow(0 12px 28px rgba(167,139,250,0.6)); }
+}
+.stage-mascot.bounce { animation: bounceMascot 2s ease-in-out infinite; }
+@keyframes bounceMascot { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.stage-mascot.celebrate { animation: celebrateMascot 0.6s ease infinite alternate; }
+@keyframes celebrateMascot { from{transform:rotate(-8deg) scale(1)} to{transform:rotate(8deg) scale(1.1)} }
+
+/* STAGE HEADING */
+.stage-heading { font-family: var(--font-display); font-size: clamp(28px, 7vw, 40px); color: var(--accent); line-height: 1.1; }
+.stage-sub { font-size: 16px; color: var(--text-muted); font-weight: 600; line-height: 1.5; max-width: 380px; }
+
+/* FEELING SCALE */
+.feeling-scale { display: flex; gap: 10px; width: 100%; justify-content: center; }
+.feeling-btn {
+  flex: 1; background: var(--card);
+  border: 3px solid transparent; border-radius: var(--radius);
+  padding: 16px 8px; text-align: center; cursor: pointer;
+  transition: all 0.2s; font-family: var(--font-main);
+  max-width: 90px;
+}
+.feeling-btn:hover { transform: scale(1.05); border-color: var(--feeling-color, var(--accent)); }
+.feeling-btn.selected {
+  border-color: var(--feeling-color, var(--accent));
+  background: var(--feeling-bg, rgba(167,139,250,0.15));
+  transform: scale(1.08);
+  box-shadow: 0 0 16px var(--feeling-color, var(--accent));
+}
+.feeling-emoji { font-size: 32px; display: block; margin-bottom: 6px; }
+.feeling-label { font-size: 11px; font-weight: 800; color: var(--text-muted); }
+.feeling-btn.selected .feeling-label { color: var(--text); }
+
+/* BREATHING RING */
+.breath-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; margin: 8px 0; }
+.breath-ring {
+  width: 180px; height: 180px; border-radius: 50%;
+  border: 4px solid rgba(167,139,250,0.2);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.breath-ring::before {
+  content: '';
+  position: absolute; inset: -10px;
+  border-radius: 50%;
+  border: 4px solid var(--accent);
+  animation: breathRing 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes breathRing {
+  0%   { opacity:0; transform:scale(.8); }
+  25%  { opacity:1; transform:scale(1.05); }
+  75%  { opacity:1; transform:scale(1.05); }
+  100% { opacity:0; transform:scale(.8); }
+}
+.breath-ring.running::before { animation: breathRing 4s ease-in-out infinite; }
+.breath-instruction {
+  font-family: var(--font-display); font-size: 20px; color: var(--accent);
+  text-align: center; line-height: 1.2;
+}
+.breath-count { font-size: 36px; font-weight: 900; color: var(--text); display: block; }
+.breath-phase { font-size: 14px; color: var(--text-muted); font-weight: 700; margin-top: 4px; }
+
+.breath-ctrl-btn {
+  background: var(--accent); border: none; border-radius: var(--radius-sm);
+  padding: 14px 32px; font-size: 17px; font-weight: 900;
+  color: #fff; cursor: pointer; font-family: var(--font-main);
+  transition: all 0.2s; box-shadow: 0 4px 20px rgba(167,139,250,0.4);
+}
+.breath-ctrl-btn:hover { transform: translateY(-2px); }
+
+/* SAFE THINGS */
+.safe-things-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+.safe-thing-btn {
+  background: var(--card); border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm); padding: 16px; text-align: center;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font-main);
+}
+.safe-thing-btn:hover, .safe-thing-btn.selected {
+  border-color: var(--accent2);
+  background: rgba(52,211,153,0.1);
+  transform: scale(1.03);
+}
+.safe-thing-emoji { font-size: 32px; display: block; margin-bottom: 6px; }
+.safe-thing-label { font-size: 14px; font-weight: 800; }
+
+/* FEELING WORDS */
+.feeling-words-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
+.feeling-word-btn {
+  background: var(--card); border: 2px solid transparent;
+  border-radius: 30px; padding: 10px 18px;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+  transition: all 0.2s; font-family: var(--font-main);
+  color: var(--text-muted);
+}
+.feeling-word-btn:hover { border-color: var(--accent); color: var(--text); transform: scale(1.04); }
+.feeling-word-btn.selected {
+  border-color: var(--word-color, var(--accent));
+  background: var(--word-bg, rgba(167,139,250,0.15));
+  color: var(--text);
+  box-shadow: 0 0 10px var(--word-color, var(--accent));
+}
+
+/* COPING TOOLS */
+.coping-tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+.coping-tool {
+  background: var(--card); border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm); padding: 14px;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font-main);
+}
+.coping-tool:hover { border-color: var(--accent2); transform: translateX(3px); }
+.coping-tool.used  { border-color: var(--success); background: rgba(74,222,128,0.08); }
+.coping-emoji { font-size: 24px; flex-shrink: 0; }
+.coping-label { font-size: 13px; font-weight: 800; text-align: left; }
+
+/* WHAT HAPPENED - simple prompts */
+.what-happened-prompts { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.prompt-label { font-size: 13px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px; text-align: left; }
+.prompt-input {
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);
+  padding: 14px; font-size: 15px; color: var(--text);
+  font-family: var(--font-main); outline: none; resize: none;
+  transition: border-color 0.2s; min-height: 70px;
+}
+.prompt-input:focus { border-color: var(--accent); }
+
+/* NEED HELP BUTTON */
+.need-help-btn {
+  background: rgba(248,113,113,0.1); border: 2px solid rgba(248,113,113,0.3);
+  border-radius: var(--radius-sm); padding: 14px 24px;
+  font-size: 15px; font-weight: 800; color: var(--danger);
+  cursor: pointer; font-family: var(--font-main); transition: all 0.2s;
+  width: 100%;
+}
+.need-help-btn:hover { background: rgba(248,113,113,0.2); border-color: var(--danger); }
+
+/* BULLY CHECKBOX */
+.bully-check-row {
+  background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2);
+  border-radius: var(--radius-sm); padding: 14px;
+  display: flex; align-items: center; gap: 12px; width: 100%; cursor: pointer;
+}
+.bully-check-row input { width: 20px; height: 20px; accent-color: var(--danger); cursor: pointer; }
+.bully-check-label { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+
+/* PRIMARY BUTTON */
+.next-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: var(--radius-sm);
+  padding: 18px 40px; font-size: 18px; font-weight: 900;
+  color: #fff; cursor: pointer; font-family: var(--font-main);
+  transition: all 0.2s; width: 100%; max-width: 320px;
+  box-shadow: 0 4px 24px rgba(167,139,250,0.4);
+}
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(167,139,250,0.5); }
+.next-btn:active { transform: scale(0.98); }
+.next-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.skip-btn {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: var(--font-main); padding: 8px;
+  transition: color 0.2s;
+}
+.skip-btn:hover { color: var(--text); }
+
+/* COMPLETION */
+.completion-stars { font-size: 48px; animation: starSpin 1s ease; }
+@keyframes starSpin { from{transform:rotate(-20deg) scale(0)} to{transform:rotate(0deg) scale(1)} }
+
+/* TOAST + NAV */
+.sos-back-btn { position: fixed; bottom: 84px; left: 20px; z-index: 100; background: rgba(255,255,255,0.1); border: none; border-radius: 20px; padding: 10px 18px; color: var(--text); font-size: 14px; font-weight: 800; cursor: pointer; font-family: var(--font-main); backdrop-filter: blur(8px); transition: all 0.2s; }
+.sos-back-btn:hover { background: rgba(255,255,255,0.2); }
+#toastContainer { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; width: 90%; max-width: 400px; pointer-events: none; }
+@keyframes toastIn  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(10px)} }
+@keyframes confettiFall { to{transform:translateY(110vh) rotate(720deg);opacity:0} }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="stars-bg" id="starsBg"></div>
+
+<button class="back-btn-fixed" id="backBtn">← Back</button>
+
+<div id="app">
+<main class="page">
+
+  <!-- Stage indicator dots -->
+  <div class="stage-dots" id="stageDots"></div>
+
+  <!-- STAGE 0: Entry / How big is this feeling? -->
+  <div class="stage active" id="stage0">
+    <div class="stage-mascot bounce" id="mascot0">🌈</div>
+    <div class="stage-heading">How big<br>is this feeling?</div>
+    <div class="stage-sub">No wrong answers. Just tell me how you feel right now.</div>
+    <div class="feeling-scale" id="feelingScale"></div>
+    <button class="next-btn" id="nextFrom0" disabled>Let's work through it →</button>
+  </div>
+
+  <!-- STAGE 1: Find your safe thing -->
+  <div class="stage" id="stage1">
+    <div class="stage-mascot bounce" id="mascot1">🧸</div>
+    <div class="stage-heading">Find your<br>safe thing</div>
+    <div class="stage-sub">Get something that helps you feel better. What do you need right now?</div>
+    <div class="safe-things-grid" id="safeThingsGrid"></div>
+    <button class="next-btn" id="nextFrom1">I have it →</button>
+    <button class="skip-btn" id="skipFrom1">Skip this step</button>
+  </div>
+
+  <!-- STAGE 2: Breathe -->
+  <div class="stage" id="stage2">
+    <div class="stage-mascot" id="mascot2">🫁</div>
+    <div class="stage-heading">Breathe with me</div>
+    <div class="stage-sub">Let's slow things down together.</div>
+    <div class="breath-ring-wrap">
+      <div class="breath-ring" id="breathRing">
+        <div class="breath-instruction">
+          <span class="breath-count" id="breathCount">4</span>
+          <span class="breath-phase" id="breathPhase">Breathe in...</span>
+        </div>
+      </div>
+    </div>
+    <button class="breath-ctrl-btn" id="breathBtn">Start Breathing 🫁</button>
+    <button class="next-btn" id="nextFrom2">I feel a bit better →</button>
+    <button class="skip-btn" id="skipFrom2">Skip breathing</button>
+  </div>
+
+  <!-- STAGE 3: Name the feeling -->
+  <div class="stage" id="stage3">
+    <div class="stage-mascot bounce" id="mascot3">💭</div>
+    <div class="stage-heading">Name the feeling</div>
+    <div class="stage-sub">What does this feeling feel like? Pick as many as you want.</div>
+    <div class="feeling-words-grid" id="feelingWordsGrid"></div>
+    <button class="next-btn" id="nextFrom3">That's it →</button>
+  </div>
+
+  <!-- STAGE 4: What happened? -->
+  <div class="stage" id="stage4">
+    <div class="stage-mascot bounce" id="mascot4">🗣️</div>
+    <div class="stage-heading">What happened?</div>
+    <div class="stage-sub">You don't have to share everything. Just what feels okay to write.</div>
+    <div class="what-happened-prompts">
+      <div>
+        <div class="prompt-label">What happened? (or skip)</div>
+        <textarea class="prompt-input" id="whatHappened" placeholder="Something happened..."></textarea>
+      </div>
+    </div>
+    <label class="bully-check-row">
+      <input type="checkbox" id="bullyCheck">
+      <span class="bully-check-label">😔 Someone was mean to me or hurt my feelings</span>
+    </label>
+    <button class="need-help-btn" id="needHelpBtn">🆘 I need to talk to someone right now</button>
+    <button class="next-btn" id="nextFrom4">Next →</button>
+  </div>
+
+  <!-- STAGE 5: Coping tools -->
+  <div class="stage" id="stage5">
+    <div class="stage-mascot bounce" id="mascot5">🧩</div>
+    <div class="stage-heading">What might help?</div>
+    <div class="stage-sub">Try one of these. Tap it when you do it!</div>
+    <div class="coping-tools-grid" id="copingToolsGrid"></div>
+    <a href="firefly.html" style="display:block;width:100%;max-width:320px;text-decoration:none;">
+      <button class="next-btn" style="background:linear-gradient(135deg,#1a3a20,#2d6a35);border:2px solid rgba(100,220,100,0.3);font-size:16px;" type="button">
+        🌿 Catch fireflies to calm down
+      </button>
+    </a>
+    <button class="next-btn" id="nextFrom5">I feel better →</button>
+    <button class="skip-btn" id="skipFrom5">I'm okay, move on</button>
+  </div>
+
+  <!-- STAGE 6: I did it! -->
+  <div class="stage" id="stage6">
+    <div class="stage-mascot celebrate" id="mascot6">🌈</div>
+    <div class="completion-stars">⭐✨🌟</div>
+    <div class="stage-heading">You did it!</div>
+    <div class="stage-sub">Big feelings are really hard. You worked through it.<br>That is incredibly brave.</div>
+    <div style="background:rgba(74,222,128,0.1);border:2px solid rgba(74,222,128,0.3);border-radius:var(--radius);padding:16px;width:100%;">
+      <div style="font-size:15px;font-weight:800;color:var(--success);margin-bottom:4px;">+5 ⭐ earned</div>
+      <div style="font-size:13px;color:var(--text-muted);font-weight:600;">Added to your Win Jar 🏆</div>
+    </div>
+    <button class="next-btn" id="finishBtn">Back to Home 🏠</button>
+  </div>
+
+</main>
+</div>
+
+<button class="sos-back-btn" id="restartBtn">↩ Start over</button>
+<div id="toastContainer"></div>
+
+<script>
+
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+
+/* ============================================================
+   SCHOOL DATA LAYER
+============================================================ */
+const School = {
+  SUBJECTS: [
+    { id:'math',    label:'Math',          emoji:'➕', color:'#60a5fa' },
+    { id:'reading', label:'Reading',       emoji:'📖', color:'#a78bfa' },
+    { id:'writing', label:'Writing',       emoji:'✏️',  color:'#f472b6' },
+    { id:'science', label:'Science',       emoji:'🔬', color:'#34d399' },
+    { id:'social',  label:'Social Studies',emoji:'🌎', color:'#fb923c' },
+    { id:'art',     label:'Art',           emoji:'🎨', color:'#e879f9' },
+    { id:'music',   label:'Music',         emoji:'🎵', color:'#fbbf24' },
+    { id:'pe',      label:'PE',            emoji:'🏃', color:'#4ade80' },
+    { id:'other',   label:'Other',         emoji:'📋', color:'#94a3b8' },
+  ],
+
+  getHomework(pid)  { return Store.getProfile(pid, 'homework', []); },
+  getTests(pid)     { return Store.getProfile(pid, 'tests', []); },
+  getProjects(pid)  { return Store.getProfile(pid, 'projects', []); },
+
+  saveHomework(pid, hw) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === hw.id);
+    const item = { ...hw, id: hw.id || `hw-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'homework', all);
+    return item;
+  },
+
+  saveTest(pid, test) {
+    const all = this.getTests(pid);
+    const idx = all.findIndex(x => x.id === test.id);
+    const item = { ...test, id: test.id || `test-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'tests', all);
+    return item;
+  },
+
+  saveProject(pid, proj) {
+    const all = this.getProjects(pid);
+    const idx = all.findIndex(x => x.id === proj.id);
+    const item = { ...proj, id: proj.id || `proj-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'projects', all);
+    return item;
+  },
+
+  deleteHomework(pid, id) {
+    Store.setProfile(pid, 'homework', this.getHomework(pid).filter(x => x.id !== id));
+  },
+  deleteTest(pid, id) {
+    Store.setProfile(pid, 'tests', this.getTests(pid).filter(x => x.id !== id));
+  },
+  deleteProject(pid, id) {
+    Store.setProfile(pid, 'projects', this.getProjects(pid).filter(x => x.id !== id));
+  },
+
+  markHomeworkDone(pid, id) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      all[idx].done = true;
+      all[idx].doneAt = new Date().toISOString();
+      Store.setProfile(pid, 'homework', all);
+      Points.add(pid, 5, `Homework done: ${all[idx].title}`, 'school');
+      WinJar.addWin(pid, `Finished homework: ${all[idx].title} 📚`, 'school');
+    }
+  },
+
+  getDueToday(pid) {
+    const today = new Date().toDateString();
+    return [
+      ...this.getHomework(pid).filter(x => !x.done && x.dueDate && new Date(x.dueDate).toDateString() === today),
+      ...this.getTests(pid).filter(x => !x.done && x.date && new Date(x.date).toDateString() === today),
+    ];
+  },
+
+  getUpcoming(pid, days = 7) {
+    const cutoff = new Date(Date.now() + days * 86400000);
+    const today  = new Date();
+    const filter = (items, dateKey) => items.filter(x =>
+      !x.done && x[dateKey] && new Date(x[dateKey]) >= today && new Date(x[dateKey]) <= cutoff
+    );
+    return {
+      homework: filter(this.getHomework(pid), 'dueDate'),
+      tests:    filter(this.getTests(pid),    'date'),
+      projects: filter(this.getProjects(pid), 'dueDate'),
+    };
+  },
+
+  subjectById(id) { return this.SUBJECTS.find(s => s.id === id) || this.SUBJECTS[this.SUBJECTS.length - 1]; },
+};
+
+/* ============================================================
+   REWARD STORE DATA LAYER
+============================================================ */
+const RewardStore = {
+  getRewards()     { return Store.get('reward-store', []); },
+  getRedemptions(pid) { return Store.getProfile(pid, 'redemptions', []); },
+
+  saveReward(reward) {
+    const all = this.getRewards();
+    const idx = all.findIndex(r => r.id === reward.id);
+    const item = { ...reward, id: reward.id || `reward-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.push(item);
+    Store.set('reward-store', all);
+    return item;
+  },
+
+  deleteReward(id) {
+    Store.set('reward-store', this.getRewards().filter(r => r.id !== id));
+  },
+
+  requestRedemption(pid, rewardId) {
+    const reward  = this.getRewards().find(r => r.id === rewardId);
+    if (!reward) return false;
+    const balance = Points.getBalance(pid);
+    if (balance < reward.cost) return false;
+
+    const redemption = {
+      id:       `redeem-${Date.now()}`,
+      profileId: pid,
+      rewardId,
+      rewardName: reward.name,
+      cost:     reward.cost,
+      status:   'pending',
+      requestedAt: new Date().toISOString(),
+    };
+
+    // Hold points (deduct immediately, refund if denied)
+    Points.spend(pid, reward.cost, `Reward request: ${reward.name}`);
+
+    // Add to pending
+    const all = Store.get('reward-redemptions', []);
+    all.unshift(redemption);
+    Store.set('reward-redemptions', all.slice(0, 200));
+
+    // Alert parents
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({
+      id: Date.now(), profileId: pid,
+      type: 'reward-request',
+      data: redemption,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    Store.set('parent-alerts', alerts.slice(0, 200));
+
+    return redemption;
+  },
+
+  approveRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      all[idx].status = 'approved';
+      all[idx].approvedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+    }
+  },
+
+  denyRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      const r = all[idx];
+      r.status = 'denied';
+      r.deniedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+      // Refund points
+      Points.add(r.profileId, r.cost, `Refund: ${r.rewardName}`, 'refund');
+    }
+  },
+
+  getPending()  { return Store.get('reward-redemptions', []).filter(r => r.status === 'pending'); },
+  getForProfile(pid) { return Store.get('reward-redemptions', []).filter(r => r.profileId === pid); },
+
+  seedDefaults() {
+    if (this.getRewards().length === 0) {
+      const defaults = [
+        { id:'r1', name:'30 min extra screen time', emoji:'📱', cost:20,  category:'screen'   },
+        { id:'r2', name:'Choose dinner tonight',     emoji:'🍽️',  cost:30,  category:'food'     },
+        { id:'r3', name:'Stay up 15 min late',       emoji:'🌙', cost:25,  category:'bedtime'  },
+        { id:'r4', name:'Movie night pick',          emoji:'🎬', cost:50,  category:'activity' },
+        { id:'r5', name:'Small treat from store',    emoji:'🍬', cost:40,  category:'treat'    },
+        { id:'r6', name:'Skip one chore (once)',     emoji:'🎉', cost:35,  category:'chores'   },
+        { id:'r7', name:'Friend sleepover',          emoji:'🏕️',  cost:100, category:'social'   },
+        { id:'r8', name:'Game time with a parent',   emoji:'🎮', cost:15,  category:'activity' },
+      ];
+      defaults.forEach(d => this.saveReward(d));
+    }
+  },
+};
+
+/* ============================================================
+   THOUGHT JAR DATA LAYER
+============================================================ */
+const ThoughtJar = {
+  TYPES: [
+    { id:'idea',    emoji:'💡', label:'Idea',    color:'#fbbf24' },
+    { id:'feeling', emoji:'💜', label:'Feeling', color:'#a78bfa' },
+    { id:'worry',   emoji:'😰', label:'Worry',   color:'#f87171' },
+    { id:'win',     emoji:'🏆', label:'Win',     color:'#4ade80' },
+    { id:'question',emoji:'❓', label:'Question',color:'#60a5fa' },
+    { id:'vent',    emoji:'🌋', label:'Vent',    color:'#fb923c' },
+  ],
+
+  getEntries(pid) { return Store.getProfile(pid, 'thoughts', []); },
+
+  add(pid, text, type = 'idea', isUrgent = false) {
+    const entries = this.getEntries(pid);
+    const entry = {
+      id:        `thought-${Date.now()}`,
+      text,
+      type,
+      isUrgent,
+      date:      new Date().toISOString(),
+      routed:    false,
+    };
+    entries.unshift(entry);
+    Store.setProfile(pid, 'thoughts', entries.slice(0, 300));
+
+    if (isUrgent) {
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id: Date.now(), profileId: pid, type: 'urgent-thought', data: entry, date: new Date().toISOString(), read: false });
+      Store.set('parent-alerts', alerts.slice(0, 200));
+    }
+    return entry;
+  },
+
+  delete(pid, id) {
+    Store.setProfile(pid, 'thoughts', this.getEntries(pid).filter(e => e.id !== id));
+  },
+
+  markRouted(pid, id) {
+    const entries = this.getEntries(pid);
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) { entries[idx].routed = true; Store.setProfile(pid, 'thoughts', entries); }
+  },
+};
+
+/* Expose new globals */
+window.School      = School;
+window.RewardStore = RewardStore;
+window.ThoughtJar  = ThoughtJar;
+
+</script>
+<script id="myhq-reset-app">
+/* ============================================================
+   RESET TOOLKIT — KIDS FIREBIRD
+============================================================ */
+
+let profileId    = null;
+let currentStage = 0;
+let sessionData  = {
+  feelingLevel: 0,
+  safeThing:    null,
+  feelingWords: [],
+  whatHappened: '',
+  bullyFlag:    false,
+  needsHelp:    false,
+  copingUsed:   [],
+  completed:    false,
+};
+let breathInterval = null;
+let breathRunning  = false;
+const TOTAL_STAGES = 7;
+
+const FEELING_SCALE = [
+  { level:1, emoji:'😐', label:'A little', color:'#60a5fa', bg:'rgba(96,165,250,0.15)' },
+  { level:2, emoji:'😕', label:'Medium',   color:'#a78bfa', bg:'rgba(167,139,250,0.15)' },
+  { level:3, emoji:'😢', label:'A lot',    color:'#818cf8', bg:'rgba(129,140,248,0.15)' },
+  { level:4, emoji:'😤', label:'Big',      color:'#fb923c', bg:'rgba(251,146,60,0.15)' },
+  { level:5, emoji:'🤯', label:'HUGE',     color:'#f87171', bg:'rgba(248,113,113,0.15)' },
+];
+
+const FEELING_WORDS = [
+  { word:'Angry',      emoji:'😠', color:'#f87171' },
+  { word:'Sad',        emoji:'😢', color:'#818cf8' },
+  { word:'Scared',     emoji:'😨', color:'#fb923c' },
+  { word:'Frustrated', emoji:'😤', color:'#fbbf24' },
+  { word:'Embarrassed',emoji:'😳', color:'#f472b6' },
+  { word:'Lonely',     emoji:'💙', color:'#60a5fa' },
+  { word:'Left out',   emoji:'😞', color:'#94a3b8' },
+  { word:'Confused',   emoji:'😕', color:'#a78bfa' },
+  { word:'Overwhelmed',emoji:'🤯', color:'#e879f9' },
+  { word:'Hurt',       emoji:'💔', color:'#f87171' },
+  { word:'Worried',    emoji:'😬', color:'#fb923c' },
+  { word:'Tired',      emoji:'😴', color:'#818cf8' },
+];
+
+function toast(msg, type = 'info', dur = 3000) {
+  const c = document.getElementById('toastContainer');
+  const colors = { success:'#4ade80', error:'#f87171', star:'#fbbf24', info:'#60a5fa' };
+  const icons  = { success:'✅', error:'❌', star:'⭐', info:'ℹ️' };
+  const t = document.createElement('div');
+  t.style.cssText = `background:var(--card);color:var(--text);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;pointer-events:all;animation:toastIn .3s ease;width:100%;font-family:var(--font-main);`;
+  t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, dur);
+}
+
+function confetti() {
+  const emojis = ['⭐','🌟','✨','🎉','💫','🌈','💜','💛'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*16+14}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }, Math.random() * 1000);
+  }
+}
+
+/* ── STAGE DOTS ── */
+function buildStageDots() {
+  const wrap = document.getElementById('stageDots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < TOTAL_STAGES - 1; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'stage-dot';
+    dot.id = `dot-${i}`;
+    wrap.appendChild(dot);
+  }
+}
+
+function updateDots() {
+  for (let i = 0; i < TOTAL_STAGES - 1; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) continue;
+    dot.className = 'stage-dot' + (i < currentStage ? ' done' : i === currentStage ? ' active' : '');
+  }
+}
+
+/* ── GO TO STAGE ── */
+function goStage(n) {
+  document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+  document.getElementById(`stage${n}`).classList.add('active');
+  currentStage = n;
+  updateDots();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Update mascot from profile
+  const mascot = MYHQ.MASCOTS.find(m => m.id === Profiles.get(profileId).mascot) || MYHQ.MASCOTS[0];
+  [0,1,2,3,4,5,6].forEach(i => {
+    const el = document.getElementById(`mascot${i}`);
+    if (el && i !== 2) el.textContent = mascot.emoji;
+  });
+}
+
+/* ── STAGE 0: FEELING SCALE ── */
+function buildFeelingScale() {
+  const wrap = document.getElementById('feelingScale');
+  FEELING_SCALE.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'feeling-btn';
+    btn.style.setProperty('--feeling-color', f.color);
+    btn.style.setProperty('--feeling-bg', f.bg);
+    btn.innerHTML = `<span class="feeling-emoji">${f.emoji}</span><span class="feeling-label">${f.label}</span>`;
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      sessionData.feelingLevel = f.level;
+      document.getElementById('nextFrom0').disabled = false;
+
+      // Change bg tint based on level
+      document.body.style.background = `linear-gradient(180deg, ${f.bg.replace('0.15','0.08')} 0%, var(--bg) 40%)`;
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+/* ── STAGE 1: SAFE THINGS ── */
+function buildSafeThings() {
+  const grid = document.getElementById('safeThingsGrid');
+  const things = ResetToolkit.getSafeThings(profileId);
+  things.forEach(thing => {
+    const btn = document.createElement('button');
+    btn.className = 'safe-thing-btn';
+    btn.innerHTML = `<span class="safe-thing-emoji">${thing.emoji}</span><span class="safe-thing-label">${thing.label}</span>`;
+    btn.addEventListener('click', () => {
+      grid.querySelectorAll('.safe-thing-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      sessionData.safeThing = thing.id;
+      toast(`Got your ${thing.label}! 🧸`, 'success');
+    });
+    grid.appendChild(btn);
+  });
+}
+
+/* ── STAGE 2: BREATHING ── */
+function startBreathing() {
+  if (breathRunning) { stopBreathing(); return; }
+  breathRunning = true;
+  document.getElementById('breathBtn').textContent = 'Stop 🛑';
+  document.getElementById('breathRing').classList.add('running');
+  document.getElementById('mascot2').classList.add('breathe');
+
+  const phases = [
+    { label:'Breathe in...', count:4, color:'#a78bfa' },
+    { label:'Hold...',       count:4, color:'#fbbf24' },
+    { label:'Breathe out...', count:4, color:'#34d399' },
+    { label:'Hold...',       count:2, color:'#60a5fa' },
+  ];
+  let phaseIdx = 0, countDown = phases[0].count;
+
+  function tick() {
+    const phase = phases[phaseIdx];
+    document.getElementById('breathCount').textContent = countDown;
+    document.getElementById('breathPhase').textContent = phase.label;
+    document.getElementById('breathCount').style.color = phase.color;
+    countDown--;
+    if (countDown < 0) {
+      phaseIdx = (phaseIdx + 1) % phases.length;
+      countDown = phases[phaseIdx].count;
+    }
+  }
+
+  tick();
+  breathInterval = setInterval(tick, 1000);
+}
+
+function stopBreathing() {
+  breathRunning = false;
+  clearInterval(breathInterval);
+  document.getElementById('breathBtn').textContent = 'Start Breathing 🫁';
+  document.getElementById('breathRing').classList.remove('running');
+  document.getElementById('mascot2').classList.remove('breathe');
+  document.getElementById('breathCount').textContent = '4';
+  document.getElementById('breathPhase').textContent = 'Ready?';
+}
+
+/* ── STAGE 3: FEELING WORDS ── */
+function buildFeelingWords() {
+  const grid = document.getElementById('feelingWordsGrid');
+  FEELING_WORDS.forEach(fw => {
+    const btn = document.createElement('button');
+    btn.className = 'feeling-word-btn';
+    btn.style.setProperty('--word-color', fw.color);
+    btn.style.setProperty('--word-bg', fw.color + '22');
+    btn.textContent = `${fw.emoji} ${fw.word}`;
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('selected');
+      const words = sessionData.feelingWords;
+      if (btn.classList.contains('selected')) {
+        if (!words.includes(fw.word)) words.push(fw.word);
+      } else {
+        const idx = words.indexOf(fw.word);
+        if (idx >= 0) words.splice(idx, 1);
+      }
+    });
+    grid.appendChild(btn);
+  });
+}
+
+/* ── STAGE 5: COPING TOOLS ── */
+function buildCopingTools() {
+  const grid  = document.getElementById('copingToolsGrid');
+  const tools = ResetToolkit.getPersonalTools(profileId).filter(t => t.active);
+  grid.innerHTML = '';
+  tools.forEach(tool => {
+    const el = document.createElement('div');
+    el.className = 'coping-tool';
+    el.innerHTML = `<span class="coping-emoji">${tool.emoji}</span><span class="coping-label">${tool.label}</span>`;
+    el.addEventListener('click', () => {
+      el.classList.toggle('used');
+      if (el.classList.contains('used')) {
+        sessionData.copingUsed.push(tool.id);
+        toast(`Good job trying: ${tool.label} 💚`, 'success');
+      }
+    });
+    grid.appendChild(el);
+  });
+}
+
+/* ── COMPLETE ── */
+function completeSession() {
+  stopBreathing();
+  sessionData.whatHappened = document.getElementById('whatHappened')?.value || '';
+  sessionData.bullyFlag    = document.getElementById('bullyCheck')?.checked || false;
+  sessionData.completed    = true;
+
+  ResetToolkit.logEvent(profileId, sessionData);
+
+  confetti();
+  toast('You did it! +5 ⭐', 'star', 5000);
+  goStage(6);
+}
+
+/* ── NEED HELP ── */
+function triggerNeedHelp() {
+  sessionData.needsHelp = true;
+  ResetToolkit._alertParents(profileId, { ...sessionData, needsHelp: true });
+  toast('A parent has been notified! 💜 You\'re not alone.', 'star', 6000);
+}
+
+/* ── STARS BG ── */
+function buildStars() {
+  const bg = document.getElementById('starsBg');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    const sz = Math.random() * 2.5 + 0.5;
+    s.className = 'star-p';
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${Math.random()*4+2}s;--dl:${Math.random()*4}s;--o:${Math.random()*0.5+0.1};`;
+    bg.appendChild(s);
+  }
+}
+
+/* ── INIT ── */
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) {
+    window.location.href = 'index.html'; return;
+  }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  const profile = Profiles.get(profileId);
+  document.title = `Reset Toolkit — ${profile.appName || 'My HQ'}`;
+
+  buildStars();
+  buildStageDots();
+  buildFeelingScale();
+  buildSafeThings();
+  buildFeelingWords();
+  buildCopingTools();
+  updateDots();
+
+  // Set profile mascot
+  const mascot = MYHQ.MASCOTS.find(m => m.id === profile.mascot) || MYHQ.MASCOTS[0];
+  [0,1,3,4,5,6].forEach(i => {
+    const el = document.getElementById(`mascot${i}`);
+    if (el) el.textContent = mascot.emoji;
+  });
+
+  // STAGE NEXT BUTTONS
+  document.getElementById('nextFrom0').addEventListener('click', () => goStage(1));
+  document.getElementById('nextFrom1').addEventListener('click', () => goStage(2));
+  document.getElementById('skipFrom1').addEventListener('click', () => goStage(2));
+  document.getElementById('nextFrom2').addEventListener('click', () => { stopBreathing(); goStage(3); });
+  document.getElementById('skipFrom2').addEventListener('click', () => { stopBreathing(); goStage(3); });
+  document.getElementById('nextFrom3').addEventListener('click', () => goStage(4));
+  document.getElementById('nextFrom4').addEventListener('click', () => goStage(5));
+  document.getElementById('nextFrom5').addEventListener('click', completeSession);
+  document.getElementById('skipFrom5').addEventListener('click', completeSession);
+  document.getElementById('finishBtn').addEventListener('click', () => window.location.href = 'index.html');
+
+  // Breathing
+  document.getElementById('breathBtn').addEventListener('click', startBreathing);
+
+  // Need help / bully
+  document.getElementById('needHelpBtn').addEventListener('click', triggerNeedHelp);
+
+  // Back / restart
+  document.getElementById('backBtn').addEventListener('click', () => {
+    stopBreathing();
+    window.location.href = 'index.html';
+  });
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopBreathing();
+    sessionData = { feelingLevel:0, safeThing:null, feelingWords:[], whatHappened:'', bullyFlag:false, needsHelp:false, copingUsed:[], completed:false };
+    document.body.style.background = '';
+    goStage(0);
+    buildFeelingScale();
+    buildCopingTools();
+    document.getElementById('nextFrom0').disabled = true;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

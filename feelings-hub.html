@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Feelings Hub — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0d1a;--surface:#12122a;--card:#1a1a3e;
+  --accent:#a78bfa;--accent2:#34d399;--text:#f1f5f9;
+  --text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;
+  --success:#4ade80;--radius:20px;--radius-sm:12px;
+  --font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;
+}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+/* BG */
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(167,139,250,0.15) 0%,transparent 70%),var(--bg);
+  pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+
+/* TOPBAR */
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:16px;}
+
+/* HERO CHECK-IN CARD */
+.hero-card{
+  background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(52,211,153,0.1));
+  border:2px solid rgba(167,139,250,0.25);
+  border-radius:var(--radius);padding:20px;
+  display:flex;align-items:center;gap:16px;
+  cursor:pointer;transition:all .2s;text-decoration:none;color:var(--text);
+}
+.hero-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.hero-mascot{font-size:52px;flex-shrink:0;animation:floatMascot 3s ease-in-out infinite;}
+@keyframes floatMascot{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hero-info{flex:1;}
+.hero-title{font-family:var(--font-display);font-size:22px;color:var(--accent);margin-bottom:4px;}
+.hero-sub{font-size:13px;font-weight:700;color:var(--text-muted);line-height:1.4;}
+.hero-slots{display:flex;gap:6px;margin-top:10px;}
+.slot-dot{
+  flex:1;height:6px;border-radius:20px;
+  background:rgba(255,255,255,0.1);
+  transition:all .3s;
+}
+.slot-dot.done{background:var(--accent2);}
+.slot-dot.current{background:var(--accent);animation:slotPulse 1.5s ease infinite;}
+@keyframes slotPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.hero-arrow{font-size:20px;color:var(--accent);flex-shrink:0;}
+
+/* SECTION TITLE */
+.section-title{font-family:var(--font-display);font-size:19px;color:var(--text);}
+
+/* HUB GRID */
+.hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.hub-tile{
+  background:var(--card);border:2px solid rgba(255,255,255,0.06);
+  border-radius:var(--radius);padding:20px 16px;
+  text-decoration:none;color:var(--text);
+  display:flex;flex-direction:column;gap:8px;
+  transition:all .2s;cursor:pointer;position:relative;overflow:hidden;
+}
+.hub-tile::before{content:'';position:absolute;inset:0;background:var(--tile-glow,transparent);opacity:0;transition:opacity .3s;}
+.hub-tile:hover{border-color:var(--tile-color,var(--accent));transform:translateY(-2px);}
+.hub-tile:hover::before{opacity:1;}
+.tile-emoji{font-size:32px;}
+.tile-label{font-size:14px;font-weight:900;color:var(--tile-color,var(--text));}
+.tile-sub{font-size:11px;font-weight:600;color:var(--text-muted);line-height:1.3;}
+.tile-badge{position:absolute;top:10px;right:10px;background:var(--tile-color,var(--accent));color:#fff;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:900;}
+
+/* WIDE TILE */
+.hub-tile.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;}
+.hub-tile.wide .tile-info{flex:1;}
+
+/* 10yo ONLY SECTION */
+.private-section{
+  background:rgba(167,139,250,0.06);
+  border:1px solid rgba(167,139,250,0.15);
+  border-radius:var(--radius);padding:16px;
+}
+.private-label{
+  font-size:11px;font-weight:900;color:rgba(167,139,250,0.6);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px;
+}
+.private-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.private-tile{
+  background:var(--card);border:1px solid rgba(167,139,250,0.15);
+  border-radius:var(--radius-sm);padding:16px;
+  text-decoration:none;color:var(--text);
+  display:flex;flex-direction:column;gap:6px;transition:all .2s;
+}
+.private-tile:hover{border-color:var(--accent);}
+.private-tile .tile-emoji{font-size:26px;}
+.private-tile .tile-label{font-size:13px;font-weight:800;color:var(--accent);}
+.private-tile .tile-sub{font-size:11px;font-weight:600;color:var(--text-muted);}
+
+/* MOOD STRIP (today's check-in summary) */
+.mood-strip{
+  background:var(--card);border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  display:flex;gap:10px;align-items:center;
+}
+.mood-slot{flex:1;text-align:center;}
+.mood-slot-label{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;}
+.mood-slot-emoji{font-size:22px;display:block;}
+.mood-slot-text{font-size:11px;font-weight:700;color:var(--text-muted);margin-top:2px;}
+.mood-slot.done .mood-slot-text{color:var(--accent2);}
+.mood-divider{width:1px;background:rgba(255,255,255,0.06);align-self:stretch;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,0.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}
+#toastContainer{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;width:90%;max-width:400px;pointer-events:none;}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title" id="pageTitle">💜 Feelings Hub</div>
+</div>
+
+<main class="page">
+
+  <!-- Today's mood strip -->
+  <div class="mood-strip" id="moodStrip">
+    <div class="mood-slot" id="slotMorning">
+      <div class="mood-slot-label">Morning</div>
+      <span class="mood-slot-emoji">🌅</span>
+      <div class="mood-slot-text">Not yet</div>
+    </div>
+    <div class="mood-divider"></div>
+    <div class="mood-slot" id="slotAfternoon">
+      <div class="mood-slot-label">Afternoon</div>
+      <span class="mood-slot-emoji">☀️</span>
+      <div class="mood-slot-text">Not yet</div>
+    </div>
+    <div class="mood-divider"></div>
+    <div class="mood-slot" id="slotEvening">
+      <div class="mood-slot-label">Evening</div>
+      <span class="mood-slot-emoji">🌙</span>
+      <div class="mood-slot-text">Not yet</div>
+    </div>
+  </div>
+
+  <!-- Hero check-in card -->
+  <a class="hero-card" href="checkin.html" id="heroCheckin">
+    <div class="hero-mascot" id="heroMascot">⭐</div>
+    <div class="hero-info">
+      <div class="hero-title" id="heroTitle">How are you?</div>
+      <div class="hero-sub" id="heroSub">Tap to do your check-in</div>
+      <div class="hero-slots">
+        <div class="slot-dot" id="dotMorning"></div>
+        <div class="slot-dot" id="dotAfternoon"></div>
+        <div class="slot-dot" id="dotEvening"></div>
+      </div>
+    </div>
+    <div class="hero-arrow">→</div>
+  </a>
+
+  <!-- Main hub grid -->
+  <div class="section-title">My Feelings Stuff</div>
+  <div class="hub-grid">
+
+    <a class="hub-tile" href="mood-map.html"
+       style="--tile-color:#a78bfa;--tile-glow:radial-gradient(circle,rgba(167,139,250,0.1),transparent)">
+      <span class="tile-emoji">🗺️</span>
+      <div class="tile-label">Mood Map</div>
+      <div class="tile-sub">See your week in colors</div>
+    </a>
+
+    <a class="hub-tile" href="before-after.html"
+       style="--tile-color:#34d399;--tile-glow:radial-gradient(circle,rgba(52,211,153,0.1),transparent)">
+      <span class="tile-emoji">✨</span>
+      <div class="tile-label">Before & After</div>
+      <div class="tile-sub">How activities change your mood</div>
+    </a>
+
+    <a class="hub-tile wide" href="calm-corner.html"
+       style="--tile-color:#4ade80;--tile-glow:radial-gradient(circle,rgba(74,222,128,0.1),transparent)">
+      <span class="tile-emoji" style="font-size:40px;">🌿</span>
+      <div class="tile-info">
+        <div class="tile-label">Calm Corner</div>
+        <div class="tile-sub">Firefly · Breathing · Fidget Timer · Games</div>
+      </div>
+      <span style="font-size:20px;color:var(--tile-color)">→</span>
+    </a>
+
+    <a class="hub-tile" href="wins-replay.html"
+       style="--tile-color:#fbbf24;--tile-glow:radial-gradient(circle,rgba(251,191,36,0.1),transparent)">
+      <span class="tile-emoji">🌟</span>
+      <div class="tile-label">Wins Replay</div>
+      <div class="tile-sub">Remember what you've done</div>
+    </a>
+
+    <a class="hub-tile" href="calm-toolkit.html"
+       style="--tile-color:#60a5fa;--tile-glow:radial-gradient(circle,rgba(96,165,250,0.1),transparent)">
+      <span class="tile-emoji">🧰</span>
+      <div class="tile-label">My Toolkit</div>
+      <div class="tile-sub">Things that help me</div>
+    </a>
+
+  </div>
+
+  <!-- 10yo only private tools (hidden for younger) -->
+  <div class="private-section" id="privateSection" style="display:none">
+    <div class="private-label">
+      <span>🔐</span> Just for you — always private
+    </div>
+    <div class="private-grid">
+      <a class="private-tile" href="truth-checker.html">
+        <span class="tile-emoji">📝</span>
+        <div class="tile-label">Truth Checker</div>
+        <div class="tile-sub">When thoughts feel too big</div>
+      </a>
+      <a class="private-tile" href="redo-button.html">
+        <span class="tile-emoji">↩️</span>
+        <div class="tile-label">Redo Button</div>
+        <div class="tile-sub">Work through a hard moment</div>
+      </a>
+    </div>
+  </div>
+
+</main>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <button class="nav-item active"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></button>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+<div id="toastContainer"></div>
+
+</div>
+<script src="myhq-core.js"></script>
+<script id="myhq-hub-app">
+/* ============================================================
+   FEELINGS HUB
+============================================================ */
+let profileId = null;
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) {
+    window.location.href = 'index.html'; return;
+  }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  const profile = Profiles.get(profileId);
+  const mascot  = MYHQ.MASCOTS.find(m => m.id === profile.mascot) || MYHQ.MASCOTS[0];
+  document.getElementById('pageTitle').textContent = `${mascot.emoji} Feelings Hub`;
+  document.getElementById('heroMascot').textContent = mascot.emoji;
+
+  // Load today's check-in state
+  const today = CheckIn.getToday(profileId);
+  const slots  = ['morning','afternoon','evening'];
+  const slotEmojis = { morning:'🌅', afternoon:'☀️', evening:'🌙' };
+  let doneCount = 0;
+
+  slots.forEach(slot => {
+    const data    = today[slot];
+    const dotEl   = document.getElementById(`dot${slot.charAt(0).toUpperCase()+slot.slice(1)}`);
+    const stripEl = document.getElementById(`slot${slot.charAt(0).toUpperCase()+slot.slice(1)}`);
+
+    if (data?.mood) {
+      doneCount++;
+      const mood = MYHQ.MOODS.find(m => m.id === data.mood);
+      dotEl.classList.add('done');
+      stripEl.classList.add('done');
+      stripEl.querySelector('.mood-slot-emoji').textContent = mood?.emoji || slotEmojis[slot];
+      stripEl.querySelector('.mood-slot-text').textContent  = mood?.label || 'Done ✓';
+    } else if (slot === CheckIn.getCurrentSlot()) {
+      dotEl.classList.add('current');
+    }
+  });
+
+  // Update hero card based on check-in state
+  const heroTitle = document.getElementById('heroTitle');
+  const heroSub   = document.getElementById('heroSub');
+  if (doneCount === 3) {
+    heroTitle.textContent = 'All done today! 🌟';
+    heroSub.textContent   = 'You did all 3 check-ins. Amazing!';
+  } else if (doneCount > 0) {
+    const current = CheckIn.getCurrentSlot();
+    heroTitle.textContent = `${current.charAt(0).toUpperCase()+current.slice(1)} check-in`;
+    heroSub.textContent   = `${3 - doneCount} slot${3-doneCount>1?'s':''} left today`;
+  } else {
+    heroTitle.textContent = 'How are you feeling?';
+    heroSub.textContent   = 'Tap to start your check-in';
+  }
+
+  // Show private section for 10yo (elder)
+  if (profileId === 'elder') {
+    document.getElementById('privateSection').style.display = '';
+  }
+
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'index.html');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Catch the Firefly — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sky-top:    #020818;
+  --sky-mid:    #0a1628;
+  --sky-bottom: #0f1f3d;
+  --grass:      #0d2b0d;
+  --grass-mid:  #1a4a1a;
+  --firefly:    #c8ff80;
+  --glow:       rgba(180,255,80,0.35);
+  --jar-glass:  rgba(180,220,255,0.12);
+  --jar-border: rgba(180,220,255,0.35);
+  --font-main:  'Nunito', sans-serif;
+  --font-display: 'Fredoka One', cursive;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: var(--font-main);
+  background: var(--sky-top);
+  color: #e8f0ff;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* ============================================================
+   SKY CANVAS
+============================================================ */
+#gameCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* ============================================================
+   GRASS SILHOUETTE
+============================================================ */
+.grass-layer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.grass-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   FOG LAYER
+============================================================ */
+.fog-layer {
+  position: fixed;
+  bottom: 50px; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to top, rgba(20,40,80,0.3), transparent);
+  pointer-events: none;
+  z-index: 3;
+  animation: fogDrift 12s ease-in-out infinite alternate;
+}
+
+@keyframes fogDrift {
+  0%   { transform: translateX(-10px); opacity: 0.4; }
+  100% { transform: translateX(10px);  opacity: 0.6; }
+}
+
+/* ============================================================
+   JAR
+============================================================ */
+.jar-wrap {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.jar-svg-wrap {
+  position: relative;
+  width: 80px;
+  height: 96px;
+}
+
+.jar-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 12px rgba(180,220,255,0.2));
+  transition: filter 1s ease;
+}
+
+.jar-svg.glowing {
+  filter: drop-shadow(0 0 20px rgba(200,255,120,0.5))
+          drop-shadow(0 0 40px rgba(200,255,120,0.25));
+}
+
+.jar-svg.celebration {
+  filter: drop-shadow(0 0 30px rgba(255,215,0,0.8))
+          drop-shadow(0 0 60px rgba(255,215,0,0.4));
+  animation: jarCelebrate 0.5s ease infinite alternate;
+}
+
+@keyframes jarCelebrate {
+  from { transform: scale(1) rotate(-2deg); }
+  to   { transform: scale(1.08) rotate(2deg); }
+}
+
+/* Fireflies inside jar - light dots */
+.jar-lights {
+  position: absolute;
+  inset: 14px 10px 18px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  gap: 3px;
+  padding: 4px;
+}
+
+.jar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--firefly);
+  box-shadow: 0 0 4px var(--firefly), 0 0 8px rgba(200,255,120,0.5);
+  animation: jarDotPulse 2s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: 0.85;
+}
+
+@keyframes jarDotPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+.jar-count {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: rgba(200,220,255,0.8);
+  text-shadow: 0 0 8px rgba(180,220,255,0.4);
+  transition: all 0.3s;
+}
+
+.jar-count.pop {
+  animation: countPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes countPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.4); color: var(--firefly); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================================
+   FIREFLY DOM ELEMENT
+============================================================ */
+.firefly {
+  position: fixed;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 8;
+  transform: translate(-50%, -50%);
+  transition: none;
+}
+
+.firefly-body {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px; height: 6px;
+  background: #b8e860;
+  border-radius: 50%;
+  box-shadow:
+    0 0 6px  2px rgba(180,255,80,0.9),
+    0 0 12px 4px rgba(160,240,60,0.6),
+    0 0 24px 8px rgba(140,220,40,0.3);
+  animation: fireflyGlow 4s ease-in-out infinite;
+}
+
+@keyframes fireflyGlow {
+  0%, 100% {
+    opacity: 0.55;
+    box-shadow:
+      0 0 4px  2px rgba(180,255,80,0.5),
+      0 0 8px  3px rgba(160,240,60,0.3),
+      0 0 16px 5px rgba(140,220,40,0.15);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 8px  3px rgba(200,255,100,1),
+      0 0 18px 6px rgba(180,255,80,0.7),
+      0 0 36px 12px rgba(160,240,60,0.4),
+      0 0 54px 18px rgba(140,220,40,0.2);
+  }
+}
+
+/* Wings */
+.firefly-wing-l,
+.firefly-wing-r {
+  position: absolute;
+  top: 30%; width: 10px; height: 6px;
+  background: rgba(200,240,255,0.25);
+  border-radius: 50%;
+  border: 1px solid rgba(200,240,255,0.3);
+  animation: wingFlap 0.18s ease-in-out infinite alternate;
+}
+
+.firefly-wing-l { right: 52%; transform-origin: right center; }
+.firefly-wing-r { left:  52%; transform-origin: left center; }
+
+@keyframes wingFlap {
+  from { transform: scaleY(0.6) rotate(-8deg); opacity: 0.4; }
+  to   { transform: scaleY(1)   rotate( 8deg); opacity: 0.7; }
+}
+
+/* ============================================================
+   TRAIL PARTICLES
+============================================================ */
+.trail-dot {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 7;
+  transform: translate(-50%, -50%);
+  background: rgba(180,255,80,0.5);
+  animation: trailFade var(--dur, 0.8s) ease-out forwards;
+}
+
+@keyframes trailFade {
+  from { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 0;   transform: translate(-50%, -50%) scale(0.1); }
+}
+
+/* ============================================================
+   CATCH BURST
+============================================================ */
+.catch-burst {
+  position: fixed;
+  z-index: 15;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.burst-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(200,255,120,0.8);
+  animation: burstRing 0.6s ease-out forwards;
+}
+
+@keyframes burstRing {
+  0%   { width: 10px; height: 10px; opacity: 0.9; }
+  100% { width: 80px; height: 80px; opacity: 0; }
+}
+
+.burst-spark {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--firefly);
+  transform-origin: 0 0;
+  animation: burstSpark 0.5s ease-out forwards;
+}
+
+@keyframes burstSpark {
+  0%   { opacity: 1; transform: translate(-50%,-50%) rotate(var(--angle)) translateX(0); }
+  100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--angle)) translateX(36px); }
+}
+
+/* ============================================================
+   SPIRAL-TO-JAR ANIMATION
+============================================================ */
+.catch-spiral {
+  position: fixed;
+  width: 12px; height: 8px;
+  border-radius: 50%;
+  background: #b8e860;
+  box-shadow: 0 0 8px 3px rgba(180,255,80,0.8), 0 0 16px 6px rgba(180,255,80,0.4);
+  pointer-events: none;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+}
+
+/* ============================================================
+   +1 FLOAT TEXT
+============================================================ */
+.plus-one {
+  position: fixed;
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--firefly);
+  text-shadow: 0 0 10px rgba(180,255,80,0.8);
+  pointer-events: none;
+  z-index: 25;
+  transform: translate(-50%, -50%);
+  animation: plusFloat 1.2s ease-out forwards;
+  white-space: nowrap;
+}
+
+@keyframes plusFloat {
+  0%   { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -110%); }
+}
+
+/* ============================================================
+   HIT RIPPLE (tap anywhere - miss feedback)
+============================================================ */
+.tap-ripple {
+  position: fixed;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  pointer-events: none;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  animation: tapRipple 0.5s ease-out forwards;
+}
+
+@keyframes tapRipple {
+  0%   { width: 10px; height: 10px; opacity: 0.5; }
+  100% { width: 60px; height: 60px; opacity: 0; }
+}
+
+/* ============================================================
+   BREATHING GUIDE
+============================================================ */
+.breath-guide {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(200,220,255,0.2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  animation: breathText 4s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes breathText {
+  0%,45%  { opacity: 0; }
+  20%     { opacity: 0.25; content: 'breathe in'; }
+  50%,95% { opacity: 0; }
+  70%     { opacity: 0.2; }
+}
+
+/* ============================================================
+   UI OVERLAY (back btn, milestone msg)
+============================================================ */
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.back-btn {
+  position: absolute;
+  top: 16px; left: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 10px 16px;
+  color: rgba(200,220,255,0.7);
+  font-size: 14px; font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font-main);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  pointer-events: all;
+}
+
+.back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+.milestone-msg {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5vw, 26px);
+  color: rgba(200,255,160,0.9);
+  text-shadow: 0 0 20px rgba(160,255,80,0.5);
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.milestone-msg.show { opacity: 1; }
+
+/* ============================================================
+   CELEBRATION SCREEN
+============================================================ */
+.celebration-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2,8,24,0.92);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 24px;
+  text-align: center;
+  animation: celebIn 0.6s ease;
+}
+
+.celebration-screen.show { display: flex; }
+
+@keyframes celebIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.celeb-jar  { font-size: 80px; animation: jarFloat 2s ease-in-out infinite; }
+@keyframes jarFloat {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-12px); }
+}
+
+.celeb-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 8vw, 42px);
+  color: #c8ff80;
+  text-shadow: 0 0 30px rgba(200,255,120,0.6);
+}
+
+.celeb-sub {
+  font-size: 16px; font-weight: 700;
+  color: rgba(200,220,255,0.75);
+  line-height: 1.5; max-width: 300px;
+}
+
+.celeb-stars {
+  font-size: 32px; letter-spacing: 8px;
+  animation: starsSpin 1s ease;
+}
+
+@keyframes starsSpin {
+  from { transform: scale(0) rotate(-20deg); }
+  to   { transform: scale(1) rotate(0deg); }
+}
+
+.btn-reset {
+  background: linear-gradient(135deg, #6ee7b7, #34d399);
+  border: none; border-radius: 20px;
+  padding: 18px 48px; font-size: 20px; font-weight: 900;
+  color: #052e16; cursor: pointer;
+  font-family: var(--font-display);
+  box-shadow: 0 4px 24px rgba(52,211,153,0.4);
+  transition: all 0.2s;
+}
+
+.btn-reset:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 32px rgba(52,211,153,0.5);
+}
+
+.btn-back {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 16px; padding: 13px 32px;
+  font-size: 15px; font-weight: 800;
+  color: rgba(200,220,255,0.75);
+  cursor: pointer; font-family: var(--font-main);
+  transition: all 0.2s;
+}
+
+.btn-back:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+/* ============================================================
+   RESTING INDICATOR
+============================================================ */
+.resting-dots {
+  position: fixed;
+  z-index: 9;
+  pointer-events: none;
+  transform: translate(-50%, -180%);
+  display: none;
+  gap: 4px;
+}
+
+.resting-dots.show { display: flex; }
+
+.rest-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(200,255,120,0.5);
+  animation: restDot 0.8s ease-in-out infinite;
+}
+
+.rest-dot:nth-child(2) { animation-delay: 0.2s; }
+.rest-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes restDot {
+  0%,100% { transform: translateY(0); opacity: 0.4; }
+  50%     { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ============================================================
+   CATCH COUNTER (top right)
+============================================================ */
+.catch-counter {
+  position: fixed;
+  top: 16px; right: 16px;
+  z-index: 30;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px; font-weight: 800;
+  color: rgba(200,255,120,0.8);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .firefly-body   { animation-duration: 8s !important; }
+  .firefly-wing-l,
+  .firefly-wing-r { animation-duration: 0.5s !important; }
+  .fogDrift       { animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Sky canvas (stars drawn here) -->
+<canvas id="gameCanvas"></canvas>
+
+<!-- Grass silhouette -->
+<div class="grass-layer">
+  <svg class="grass-svg" viewBox="0 0 800 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1a4a1a"/>
+        <stop offset="100%" stop-color="#0a1e0a"/>
+      </linearGradient>
+    </defs>
+    <!-- Base ground -->
+    <rect x="0" y="40" width="800" height="40" fill="url(#grassGrad)"/>
+    <!-- Grass blades (SVG path) -->
+    <path d="M0,40 Q5,10 10,40 Q15,5 20,40 Q25,15 30,40 Q35,8 40,40 Q45,18 50,40 Q55,6 60,40 Q65,20 70,40 Q75,10 80,40 Q85,16 90,40 Q95,4 100,40 Q105,22 110,40 Q115,12 120,40 Q125,7 130,40 Q135,19 140,40 Q145,9 150,40 Q155,14 160,40 Q165,5 170,40 Q175,21 180,40 Q185,11 190,40 Q195,17 200,40 Q205,6 210,40 Q215,20 220,40 Q225,8 230,40 Q235,15 240,40 Q245,10 250,40 Q255,18 260,40 Q265,7 270,40 Q275,13 280,40 Q285,22 290,40 Q295,9 300,40 Q305,16 310,40 Q315,4 320,40 Q325,19 330,40 Q335,11 340,40 Q345,6 350,40 Q355,20 360,40 Q365,12 370,40 Q375,8 380,40 Q385,17 390,40 Q395,5 400,40 Q405,21 410,40 Q415,10 420,40 Q425,14 430,40 Q435,7 440,40 Q445,18 450,40 Q455,9 460,40 Q465,22 470,40 Q475,6 480,40 Q485,15 490,40 Q495,11 500,40 Q505,19 510,40 Q515,8 520,40 Q525,16 530,40 Q535,4 540,40 Q545,20 550,40 Q555,12 560,40 Q565,9 570,40 Q575,17 580,40 Q585,5 590,40 Q595,21 600,40 Q605,10 610,40 Q615,15 620,40 Q625,7 630,40 Q635,18 640,40 Q645,11 650,40 Q655,6 660,40 Q665,20 670,40 Q675,8 680,40 Q685,14 690,40 Q695,22 700,40 Q705,9 710,40 Q715,16 720,40 Q725,4 730,40 Q735,19 740,40 Q745,11 750,40 Q755,7 760,40 Q765,17 770,40 Q775,5 780,40 Q785,20 790,40 Q795,12 800,40 L800,80 L0,80 Z"
+          fill="url(#grassGrad)" opacity="0.9"/>
+  </svg>
+</div>
+
+<!-- Fog -->
+<div class="fog-layer"></div>
+
+<!-- Firefly DOM element -->
+<div class="firefly" id="firefly">
+  <div class="firefly-wing-l"></div>
+  <div class="firefly-wing-r"></div>
+  <div class="firefly-body"></div>
+</div>
+
+<!-- Resting dots -->
+<div class="resting-dots" id="restingDots">
+  <div class="rest-dot"></div>
+  <div class="rest-dot"></div>
+  <div class="rest-dot"></div>
+</div>
+
+<!-- Jar -->
+<div class="jar-wrap" id="jarWrap">
+  <div class="jar-svg-wrap">
+    <svg class="jar-svg" id="jarSvg" viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="jarGlassGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="rgba(160,210,255,0.05)"/>
+          <stop offset="35%"  stop-color="rgba(200,235,255,0.18)"/>
+          <stop offset="65%"  stop-color="rgba(200,235,255,0.08)"/>
+          <stop offset="100%" stop-color="rgba(160,210,255,0.12)"/>
+        </linearGradient>
+        <linearGradient id="jarGlowGrad" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%"   stop-color="rgba(180,255,80,0)" stop-opacity="0"/>
+          <stop offset="100%" stop-color="rgba(180,255,80,0.08)"/>
+        </linearGradient>
+        <clipPath id="jarClip">
+          <path d="M16,18 Q12,20 10,26 L8,82 Q8,88 12,90 L68,90 Q72,88 72,82 L70,26 Q68,20 64,18 Z"/>
+        </clipPath>
+      </defs>
+      <!-- Lid -->
+      <rect x="22" y="8" width="36" height="12" rx="4" fill="rgba(160,200,255,0.25)" stroke="rgba(180,220,255,0.5)" stroke-width="1.5"/>
+      <rect x="24" y="10" width="32" height="3" rx="2" fill="rgba(255,255,255,0.1)"/>
+      <!-- Jar body -->
+      <path d="M16,18 Q12,20 10,26 L8,82 Q8,88 12,90 L68,90 Q72,88 72,82 L70,26 Q68,20 64,18 Z"
+            fill="url(#jarGlassGrad)" stroke="rgba(180,220,255,0.4)" stroke-width="1.5"/>
+      <!-- Inner glow fill -->
+      <path d="M16,18 Q12,20 10,26 L8,82 Q8,88 12,90 L68,90 Q72,88 72,82 L70,26 Q68,20 64,18 Z"
+            fill="url(#jarGlowGrad)" id="jarGlowFill"/>
+      <!-- Highlight streak -->
+      <path d="M18,22 Q16,30 16,50 Q16,65 18,78"
+            stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <!-- Bottom rim -->
+      <ellipse cx="40" cy="89" rx="32" ry="3" fill="rgba(160,200,255,0.15)" stroke="rgba(180,220,255,0.3)" stroke-width="1"/>
+    </svg>
+    <!-- Firefly dots inside jar -->
+    <div class="jar-lights" id="jarLights"></div>
+  </div>
+  <div class="jar-count" id="jarCount">0 / 30</div>
+</div>
+
+<!-- Breathing guide text -->
+<div class="breath-guide" id="breathGuide">breathe in...</div>
+
+<!-- Catch counter -->
+<div class="catch-counter" id="catchCounter">🌿 0</div>
+
+<!-- UI Overlay -->
+<div class="ui-overlay">
+  <button class="back-btn" id="backBtn">← Back</button>
+  <div class="milestone-msg" id="milestoneMsg"></div>
+</div>
+
+<!-- Celebration screen -->
+<div class="celebration-screen" id="celebScreen">
+  <div class="celeb-jar">🫙</div>
+  <div class="celeb-stars" id="celebStars">✨🌟✨</div>
+  <div class="celeb-title">You caught 30 fireflies!</div>
+  <div class="celeb-sub">
+    You stayed so calm and patient.<br>
+    The whole jar is glowing just for you. 🌿
+  </div>
+  <button class="btn-reset" id="resetBtn">Catch more fireflies 🌙</button>
+  <button class="btn-back" id="celebBackBtn">← Back to My HQ</button>
+</div>
+
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script>
+
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+
+/* ============================================================
+   SCHOOL DATA LAYER
+============================================================ */
+const School = {
+  SUBJECTS: [
+    { id:'math',    label:'Math',          emoji:'➕', color:'#60a5fa' },
+    { id:'reading', label:'Reading',       emoji:'📖', color:'#a78bfa' },
+    { id:'writing', label:'Writing',       emoji:'✏️',  color:'#f472b6' },
+    { id:'science', label:'Science',       emoji:'🔬', color:'#34d399' },
+    { id:'social',  label:'Social Studies',emoji:'🌎', color:'#fb923c' },
+    { id:'art',     label:'Art',           emoji:'🎨', color:'#e879f9' },
+    { id:'music',   label:'Music',         emoji:'🎵', color:'#fbbf24' },
+    { id:'pe',      label:'PE',            emoji:'🏃', color:'#4ade80' },
+    { id:'other',   label:'Other',         emoji:'📋', color:'#94a3b8' },
+  ],
+
+  getHomework(pid)  { return Store.getProfile(pid, 'homework', []); },
+  getTests(pid)     { return Store.getProfile(pid, 'tests', []); },
+  getProjects(pid)  { return Store.getProfile(pid, 'projects', []); },
+
+  saveHomework(pid, hw) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === hw.id);
+    const item = { ...hw, id: hw.id || `hw-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'homework', all);
+    return item;
+  },
+
+  saveTest(pid, test) {
+    const all = this.getTests(pid);
+    const idx = all.findIndex(x => x.id === test.id);
+    const item = { ...test, id: test.id || `test-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'tests', all);
+    return item;
+  },
+
+  saveProject(pid, proj) {
+    const all = this.getProjects(pid);
+    const idx = all.findIndex(x => x.id === proj.id);
+    const item = { ...proj, id: proj.id || `proj-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'projects', all);
+    return item;
+  },
+
+  deleteHomework(pid, id) {
+    Store.setProfile(pid, 'homework', this.getHomework(pid).filter(x => x.id !== id));
+  },
+  deleteTest(pid, id) {
+    Store.setProfile(pid, 'tests', this.getTests(pid).filter(x => x.id !== id));
+  },
+  deleteProject(pid, id) {
+    Store.setProfile(pid, 'projects', this.getProjects(pid).filter(x => x.id !== id));
+  },
+
+  markHomeworkDone(pid, id) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      all[idx].done = true;
+      all[idx].doneAt = new Date().toISOString();
+      Store.setProfile(pid, 'homework', all);
+      Points.add(pid, 5, `Homework done: ${all[idx].title}`, 'school');
+      WinJar.addWin(pid, `Finished homework: ${all[idx].title} 📚`, 'school');
+    }
+  },
+
+  getDueToday(pid) {
+    const today = new Date().toDateString();
+    return [
+      ...this.getHomework(pid).filter(x => !x.done && x.dueDate && new Date(x.dueDate).toDateString() === today),
+      ...this.getTests(pid).filter(x => !x.done && x.date && new Date(x.date).toDateString() === today),
+    ];
+  },
+
+  getUpcoming(pid, days = 7) {
+    const cutoff = new Date(Date.now() + days * 86400000);
+    const today  = new Date();
+    const filter = (items, dateKey) => items.filter(x =>
+      !x.done && x[dateKey] && new Date(x[dateKey]) >= today && new Date(x[dateKey]) <= cutoff
+    );
+    return {
+      homework: filter(this.getHomework(pid), 'dueDate'),
+      tests:    filter(this.getTests(pid),    'date'),
+      projects: filter(this.getProjects(pid), 'dueDate'),
+    };
+  },
+
+  subjectById(id) { return this.SUBJECTS.find(s => s.id === id) || this.SUBJECTS[this.SUBJECTS.length - 1]; },
+};
+
+/* ============================================================
+   REWARD STORE DATA LAYER
+============================================================ */
+const RewardStore = {
+  getRewards()     { return Store.get('reward-store', []); },
+  getRedemptions(pid) { return Store.getProfile(pid, 'redemptions', []); },
+
+  saveReward(reward) {
+    const all = this.getRewards();
+    const idx = all.findIndex(r => r.id === reward.id);
+    const item = { ...reward, id: reward.id || `reward-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.push(item);
+    Store.set('reward-store', all);
+    return item;
+  },
+
+  deleteReward(id) {
+    Store.set('reward-store', this.getRewards().filter(r => r.id !== id));
+  },
+
+  requestRedemption(pid, rewardId) {
+    const reward  = this.getRewards().find(r => r.id === rewardId);
+    if (!reward) return false;
+    const balance = Points.getBalance(pid);
+    if (balance < reward.cost) return false;
+
+    const redemption = {
+      id:       `redeem-${Date.now()}`,
+      profileId: pid,
+      rewardId,
+      rewardName: reward.name,
+      cost:     reward.cost,
+      status:   'pending',
+      requestedAt: new Date().toISOString(),
+    };
+
+    // Hold points (deduct immediately, refund if denied)
+    Points.spend(pid, reward.cost, `Reward request: ${reward.name}`);
+
+    // Add to pending
+    const all = Store.get('reward-redemptions', []);
+    all.unshift(redemption);
+    Store.set('reward-redemptions', all.slice(0, 200));
+
+    // Alert parents
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({
+      id: Date.now(), profileId: pid,
+      type: 'reward-request',
+      data: redemption,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    Store.set('parent-alerts', alerts.slice(0, 200));
+
+    return redemption;
+  },
+
+  approveRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      all[idx].status = 'approved';
+      all[idx].approvedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+    }
+  },
+
+  denyRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      const r = all[idx];
+      r.status = 'denied';
+      r.deniedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+      // Refund points
+      Points.add(r.profileId, r.cost, `Refund: ${r.rewardName}`, 'refund');
+    }
+  },
+
+  getPending()  { return Store.get('reward-redemptions', []).filter(r => r.status === 'pending'); },
+  getForProfile(pid) { return Store.get('reward-redemptions', []).filter(r => r.profileId === pid); },
+
+  seedDefaults() {
+    if (this.getRewards().length === 0) {
+      const defaults = [
+        { id:'r1', name:'30 min extra screen time', emoji:'📱', cost:20,  category:'screen'   },
+        { id:'r2', name:'Choose dinner tonight',     emoji:'🍽️',  cost:30,  category:'food'     },
+        { id:'r3', name:'Stay up 15 min late',       emoji:'🌙', cost:25,  category:'bedtime'  },
+        { id:'r4', name:'Movie night pick',          emoji:'🎬', cost:50,  category:'activity' },
+        { id:'r5', name:'Small treat from store',    emoji:'🍬', cost:40,  category:'treat'    },
+        { id:'r6', name:'Skip one chore (once)',     emoji:'🎉', cost:35,  category:'chores'   },
+        { id:'r7', name:'Friend sleepover',          emoji:'🏕️',  cost:100, category:'social'   },
+        { id:'r8', name:'Game time with a parent',   emoji:'🎮', cost:15,  category:'activity' },
+      ];
+      defaults.forEach(d => this.saveReward(d));
+    }
+  },
+};
+
+/* ============================================================
+   THOUGHT JAR DATA LAYER
+============================================================ */
+const ThoughtJar = {
+  TYPES: [
+    { id:'idea',    emoji:'💡', label:'Idea',    color:'#fbbf24' },
+    { id:'feeling', emoji:'💜', label:'Feeling', color:'#a78bfa' },
+    { id:'worry',   emoji:'😰', label:'Worry',   color:'#f87171' },
+    { id:'win',     emoji:'🏆', label:'Win',     color:'#4ade80' },
+    { id:'question',emoji:'❓', label:'Question',color:'#60a5fa' },
+    { id:'vent',    emoji:'🌋', label:'Vent',    color:'#fb923c' },
+  ],
+
+  getEntries(pid) { return Store.getProfile(pid, 'thoughts', []); },
+
+  add(pid, text, type = 'idea', isUrgent = false) {
+    const entries = this.getEntries(pid);
+    const entry = {
+      id:        `thought-${Date.now()}`,
+      text,
+      type,
+      isUrgent,
+      date:      new Date().toISOString(),
+      routed:    false,
+    };
+    entries.unshift(entry);
+    Store.setProfile(pid, 'thoughts', entries.slice(0, 300));
+
+    if (isUrgent) {
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id: Date.now(), profileId: pid, type: 'urgent-thought', data: entry, date: new Date().toISOString(), read: false });
+      Store.set('parent-alerts', alerts.slice(0, 200));
+    }
+    return entry;
+  },
+
+  delete(pid, id) {
+    Store.setProfile(pid, 'thoughts', this.getEntries(pid).filter(e => e.id !== id));
+  },
+
+  markRouted(pid, id) {
+    const entries = this.getEntries(pid);
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) { entries[idx].routed = true; Store.setProfile(pid, 'thoughts', entries); }
+  },
+};
+
+/* Expose new globals */
+window.School      = School;
+window.RewardStore = RewardStore;
+window.ThoughtJar  = ThoughtJar;
+
+</script>
+<script id="myhq-firefly-app">
+/* ============================================================
+   CATCH THE FIREFLY — GAME ENGINE
+============================================================ */
+
+/* ── STATE ── */
+const GOAL = 30;
+let caught   = 0;
+let isResting = false;
+let restTimer = null;
+let spawnTimer = null;
+let animFrame  = null;
+let profileId  = null;
+
+/* ── FIREFLY POSITION & PATH ── */
+const ff = {
+  x: 0, y: 0,         // current position (px)
+  tx: 0, ty: 0,        // target position
+  vx: 0, vy: 0,        // velocity
+  visible: true,
+  canCatch: true,
+  spiraling: false,
+};
+
+/* ── TRAIL ── */
+const TRAIL_MAX   = 12;
+const trailPoints = [];
+let trailTick     = 0;
+
+/* ── BEZIER PATH ── */
+let path = { p0x:0, p0y:0, p1x:0, p1y:0, p2x:0, p2y:0, p3x:0, p3y:0, t:0, duration:3.5 };
+let pathStart = 0;
+
+/* ── MILESTONES ── */
+const MILESTONES = {
+  5:  'You\'re so calm ✨',
+  10: 'Amazing patience! 🌿',
+  15: 'You\'re a natural 🍃',
+  20: 'Firefly whisperer 🌟',
+  25: 'Almost there! 💫',
+  30: 'You did it! 🎉',
+};
+
+/* ── CANVAS FOR STARS & TRAIL ── */
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+const stars  = [];
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+/* ── STARS ── */
+function buildStars() {
+  stars.length = 0;
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x:    Math.random() * canvas.width,
+      y:    Math.random() * canvas.height * 0.75,
+      r:    Math.random() * 1.5 + 0.3,
+      a:    Math.random(),
+      da:   (Math.random() * 0.004 + 0.001) * (Math.random() < 0.5 ? 1 : -1),
+      base: Math.random() * 0.6 + 0.1,
+    });
+  }
+}
+
+function drawStars(ts) {
+  // Sky gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0,   '#020818');
+  grad.addColorStop(0.5, '#0a1628');
+  grad.addColorStop(1,   '#0f1f3d');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Stars
+  stars.forEach(s => {
+    s.a += s.da;
+    if (s.a > 1 || s.a < 0) s.da *= -1;
+    const opacity = s.base + (1 - s.base) * Math.abs(Math.sin(ts * 0.001 + s.x));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(220,230,255,${Math.max(0, Math.min(1, opacity * 0.8))})`;
+    ctx.fill();
+  });
+
+  // Moon (soft)
+  const mx = canvas.width * 0.82, my = canvas.height * 0.12;
+  const moonGrad = ctx.createRadialGradient(mx, my, 0, mx, my, 28);
+  moonGrad.addColorStop(0,   'rgba(255,250,220,0.9)');
+  moonGrad.addColorStop(0.6, 'rgba(255,245,200,0.5)');
+  moonGrad.addColorStop(1,   'rgba(255,240,180,0)');
+  ctx.beginPath();
+  ctx.arc(mx, my, 22, 0, Math.PI * 2);
+  ctx.fillStyle = moonGrad;
+  ctx.fill();
+
+  // Moon glow
+  const glowGrad = ctx.createRadialGradient(mx, my, 0, mx, my, 60);
+  glowGrad.addColorStop(0,   'rgba(255,250,200,0.08)');
+  glowGrad.addColorStop(1,   'rgba(255,250,200,0)');
+  ctx.beginPath();
+  ctx.arc(mx, my, 60, 0, Math.PI * 2);
+  ctx.fillStyle = glowGrad;
+  ctx.fill();
+}
+
+/* ── DRAW TRAIL ON CANVAS ── */
+function drawTrail() {
+  trailPoints.forEach((p, i) => {
+    if (p.age > p.maxAge) return;
+    const ratio   = 1 - p.age / p.maxAge;
+    const radius  = p.r * ratio;
+    const opacity = ratio * 0.5;
+    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 3);
+    grad.addColorStop(0,   `rgba(180,255,80,${opacity})`);
+    grad.addColorStop(1,   `rgba(180,255,80,0)`);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius * 3, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    p.age += 0.018;
+  });
+  // Remove old
+  for (let i = trailPoints.length - 1; i >= 0; i--) {
+    if (trailPoints[i].age >= trailPoints[i].maxAge) trailPoints.splice(i, 1);
+  }
+}
+
+/* ── FIREFLY SAFE ZONE ── */
+function safeZone() {
+  const margin = 60;
+  const grassH = 100;
+  return {
+    x1: margin,
+    y1: margin + 60,  // below back btn
+    x2: window.innerWidth  - margin,
+    y2: window.innerHeight - grassH - 40,
+  };
+}
+
+/* ── NEW BEZIER PATH ── */
+function newPath(fromX, fromY) {
+  const z = safeZone();
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  path.p0x = fromX; path.p0y = fromY;
+  path.p3x = rand(z.x1, z.x2);
+  path.p3y = rand(z.y1, z.y2);
+
+  // Control points: offset from start/end for natural curve
+  const cx1 = (path.p0x + path.p3x) / 2 + rand(-120, 120);
+  const cy1 = (path.p0y + path.p3y) / 2 + rand(-100, 100);
+  path.p1x = cx1; path.p1y = cy1;
+  path.p2x = path.p3x + rand(-80, 80);
+  path.p2y = path.p3y + rand(-60, 60);
+
+  // Clamp control points
+  path.p1x = Math.max(z.x1, Math.min(z.x2, path.p1x));
+  path.p1y = Math.max(z.y1, Math.min(z.y2, path.p1y));
+  path.p2x = Math.max(z.x1, Math.min(z.x2, path.p2x));
+  path.p2y = Math.max(z.y1, Math.min(z.y2, path.p2y));
+
+  // Duration: 3–6 seconds, slower when more caught (calming)
+  path.duration = 3 + Math.random() * 3 + (caught / GOAL) * 1.5;
+  path.t = 0;
+  pathStart = performance.now();
+}
+
+function bezier(t, p0, p1, p2, p3) {
+  const u = 1 - t;
+  return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+}
+
+/* ── SPAWN FIREFLY ── */
+function spawnFirefly() {
+  if (caught >= GOAL) return;
+  isResting = false;
+  ff.visible  = true;
+  ff.canCatch = true;
+  ff.spiraling = false;
+
+  const z = safeZone();
+  ff.x = z.x1 + Math.random() * (z.x2 - z.x1);
+  ff.y = z.y1 + Math.random() * (z.y2 - z.y1);
+
+  newPath(ff.x, ff.y);
+
+  const el = document.getElementById('firefly');
+  el.style.left    = ff.x + 'px';
+  el.style.top     = ff.y + 'px';
+  el.style.display = 'block';
+  el.style.opacity = '0';
+
+  // Fade in
+  requestAnimationFrame(() => {
+    el.style.transition = 'opacity 0.8s ease';
+    el.style.opacity = '1';
+  });
+  setTimeout(() => { el.style.transition = ''; }, 900);
+
+  // Schedule a rest
+  scheduleRest();
+}
+
+function scheduleRest() {
+  clearTimeout(restTimer);
+  const delay = 6000 + Math.random() * 8000; // rest every 6-14s
+  restTimer = setTimeout(doRest, delay);
+}
+
+function doRest() {
+  if (!ff.visible || ff.spiraling || caught >= GOAL) return;
+  isResting = true;
+
+  const restDots = document.getElementById('restingDots');
+  restDots.style.left = ff.x + 'px';
+  restDots.style.top  = ff.y + 'px';
+  restDots.classList.add('show');
+
+  const restDuration = 1500 + Math.random() * 2000;
+  setTimeout(() => {
+    isResting = false;
+    restDots.classList.remove('show');
+    if (ff.visible && !ff.spiraling) {
+      newPath(ff.x, ff.y);
+      scheduleRest();
+    }
+  }, restDuration);
+}
+
+/* ── MAIN GAME LOOP ── */
+function gameLoop(ts) {
+  animFrame = requestAnimationFrame(gameLoop);
+
+  // Draw bg + stars + trail
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawStars(ts);
+  drawTrail();
+
+  if (!ff.visible || ff.spiraling) return;
+
+  // Advance path
+  if (!isResting) {
+    const elapsed = (ts - pathStart) / 1000;
+    path.t = Math.min(elapsed / path.duration, 1);
+
+    ff.x = bezier(path.t, path.p0x, path.p1x, path.p2x, path.p3x);
+    ff.y = bezier(path.t, path.p0y, path.p1y, path.p2y, path.p3y);
+
+    // Add trail point
+    trailTick++;
+    if (trailTick % 3 === 0) {
+      trailPoints.push({
+        x: ff.x, y: ff.y,
+        r: 5 + Math.random() * 3,
+        age: 0,
+        maxAge: 0.7 + Math.random() * 0.4,
+      });
+    }
+
+    // When path ends, start new one (or schedule rest)
+    if (path.t >= 1) newPath(ff.x, ff.y);
+  }
+
+  // Update DOM firefly position
+  const el = document.getElementById('firefly');
+  el.style.left = ff.x + 'px';
+  el.style.top  = ff.y + 'px';
+
+  // Update resting dots position
+  const restDots = document.getElementById('restingDots');
+  restDots.style.left = ff.x + 'px';
+  restDots.style.top  = ff.y + 'px';
+
+  // Breath guide sync (roughly every 4s)
+  const breathPhase = (ts % 8000) / 8000;
+  const guide = document.getElementById('breathGuide');
+  if (breathPhase < 0.5) {
+    guide.textContent = 'breathe in...';
+    guide.style.opacity = Math.sin(breathPhase * Math.PI) * 0.18 + '';
+  } else {
+    guide.textContent = 'breathe out...';
+    guide.style.opacity = Math.sin((breathPhase - 0.5) * Math.PI) * 0.15 + '';
+  }
+}
+
+/* ── CATCH SEQUENCE ── */
+function doCatch() {
+  if (!ff.canCatch || ff.spiraling || !ff.visible || caught >= GOAL) return;
+
+  ff.canCatch  = false;
+  ff.spiraling = true;
+  clearTimeout(restTimer);
+  clearTimeout(spawnTimer);
+  document.getElementById('restingDots').classList.remove('show');
+
+  const catchX = ff.x;
+  const catchY = ff.y;
+  caught++;
+
+  // Hide original firefly
+  document.getElementById('firefly').style.opacity = '0';
+
+  // Burst effect
+  spawnBurst(catchX, catchY);
+
+  // +1 float
+  spawnPlusOne(catchX, catchY);
+
+  // Spiral to jar
+  spiralToJar(catchX, catchY, () => {
+    ff.visible = false;
+    document.getElementById('firefly').style.display = 'none';
+    updateJar();
+    updateCounter();
+
+    if (caught >= GOAL) {
+      setTimeout(celebrate, 800);
+    } else {
+      // Show milestone if applicable
+      if (MILESTONES[caught]) showMilestone(MILESTONES[caught]);
+      // Spawn next
+      spawnTimer = setTimeout(spawnFirefly, 1500);
+    }
+  });
+}
+
+/* ── BURST ── */
+function spawnBurst(x, y) {
+  const wrap = document.createElement('div');
+  wrap.className = 'catch-burst';
+  wrap.style.left = x + 'px';
+  wrap.style.top  = y + 'px';
+
+  // Ring
+  const ring = document.createElement('div');
+  ring.className = 'burst-ring';
+  wrap.appendChild(ring);
+
+  // Sparks
+  const SPARKS = 8;
+  for (let i = 0; i < SPARKS; i++) {
+    const spark = document.createElement('div');
+    spark.className = 'burst-spark';
+    spark.style.setProperty('--angle', (i / SPARKS * 360) + 'deg');
+    wrap.appendChild(spark);
+  }
+
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 700);
+}
+
+/* ── +1 FLOAT ── */
+function spawnPlusOne(x, y) {
+  const el = document.createElement('div');
+  el.className = 'plus-one';
+  el.textContent = '+1 ✨';
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+/* ── SPIRAL TO JAR ── */
+function spiralToJar(startX, startY, onDone) {
+  const jarEl = document.getElementById('jarWrap');
+  const jarRect = jarEl.getBoundingClientRect();
+  const jarCX = jarRect.left + jarRect.width / 2;
+  const jarCY = jarRect.top  + jarRect.height / 2 - 20;
+
+  const spiral = document.createElement('div');
+  spiral.className = 'catch-spiral';
+  spiral.style.left = startX + 'px';
+  spiral.style.top  = startY + 'px';
+  document.body.appendChild(spiral);
+
+  const STEPS   = 40;
+  const DURATION = 600;
+  let step = 0;
+
+  function tick() {
+    step++;
+    const t = step / STEPS;
+    const ease = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+
+    // Spiral: linear interpolation + shrinking orbit
+    const angle   = t * Math.PI * 4;
+    const orbit   = (1 - t) * 30;
+    const x = startX + (jarCX - startX) * ease + Math.cos(angle) * orbit;
+    const y = startY + (jarCY - startY) * ease + Math.sin(angle) * orbit;
+
+    spiral.style.left    = x + 'px';
+    spiral.style.top     = y + 'px';
+    spiral.style.opacity = (1 - t) + '';
+    const s = Math.max(0.2, 1 - t);
+    spiral.style.transform = `translate(-50%,-50%) scale(${s})`;
+
+    if (step < STEPS) {
+      setTimeout(tick, DURATION / STEPS);
+    } else {
+      spiral.remove();
+      // Jar pulse
+      pulseJar();
+      onDone();
+    }
+  }
+
+  setTimeout(tick, 0);
+}
+
+/* ── JAR PULSE ── */
+function pulseJar() {
+  const jar = document.getElementById('jarSvg');
+  jar.classList.add('glowing');
+  jar.style.transform = 'scale(1.12)';
+  jar.style.transition = 'transform 0.2s ease';
+  setTimeout(() => {
+    jar.style.transform = 'scale(1)';
+    setTimeout(() => {
+      jar.style.transition = '';
+      if (caught < GOAL) jar.classList.toggle('glowing', caught > 3);
+    }, 200);
+  }, 200);
+}
+
+/* ── UPDATE JAR DOTS ── */
+function updateJar() {
+  const lights = document.getElementById('jarLights');
+  lights.innerHTML = '';
+  for (let i = 0; i < Math.min(caught, 25); i++) {
+    const dot = document.createElement('div');
+    dot.className = 'jar-dot';
+    dot.style.setProperty('--delay', (Math.random() * 2) + 's');
+    // Vary colors slightly for life
+    const hue = 85 + Math.random() * 30;
+    const sat = 80 + Math.random() * 20;
+    dot.style.background = `hsl(${hue},${sat}%,65%)`;
+    dot.style.boxShadow  = `0 0 4px hsl(${hue},${sat}%,65%), 0 0 8px rgba(180,255,80,0.4)`;
+    lights.appendChild(dot);
+  }
+
+  const countEl = document.getElementById('jarCount');
+  countEl.textContent = `${caught} / ${GOAL}`;
+  countEl.classList.remove('pop');
+  void countEl.offsetWidth;
+  countEl.classList.add('pop');
+
+  // Glow jar as it fills
+  const jar = document.getElementById('jarSvg');
+  if (caught >= GOAL) {
+    jar.classList.add('celebration');
+  } else if (caught >= 5) {
+    jar.classList.add('glowing');
+  }
+}
+
+/* ── UPDATE COUNTER ── */
+function updateCounter() {
+  document.getElementById('catchCounter').textContent = `🌿 ${caught}`;
+}
+
+/* ── MILESTONE MESSAGE ── */
+function showMilestone(msg) {
+  const el = document.getElementById('milestoneMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ── MISS TAP ── */
+function spawnMissRipple(x, y) {
+  const el = document.createElement('div');
+  el.className = 'tap-ripple';
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 600);
+}
+
+/* ── CELEBRATE ── */
+function celebrate() {
+  cancelAnimationFrame(animFrame);
+  document.getElementById('firefly').style.display = 'none';
+
+  // Gold stars animation
+  const starsEl = document.getElementById('celebStars');
+  starsEl.textContent = '✨🌟✨🌟✨';
+
+  // Final jar state
+  updateJar();
+  document.getElementById('celebScreen').classList.add('show');
+
+  // Confetti burst
+  spawnConfetti();
+
+  // Award points if core loaded
+  if (typeof Points !== 'undefined' && profileId) {
+    Points.add(profileId, 15, 'Caught 30 fireflies 🌿', 'game');
+    if (typeof WinJar !== 'undefined') {
+      WinJar.addWin(profileId, 'Caught 30 fireflies! 🌿✨', 'calm');
+    }
+  }
+}
+
+function spawnConfetti() {
+  const emojis = ['✨','🌟','💛','💚','🌿','🍃','⭐','🌙','💫'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*16+14}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }, Math.random() * 1500);
+  }
+}
+
+/* ── RESET GAME ── */
+function resetGame() {
+  caught = 0;
+  isResting = false;
+  trailPoints.length = 0;
+  clearTimeout(restTimer);
+  clearTimeout(spawnTimer);
+
+  document.getElementById('celebScreen').classList.remove('show');
+  document.getElementById('jarLights').innerHTML = '';
+  document.getElementById('jarCount').textContent = '0 / 30';
+  document.getElementById('catchCounter').textContent = '🌿 0';
+  document.getElementById('jarSvg').classList.remove('celebration', 'glowing');
+
+  // Restart loop
+  if (!animFrame) animFrame = requestAnimationFrame(gameLoop);
+  setTimeout(spawnFirefly, 600);
+}
+
+/* ── HIT DETECTION ── */
+function checkHit(tapX, tapY) {
+  const dx   = tapX - ff.x;
+  const dy   = tapY - ff.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  return dist < 60; // generous 60px radius
+}
+
+/* ── INPUT ── */
+function handleTap(x, y) {
+  if (caught >= GOAL) return;
+  if (checkHit(x, y)) {
+    doCatch();
+  } else {
+    spawnMissRipple(x, y);
+  }
+}
+
+/* ── INIT ── */
+function init() {
+  // Auth check (graceful — game works without profile too)
+  if (typeof Auth !== 'undefined') {
+    const session = Auth.getSession();
+    if (session && ['elder','younger'].includes(session.profileId)) {
+      profileId = session.profileId;
+      if (typeof Profiles !== 'undefined') Profiles.applyTheme(profileId);
+    }
+  }
+
+  resizeCanvas();
+  buildStars();
+
+  // Start loop
+  animFrame = requestAnimationFrame(gameLoop);
+
+  // Spawn first firefly after a short pause (let scene settle)
+  setTimeout(spawnFirefly, 1200);
+
+  // Input events
+  canvas.addEventListener('click', e => {
+    handleTap(e.clientX, e.clientY);
+  });
+
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    handleTap(touch.clientX, touch.clientY);
+  }, { passive: false });
+
+  // Resize
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    buildStars();
+  });
+
+  // Back btn
+  document.getElementById('backBtn').addEventListener('click', () => {
+    cancelAnimationFrame(animFrame);
+    clearTimeout(restTimer);
+    clearTimeout(spawnTimer);
+    window.location.href = typeof Auth !== 'undefined' ? 'index.html' : 'reset-toolkit.html';
+  });
+
+  // Celebration buttons
+  document.getElementById('resetBtn').addEventListener('click', resetGame);
+  document.getElementById('celebBackBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  // Add confettiFall keyframe if not already
+  if (!document.querySelector('#confetti-style')) {
+    const s = document.createElement('style');
+    s.id = 'confetti-style';
+    s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+    document.head.appendChild(s);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

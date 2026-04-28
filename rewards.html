@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rewards — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0a0d14;--surface:#0f1420;--card:#151e2e;--accent:#fbbf24;--accent2:#34d399;--text:#f1f5f9;--text-muted:#64748b;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(251,191,36,0.08) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);color:#431407;}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:16px;}
+
+/* BALANCE */
+.balance-card{background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(52,211,153,.08));border:2px solid rgba(251,191,36,.2);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;gap:16px;}
+.balance-star{font-size:52px;filter:drop-shadow(0 4px 12px rgba(251,191,36,.5));}
+.balance-info{flex:1;}
+.balance-num{font-family:var(--font-display);font-size:42px;color:var(--accent);line-height:1;}
+.balance-label{font-size:13px;font-weight:800;color:var(--text-muted);margin-top:2px;}
+.balance-sub{font-size:12px;font-weight:700;color:var(--text-muted);margin-top:4px;}
+
+/* SECTION */
+.section-title{font-family:var(--font-display);font-size:19px;color:var(--text);}
+.section-sub{font-size:13px;font-weight:700;color:var(--text-muted);margin-top:-10px;}
+
+/* REWARD GRID */
+.reward-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.reward-tile{background:var(--card);border:2px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;}
+.reward-tile:hover{border-color:var(--accent);transform:translateY(-2px);}
+.reward-tile.cant-afford{opacity:.45;cursor:not-allowed;}
+.reward-tile.cant-afford:hover{transform:none;border-color:rgba(255,255,255,.06);}
+.rt-emoji{font-size:38px;filter:drop-shadow(0 3px 8px rgba(251,191,36,.25));}
+.rt-name{font-size:14px;font-weight:900;}
+.rt-cost{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:900;color:var(--accent);}
+.rt-desc{font-size:11px;font-weight:600;color:var(--text-muted);line-height:1.3;}
+.rt-pending{position:absolute;top:8px;right:8px;background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.4);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:900;color:var(--accent);}
+
+/* PENDING SECTION */
+.pending-list{display:flex;flex-direction:column;gap:8px;}
+.pending-item{background:var(--card);border:2px solid rgba(251,191,36,.15);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.pi-emoji{font-size:26px;flex-shrink:0;}
+.pi-info{flex:1;}
+.pi-name{font-size:14px;font-weight:800;}
+.pi-status{font-size:12px;font-weight:700;color:var(--accent);margin-top:2px;}
+.pi-cost{font-size:13px;font-weight:900;color:var(--accent);}
+
+/* HISTORY */
+.history-list{display:flex;flex-direction:column;gap:8px;}
+.hist-item{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.hi-emoji{font-size:20px;flex-shrink:0;}
+.hi-info{flex:1;}
+.hi-name{font-size:13px;font-weight:800;}
+.hi-status{font-size:11px;font-weight:700;margin-top:2px;}
+.hi-date{font-size:11px;color:var(--text-muted);flex-shrink:0;}
+
+/* CONFIRM MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.modal-overlay.open{display:flex;}
+.modal-card{background:var(--surface);border:2px solid rgba(251,191,36,.2);border-radius:var(--radius);padding:28px 24px;max-width:320px;width:90%;text-align:center;animation:modalIn .3s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-emoji{font-size:64px;display:block;margin-bottom:12px;}
+.modal-title{font-family:var(--font-display);font-size:22px;color:var(--accent);margin-bottom:6px;}
+.modal-cost{font-size:16px;font-weight:900;color:var(--text-muted);margin-bottom:14px;}
+.modal-note{font-size:13px;font-weight:700;color:var(--text-muted);background:rgba(255,255,255,.04);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;line-height:1.5;}
+.modal-btns{display:flex;gap:10px;}
+.modal-confirm{flex:1;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:14px;font-size:16px;font-weight:900;color:#431407;cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.modal-confirm:hover{transform:scale(1.03);}
+.modal-cancel{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:14px 18px;font-size:14px;font-weight:700;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}
+#toastWrap{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;width:90%;max-width:400px;pointer-events:none;}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">⭐ Reward Store</div>
+</div>
+<main class="page">
+
+  <!-- Balance -->
+  <div class="balance-card">
+    <div class="balance-star">⭐</div>
+    <div class="balance-info">
+      <div class="balance-num" id="balanceNum">0</div>
+      <div class="balance-label">stars to spend</div>
+      <div class="balance-sub" id="balanceSub">Keep earning by doing chores and check-ins!</div>
+    </div>
+  </div>
+
+  <!-- Reward store -->
+  <div class="section-title">Things I can get ✨</div>
+  <div class="section-sub">Tap to request — a parent will approve it</div>
+  <div class="reward-grid" id="rewardGrid"></div>
+
+  <!-- Pending -->
+  <div id="pendingSection" style="display:none">
+    <div class="section-title">Waiting for approval ⏳</div>
+    <div class="pending-list" id="pendingList"></div>
+  </div>
+
+  <!-- History -->
+  <div id="historySection" style="display:none">
+    <div class="section-title">Past rewards 📜</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-card">
+    <span class="modal-emoji" id="modalEmoji">⭐</span>
+    <div class="modal-title"  id="modalTitle">Reward</div>
+    <div class="modal-cost"   id="modalCost">0 ⭐</div>
+    <div class="modal-note">A parent will get a notification and needs to approve this. You won't lose your stars until they say yes!</div>
+    <div class="modal-btns">
+      <button class="modal-confirm" id="modalConfirm">Request it! 🙏</button>
+      <button class="modal-cancel"  id="modalCancel">Not yet</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item active" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+<div id="toastWrap"></div>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-rewards-app">
+let profileId  = null;
+let pendingConfirm = null;
+
+const DEFAULT_REWARDS = [
+  { id:'screen-30',   emoji:'📱', name:'30 min extra screen time', cost:20,  desc:'Extra 30 mins on a device'      },
+  { id:'screen-60',   emoji:'📺', name:'1 hour extra screen time', cost:35,  desc:'A whole extra hour!'            },
+  { id:'stay-up',     emoji:'🌙', name:'Stay up 30 min later',     cost:25,  desc:'One night, 30 mins past bedtime'},
+  { id:'movie-night', emoji:'🎬', name:'Movie night pick',          cost:30,  desc:'You choose the movie!'          },
+  { id:'treat',       emoji:'🍕', name:'Choose dinner',             cost:40,  desc:'Pick what\'s for dinner'        },
+  { id:'ice-cream',   emoji:'🍦', name:'Ice cream trip',            cost:50,  desc:'Go get ice cream!'             },
+  { id:'friend-over', emoji:'👧', name:'Friend come over',          cost:60,  desc:'Invite a friend!'              },
+  { id:'no-chores',   emoji:'😎', name:'One chore-free day',        cost:45,  desc:'Skip all chores for one day'   },
+  { id:'craft',       emoji:'🎨', name:'Craft supply money',        cost:30,  desc:'$5 for craft supplies'         },
+  { id:'book',        emoji:'📚', name:'New book',                  cost:25,  desc:'Choose a new book'             },
+];
+
+function toast(msg, type='info') {
+  const c=document.getElementById('toastWrap');
+  const col={success:'#4ade80',error:'#f87171',info:'#fbbf24'};
+  const t=document.createElement('div');
+  t.style.cssText=`background:var(--card);color:var(--text);border:2px solid ${col[type]||col.info};border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;pointer-events:all;animation:toastIn .3s ease;width:100%;font-family:var(--font-main);`;
+  t.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'⭐'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.animation='toastOut .3s ease forwards';setTimeout(()=>t.remove(),300);},3000);
+}
+
+function getRewards() { return Store.get('reward-store', DEFAULT_REWARDS); }
+function getRedemptions() { return Store.getProfile(profileId, 'redemptions', []); }
+
+function renderBalance() {
+  const bal = Points.getBalance(profileId);
+  document.getElementById('balanceNum').textContent = bal;
+  document.getElementById('balanceSub').textContent = bal >= 50
+    ? 'Wow! You have lots of stars! 🌟'
+    : bal >= 20
+    ? 'You can afford some rewards!'
+    : 'Keep earning — you\'re doing great!';
+}
+
+function renderGrid() {
+  const grid    = document.getElementById('rewardGrid');
+  const rewards = getRewards().filter(r => r.active !== false);
+  const bal     = Points.getBalance(profileId);
+  const pending = getRedemptions().filter(r => r.status === 'pending').map(r => r.rewardId);
+
+  grid.innerHTML = '';
+  rewards.forEach(r => {
+    const canAfford = bal >= r.cost;
+    const isPending = pending.includes(r.id);
+    const tile = document.createElement('div');
+    tile.className = `reward-tile${!canAfford ? ' cant-afford' : ''}`;
+
+    tile.innerHTML = `
+      ${isPending ? '<div class="rt-pending">⏳ Pending</div>' : ''}
+      <span class="rt-emoji">${r.emoji}</span>
+      <div class="rt-name">${r.name}</div>
+      <div class="rt-cost">${r.cost} ⭐</div>
+      <div class="rt-desc">${r.desc || ''}</div>
+    `;
+
+    if (canAfford && !isPending) {
+      tile.addEventListener('click', () => openConfirm(r));
+    }
+    grid.appendChild(tile);
+  });
+}
+
+function openConfirm(reward) {
+  pendingConfirm = reward;
+  document.getElementById('modalEmoji').textContent = reward.emoji;
+  document.getElementById('modalTitle').textContent = reward.name;
+  document.getElementById('modalCost').textContent  = `${reward.cost} ⭐`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function confirmRedemption() {
+  if (!pendingConfirm) return;
+  const redemption = {
+    id:       `redeem-${Date.now()}`,
+    rewardId: pendingConfirm.id,
+    name:     pendingConfirm.name,
+    emoji:    pendingConfirm.emoji,
+    cost:     pendingConfirm.cost,
+    status:   'pending',
+    date:     new Date().toISOString(),
+    profileId,
+  };
+
+  // Save to profile redemptions
+  const all = getRedemptions();
+  all.unshift(redemption);
+  Store.setProfile(profileId, 'redemptions', all.slice(0, 100));
+
+  // Send parent alert
+  const alerts = Store.get('parent-alerts', []);
+  alerts.unshift({
+    id: Date.now(), profileId, type: 'reward-request',
+    data: { id: redemption.id, rewardName: pendingConfirm.name, cost: pendingConfirm.cost, emoji: pendingConfirm.emoji },
+    date: new Date().toISOString(), read: false,
+  });
+  Store.set('parent-alerts', alerts.slice(0, 200));
+
+  document.getElementById('confirmModal').classList.remove('open');
+  toast(`Request sent! Waiting for a parent to approve 🙏`, 'success');
+  renderBalance();
+  renderGrid();
+  renderPending();
+  renderHistory();
+}
+
+function renderPending() {
+  const pending = getRedemptions().filter(r => r.status === 'pending');
+  const sec     = document.getElementById('pendingSection');
+  sec.style.display = pending.length ? '' : 'none';
+  if (!pending.length) return;
+
+  document.getElementById('pendingList').innerHTML = pending.map(r => `
+    <div class="pending-item">
+      <span class="pi-emoji">${r.emoji}</span>
+      <div class="pi-info">
+        <div class="pi-name">${r.name}</div>
+        <div class="pi-status">⏳ Waiting for approval…</div>
+      </div>
+      <span class="pi-cost">${r.cost} ⭐</span>
+    </div>
+  `).join('');
+}
+
+function renderHistory() {
+  const done = getRedemptions().filter(r => r.status !== 'pending');
+  const sec  = document.getElementById('historySection');
+  sec.style.display = done.length ? '' : 'none';
+  if (!done.length) return;
+
+  const statusColors = { approved:'#4ade80', denied:'#f87171' };
+  const statusLabels = { approved:'✅ Approved', denied:'❌ Denied — stars refunded' };
+
+  document.getElementById('historyList').innerHTML = done.slice(0, 10).map(r => {
+    const date = new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `
+      <div class="hist-item">
+        <span class="hi-emoji">${r.emoji}</span>
+        <div class="hi-info">
+          <div class="hi-name">${r.name}</div>
+          <div class="hi-status" style="color:${statusColors[r.status]||'var(--text-muted)'}">${statusLabels[r.status]||r.status}</div>
+        </div>
+        <span class="hi-date">${date}</span>
+      </div>`;
+  }).join('');
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  renderBalance();
+  renderGrid();
+  renderPending();
+  renderHistory();
+
+  document.getElementById('modalConfirm').addEventListener('click', confirmRedemption);
+  document.getElementById('modalCancel').addEventListener('click',  () => document.getElementById('confirmModal').classList.remove('open'));
+  document.getElementById('confirmModal').addEventListener('click', e => { if (e.target === document.getElementById('confirmModal')) document.getElementById('confirmModal').classList.remove('open'); });
+  document.getElementById('backBtn').addEventListener('click', () => history.back());
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

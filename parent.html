@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Parent Dashboard — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     STYLES  →  extract to parent.css when ready
+============================================================ -->
+<style id="parent-styles">
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Parent layer has its own distinct palette — slate/indigo, authority feel */
+  --bg:         #080c18;
+  --surface:    #0d1220;
+  --card:       #131929;
+  --card2:      #1a2235;
+  --border:     rgba(255,255,255,0.07);
+  --accent:     #6366f1;   /* indigo */
+  --accent2:    #34d399;   /* green */
+  --danger:     #f87171;
+  --warning:    #fbbf24;
+  --success:    #4ade80;
+  --elder:      #e94560;   /* elder profile color */
+  --younger:    #c084fc;   /* younger profile color */
+  --text:       #f1f5f9;
+  --text-muted: #64748b;
+  --text-dim:   #334155;
+  --radius:     18px;
+  --radius-sm:  10px;
+  --shadow:     0 8px 32px rgba(0,0,0,0.4);
+  --font-main:  'Nunito', sans-serif;
+  --font-disp:  'Fredoka One', cursive;
+
+  /* Canva placeholder hooks — swap these vars when ready */
+  --canva-bg-image:      none;   /* background image from Canva export */
+  --canva-card-image:    none;   /* card texture */
+  --canva-accent-image:  none;   /* decorative accent graphic */
+}
+
+html, body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 0%,  rgba(99,102,241,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 100%, rgba(52,211,153,0.08) 0%, transparent 70%),
+    var(--bg);
+  /* CANVA HOOK: replace with → background-image: var(--canva-bg-image); */
+  pointer-events: none;
+}
+
+#app { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── PIN GATE SCREEN ── */
+.pin-gate {
+  align-items: center; justify-content: center;
+  padding: 32px 24px; gap: 24px; text-align: center;
+}
+
+.pin-logo {
+  font-family: var(--font-disp);
+  font-size: 42px; color: var(--accent);
+  text-shadow: 0 0 40px rgba(99,102,241,0.4);
+  margin-bottom: 4px;
+}
+
+.pin-sub {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.06em;
+}
+
+/* Duration selector */
+.duration-row {
+  display: flex; gap: 8px; justify-content: center; width: 100%;
+}
+
+.dur-btn {
+  flex: 1; max-width: 90px;
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 8px;
+  font-size: 13px; font-weight: 800; color: var(--text-muted);
+  cursor: pointer; font-family: var(--font-main); transition: all 0.2s;
+  text-align: center;
+}
+.dur-btn:hover  { border-color: var(--accent); color: var(--text); }
+.dur-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.dur-label {
+  font-size: 12px; font-weight: 800; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 6px; text-align: center; width: 100%;
+}
+
+/* PIN dots */
+.pin-dots { display: flex; gap: 14px; justify-content: center; }
+.pin-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--accent); background: transparent;
+  transition: all 0.2s;
+}
+.pin-dot.filled { background: var(--accent); transform: scale(1.15); box-shadow: 0 0 8px var(--accent); }
+.pin-dot.error  { border-color: var(--danger); background: var(--danger); animation: shake 0.4s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%     { transform: translateX(-6px); }
+  75%     { transform: translateX(6px); }
+}
+
+/* PIN keypad */
+.pin-keypad {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; width: 100%; max-width: 280px;
+}
+
+.pin-key {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 16px 8px;
+  font-size: 22px; font-weight: 800; color: var(--text);
+  cursor: pointer; transition: all 0.15s; font-family: var(--font-main);
+  text-align: center;
+}
+.pin-key:hover  { background: var(--accent); border-color: var(--accent); transform: scale(1.04); }
+.pin-key:active { transform: scale(0.96); }
+.pin-key.zero   { grid-column: 2; }
+.pin-key.del    { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); color: var(--danger); font-size: 18px; }
+.pin-key.del:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+.pin-error { color: var(--danger); font-size: 13px; font-weight: 800; min-height: 18px; }
+.pin-which-label { font-size: 13px; font-weight: 800; color: var(--text-muted); }
+
+/* Both PINs flow */
+.both-pins-wrap { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 320px; }
+.both-pin-field { display: flex; flex-direction: column; gap: 6px; }
+.both-pin-label { font-size: 12px; font-weight: 800; color: var(--text-muted); }
+.both-pin-input {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px;
+  font-size: 20px; font-weight: 800; color: var(--text);
+  font-family: var(--font-main); letter-spacing: 6px;
+  text-align: center; outline: none; width: 100%;
+  transition: border-color 0.2s;
+}
+.both-pin-input:focus { border-color: var(--accent); }
+.both-pins-submit {
+  background: var(--accent); border: none; border-radius: var(--radius-sm);
+  padding: 14px; font-size: 16px; font-weight: 900; color: #fff;
+  cursor: pointer; font-family: var(--font-main); transition: all 0.2s; width: 100%;
+}
+.both-pins-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+
+/* Session timer pill */
+.session-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 20px; padding: 6px 14px;
+  font-size: 12px; font-weight: 800; color: var(--accent);
+}
+.session-pill.expiring { color: var(--warning); border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); animation: sessionPulse 1s ease infinite; }
+@keyframes sessionPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* ── MAIN DASHBOARD ── */
+.dash-header {
+  padding: 16px 20px 12px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+  backdrop-filter: blur(12px);
+}
+
+.dash-title {
+  font-family: var(--font-disp); font-size: 20px;
+  color: var(--accent); flex: 1;
+}
+
+.dash-back {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 12px;
+  color: var(--text-muted); font-size: 13px; font-weight: 800;
+  cursor: pointer; font-family: var(--font-main); transition: all 0.2s;
+}
+.dash-back:hover { color: var(--text); border-color: var(--accent); }
+
+.dash-body { padding: 16px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+
+/* ── ALERT BANNER (persistent for high-urgency) ── */
+.alert-banner {
+  background: linear-gradient(135deg, rgba(248,113,113,0.15), rgba(251,146,60,0.08));
+  border: 2px solid rgba(248,113,113,0.35);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: none; align-items: center; gap: 12px;
+  animation: bannerPulse 2s ease infinite;
+}
+.alert-banner.show { display: flex; }
+@keyframes bannerPulse { 0%,100%{border-color:rgba(248,113,113,.35)} 50%{border-color:rgba(248,113,113,.7)} }
+.alert-banner-icon { font-size: 24px; flex-shrink: 0; }
+.alert-banner-text { flex: 1; }
+.alert-banner-title { font-size: 14px; font-weight: 900; color: var(--danger); }
+.alert-banner-sub   { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 2px; }
+.alert-banner-btn {
+  background: var(--danger); border: none; border-radius: 8px;
+  padding: 7px 14px; font-size: 13px; font-weight: 900; color: #fff;
+  cursor: pointer; font-family: var(--font-main); flex-shrink: 0;
+  transition: all 0.2s;
+}
+.alert-banner-btn:hover { transform: scale(1.04); }
+
+/* ── QUICK STATS ROW ── */
+.stats-row { display: flex; gap: 10px; }
+.stat-card {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--accent); }
+.stat-num   { font-family: var(--font-disp); font-size: 26px; color: var(--accent); }
+.stat-label { font-size: 10px; font-weight: 800; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ── PROFILE QUICK VIEW ── */
+.profiles-row { display: flex; gap: 12px; }
+
+.profile-quick {
+  flex: 1; background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: all 0.2s; cursor: pointer;
+}
+.profile-quick.elder   { --pcolor: var(--elder); }
+.profile-quick.younger { --pcolor: var(--younger); }
+.profile-quick:hover   { border-color: var(--pcolor); transform: translateY(-2px); }
+
+.profile-quick-top { display: flex; align-items: center; gap: 10px; }
+.pq-mascot { font-size: 32px; }
+.pq-info   { flex: 1; }
+.pq-name   { font-size: 15px; font-weight: 800; color: var(--pcolor); }
+.pq-label  { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+
+.pq-mood-chip {
+  font-size: 11px; font-weight: 800; padding: 3px 10px;
+  border-radius: 20px; background: rgba(255,255,255,0.06);
+  color: var(--text-muted); width: fit-content;
+}
+
+.pq-stats { display: flex; gap: 8px; }
+.pq-stat {
+  flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px;
+  padding: 8px 6px; text-align: center;
+}
+.pq-stat-num   { font-size: 16px; font-weight: 900; color: var(--pcolor); }
+.pq-stat-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+
+.pq-chore-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 20px; height: 6px; overflow: hidden; }
+.pq-chore-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--pcolor), var(--accent2)); transition: width 0.6s ease; }
+
+/* ── SECTION HEADERS ── */
+.section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-title { font-family: var(--font-disp); font-size: 17px; color: var(--text); }
+.section-link  { font-size: 12px; font-weight: 800; color: var(--accent); cursor: pointer; background: none; border: none; font-family: var(--font-main); }
+
+/* ── NAV GRID (main navigation tiles) ── */
+.nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.nav-tile {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 16px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; gap: 8px;
+  text-decoration: none; color: var(--text);
+  position: relative; overflow: hidden;
+}
+.nav-tile::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--tile-glow, transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.nav-tile:hover { border-color: var(--tile-color, var(--accent)); transform: translateY(-2px); }
+.nav-tile:hover::before { opacity: 1; }
+
+.tile-emoji { font-size: 28px; }
+.tile-title { font-size: 14px; font-weight: 900; color: var(--tile-color, var(--text)); }
+.tile-sub   { font-size: 11px; font-weight: 600; color: var(--text-muted); line-height: 1.3; }
+
+.tile-badge {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--danger); color: #fff;
+  border-radius: 20px; padding: 2px 8px;
+  font-size: 11px; font-weight: 900;
+}
+
+.tile-badge.warn { background: var(--warning); color: #431407; }
+.tile-badge.ok   { background: var(--success); color: #052e16; }
+
+/* WIDE TILE */
+.nav-tile.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 14px; }
+.nav-tile.wide .tile-info { flex: 1; }
+
+/* ── RECENT ALERTS PREVIEW ── */
+.alerts-preview { display: flex; flex-direction: column; gap: 8px; }
+
+.alert-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: all 0.2s; cursor: pointer;
+}
+.alert-item:hover { border-color: var(--accent); }
+.alert-item.unread { border-left: 3px solid var(--danger); }
+.alert-item.unread.warn { border-left-color: var(--warning); }
+
+.alert-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger); flex-shrink: 0;
+}
+.alert-dot.warn { background: var(--warning); }
+.alert-dot.info { background: var(--accent); }
+
+.alert-info { flex: 1; min-width: 0; }
+.alert-who  { font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 2px; }
+.alert-text { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 640px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; z-index: 90;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 6px 4px; cursor: pointer;
+  text-decoration: none; color: var(--text-muted);
+  border: none; background: none; font-family: var(--font-main); transition: color 0.2s;
+}
+.bnav-item .bn-emoji { font-size: 20px; }
+.bnav-item .bn-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.bnav-item.active   { color: var(--accent); }
+
+/* ── TOAST ── */
+#toastWrap {
+  position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; display: flex; flex-direction: column;
+  gap: 8px; width: 90%; max-width: 400px; pointer-events: none;
+}
+@keyframes tIn  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes tOut { from{opacity:1} to{opacity:0;transform:translateY(8px)} }
+
+/* ── PUSH NOTIFICATION STUB ── */
+.push-stub {
+  /* Placeholder — wire to Web Push API when PWA ready */
+  /* STUB: window.PushNotifications.send(title, body, urgency) */
+  display: none;
+}
+
+/* ── UTILITIES ── */
+.hidden   { display: none !important; }
+.mt-4     { margin-top: 4px; }
+.mt-12    { margin-top: 12px; }
+.divider  { height: 1px; background: var(--border); margin: 4px 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HTML STRUCTURE
+============================================================ -->
+
+<!-- ── SCREEN: PIN GATE ── -->
+<div class="screen active" id="screenPin">
+  <div class="pin-gate screen active" id="pinGate">
+
+    <div>
+      <div class="pin-logo">🔒 Parent</div>
+      <div class="pin-sub">MY HQ PARENT DASHBOARD</div>
+    </div>
+
+    <!-- Session duration picker -->
+    <div style="width:100%;max-width:280px;">
+      <div class="dur-label">Stay logged in for</div>
+      <div class="duration-row">
+        <button class="dur-btn" data-mins="5">5 min</button>
+        <button class="dur-btn active" data-mins="10">10 min</button>
+        <button class="dur-btn" data-mins="30">30 min</button>
+      </div>
+    </div>
+
+    <!-- Which parent label -->
+    <div class="pin-which-label" id="pinWhichLabel">Enter your PIN</div>
+
+    <!-- PIN dots -->
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+
+    <div class="pin-error" id="pinError"></div>
+
+    <!-- Keypad -->
+    <div class="pin-keypad">
+      <button class="pin-key" data-k="1">1</button>
+      <button class="pin-key" data-k="2">2</button>
+      <button class="pin-key" data-k="3">3</button>
+      <button class="pin-key" data-k="4">4</button>
+      <button class="pin-key" data-k="5">5</button>
+      <button class="pin-key" data-k="6">6</button>
+      <button class="pin-key" data-k="7">7</button>
+      <button class="pin-key" data-k="8">8</button>
+      <button class="pin-key" data-k="9">9</button>
+      <button class="pin-key zero" data-k="0">0</button>
+      <button class="pin-key del"  data-k="del">⌫</button>
+    </div>
+
+    <button class="dash-back" id="pinBackBtn" style="margin-top:8px">← Back to profiles</button>
+  </div>
+</div>
+
+
+<!-- ── SCREEN: BOTH PINs (for sensitive actions) ── -->
+<div class="screen" id="screenBothPins">
+  <div class="pin-gate screen active">
+    <div>
+      <div class="pin-logo">🔐 Both Parents</div>
+      <div class="pin-sub" id="bothPinsReason">REQUIRES BOTH PARENT PINS</div>
+    </div>
+
+    <div class="both-pins-wrap">
+      <div class="both-pin-field">
+        <div class="both-pin-label">Parent A PIN</div>
+        <input type="number" class="both-pin-input" id="bothPinA" placeholder="••••" maxlength="4" autocomplete="off">
+      </div>
+      <div class="both-pin-field">
+        <div class="both-pin-label">Parent B PIN</div>
+        <input type="number" class="both-pin-input" id="bothPinB" placeholder="••••" maxlength="4" autocomplete="off">
+      </div>
+      <div class="pin-error" id="bothPinError"></div>
+      <button class="both-pins-submit" id="bothPinsSubmit">Confirm Both PINs 🔐</button>
+    </div>
+
+    <button class="dash-back" id="bothPinsBack">← Cancel</button>
+  </div>
+</div>
+
+
+<!-- ── SCREEN: MAIN DASHBOARD ── -->
+<div class="screen" id="screenDash">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <button class="dash-back" id="dashBackBtn">← Exit</button>
+    <div class="dash-title">🔒 Parent HQ</div>
+    <div class="session-pill" id="sessionPill">⏱ 10:00</div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- Persistent alert banner (high urgency only) -->
+    <div class="alert-banner" id="alertBanner">
+      <div class="alert-banner-icon">🌋</div>
+      <div class="alert-banner-text">
+        <div class="alert-banner-title" id="alertBannerTitle">High distress alert</div>
+        <div class="alert-banner-sub"   id="alertBannerSub">Tap to view details</div>
+      </div>
+      <button class="alert-banner-btn" id="alertBannerBtn">View</button>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="statAlerts">0</div>
+        <div class="stat-label">Alerts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statPending">0</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statChoresDone">—</div>
+        <div class="stat-label">Jobs Done</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statPoints">—</div>
+        <div class="stat-label">Stars Today</div>
+      </div>
+    </div>
+
+    <!-- Profile quick view -->
+    <div>
+      <div class="section-hdr">
+        <div class="section-title">Today's Overview</div>
+      </div>
+      <div class="profiles-row">
+
+        <!-- Elder -->
+        <div class="profile-quick elder" id="pqElder">
+          <div class="profile-quick-top">
+            <div class="pq-mascot" id="pqElderMascot">⭐</div>
+            <div class="pq-info">
+              <div class="pq-name" id="pqElderName">—</div>
+              <div class="pq-label">10yo</div>
+            </div>
+          </div>
+          <div class="pq-mood-chip" id="pqElderMood">No check-in yet</div>
+          <div class="pq-stats">
+            <div class="pq-stat">
+              <div class="pq-stat-num" id="pqElderChores">0/0</div>
+              <div class="pq-stat-label">Jobs</div>
+            </div>
+            <div class="pq-stat">
+              <div class="pq-stat-num" id="pqElderPoints">0</div>
+              <div class="pq-stat-label">Stars</div>
+            </div>
+            <div class="pq-stat">
+              <div class="pq-stat-num" id="pqElderVolcano">—</div>
+              <div class="pq-stat-label">Wave</div>
+            </div>
+          </div>
+          <div class="pq-chore-bar-wrap">
+            <div class="pq-chore-bar" id="pqElderBar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Younger -->
+        <div class="profile-quick younger" id="pqYounger">
+          <div class="profile-quick-top">
+            <div class="pq-mascot" id="pqYoungerMascot">🦄</div>
+            <div class="pq-info">
+              <div class="pq-name" id="pqYoungerName">—</div>
+              <div class="pq-label">7yo</div>
+            </div>
+          </div>
+          <div class="pq-mood-chip" id="pqYoungerMood">No check-in yet</div>
+          <div class="pq-stats">
+            <div class="pq-stat">
+              <div class="pq-stat-num" id="pqYoungerChores">0/0</div>
+              <div class="pq-stat-label">Jobs</div>
+            </div>
+            <div class="pq-stat">
+              <div class="pq-stat-num" id="pqYoungerPoints">0</div>
+              <div class="pq-stat-label">Stars</div>
+            </div>
+            <div class="pq-stat">
+              <div class="pq-stat-num" id="pqYoungerVolcano">—</div>
+              <div class="pq-stat-label">Wave</div>
+            </div>
+          </div>
+          <div class="pq-chore-bar-wrap">
+            <div class="pq-chore-bar" id="pqYoungerBar" style="width:0%"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Recent alerts preview -->
+    <div>
+      <div class="section-hdr">
+        <div class="section-title">Recent Alerts</div>
+        <button class="section-link" onclick="goTo('parent-alerts.html')">See all →</button>
+      </div>
+      <div class="alerts-preview" id="alertsPreview">
+        <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;font-weight:700;">
+          No alerts 🎉
+        </div>
+      </div>
+    </div>
+
+    <!-- Main nav grid -->
+    <div>
+      <div class="section-hdr">
+        <div class="section-title">Manage</div>
+      </div>
+      <div class="nav-grid">
+
+        <a class="nav-tile" href="parent-chores.html"
+           style="--tile-color:#4ade80;--tile-glow:radial-gradient(circle,rgba(74,222,128,0.08),transparent)">
+          <span class="tile-emoji">✅</span>
+          <div class="tile-title">Chore Builder</div>
+          <div class="tile-sub">Set up jobs, points, schedules</div>
+          <span class="tile-badge ok" id="badgeChores">—</span>
+        </a>
+
+        <a class="nav-tile" href="parent-rewards.html"
+           style="--tile-color:#fbbf24;--tile-glow:radial-gradient(circle,rgba(251,191,36,0.08),transparent)">
+          <span class="tile-emoji">⭐</span>
+          <div class="tile-title">Rewards</div>
+          <div class="tile-sub">Store + approve redemptions</div>
+          <span class="tile-badge warn hidden" id="badgeRewards">0</span>
+        </a>
+
+        <a class="nav-tile" href="parent-routines.html"
+           style="--tile-color:#60a5fa;--tile-glow:radial-gradient(circle,rgba(96,165,250,0.08),transparent)">
+          <span class="tile-emoji">🌙</span>
+          <div class="tile-title">Routines</div>
+          <div class="tile-sub">Morning · Bedtime · After school</div>
+        </a>
+
+        <a class="nav-tile" href="parent-profiles.html"
+           style="--tile-color:#a78bfa;--tile-glow:radial-gradient(circle,rgba(167,139,250,0.08),transparent)">
+          <span class="tile-emoji">👧</span>
+          <div class="tile-title">Profiles</div>
+          <div class="tile-sub">Settings · Permissions · Privacy</div>
+        </a>
+
+        <a class="nav-tile wide" href="parent-alerts.html"
+           style="--tile-color:#f87171;--tile-glow:radial-gradient(circle,rgba(248,113,113,0.08),transparent)">
+          <span class="tile-emoji">🔔</span>
+          <div class="tile-info">
+            <div class="tile-title">Alert Center</div>
+            <div class="tile-sub">Volcano · Bully · Distress · Requests</div>
+          </div>
+          <span class="tile-badge hidden" id="badgeAlerts">0</span>
+        </a>
+
+        <a class="nav-tile" href="parent-monitoring.html"
+           style="--tile-color:#34d399;--tile-glow:radial-gradient(circle,rgba(52,211,153,0.08),transparent)">
+          <span class="tile-emoji">📊</span>
+          <div class="tile-title">Monitoring</div>
+          <div class="tile-sub">Mood · Volcano trends · Check-ins</div>
+        </a>
+
+        <a class="nav-tile" href="parent-settings.html"
+           style="--tile-color:#64748b;--tile-glow:radial-gradient(circle,rgba(100,116,139,0.08),transparent)">
+          <span class="tile-emoji">⚙️</span>
+          <div class="tile-title">Settings</div>
+          <div class="tile-sub">Notifications · Privacy · Family</div>
+        </a>
+
+        <!-- Deep clean trigger — special action tile -->
+        <div class="nav-tile wide" id="deepCleanTile"
+           style="--tile-color:#fb923c;--tile-glow:radial-gradient(circle,rgba(251,146,60,0.08),transparent);cursor:pointer;">
+          <span class="tile-emoji">🧹</span>
+          <div class="tile-info">
+            <div class="tile-title">Room Clean Trigger</div>
+            <div class="tile-sub">Send cleaning guide to a girl's dashboard</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /dash-body -->
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="bnav-item active">
+      <span class="bn-emoji">🏠</span><span class="bn-label">Home</span>
+    </button>
+    <a class="bnav-item" href="parent-alerts.html">
+      <span class="bn-emoji">🔔</span><span class="bn-label">Alerts</span>
+    </a>
+    <a class="bnav-item" href="parent-chores.html">
+      <span class="bn-emoji">✅</span><span class="bn-label">Chores</span>
+    </a>
+    <a class="bnav-item" href="parent-monitoring.html">
+      <span class="bn-emoji">📊</span><span class="bn-label">Monitor</span>
+    </a>
+    <a class="bnav-item" href="parent-settings.html">
+      <span class="bn-emoji">⚙️</span><span class="bn-label">Settings</span>
+    </a>
+  </nav>
+
+</div><!-- /screenDash -->
+
+<!-- Toast container -->
+<div id="toastWrap"></div>
+
+<!-- Push notification stub (wire to Web Push API when PWA ready) -->
+<div class="push-stub" id="pushStub" aria-hidden="true"></div>
+
+
+<!-- ============================================================
+     SCRIPTS  →  extract to parent.js when ready
+============================================================ -->
+<script>
+
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+
+/* ============================================================
+   SCHOOL DATA LAYER
+============================================================ */
+const School = {
+  SUBJECTS: [
+    { id:'math',    label:'Math',          emoji:'➕', color:'#60a5fa' },
+    { id:'reading', label:'Reading',       emoji:'📖', color:'#a78bfa' },
+    { id:'writing', label:'Writing',       emoji:'✏️',  color:'#f472b6' },
+    { id:'science', label:'Science',       emoji:'🔬', color:'#34d399' },
+    { id:'social',  label:'Social Studies',emoji:'🌎', color:'#fb923c' },
+    { id:'art',     label:'Art',           emoji:'🎨', color:'#e879f9' },
+    { id:'music',   label:'Music',         emoji:'🎵', color:'#fbbf24' },
+    { id:'pe',      label:'PE',            emoji:'🏃', color:'#4ade80' },
+    { id:'other',   label:'Other',         emoji:'📋', color:'#94a3b8' },
+  ],
+
+  getHomework(pid)  { return Store.getProfile(pid, 'homework', []); },
+  getTests(pid)     { return Store.getProfile(pid, 'tests', []); },
+  getProjects(pid)  { return Store.getProfile(pid, 'projects', []); },
+
+  saveHomework(pid, hw) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === hw.id);
+    const item = { ...hw, id: hw.id || `hw-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'homework', all);
+    return item;
+  },
+
+  saveTest(pid, test) {
+    const all = this.getTests(pid);
+    const idx = all.findIndex(x => x.id === test.id);
+    const item = { ...test, id: test.id || `test-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'tests', all);
+    return item;
+  },
+
+  saveProject(pid, proj) {
+    const all = this.getProjects(pid);
+    const idx = all.findIndex(x => x.id === proj.id);
+    const item = { ...proj, id: proj.id || `proj-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'projects', all);
+    return item;
+  },
+
+  deleteHomework(pid, id) {
+    Store.setProfile(pid, 'homework', this.getHomework(pid).filter(x => x.id !== id));
+  },
+  deleteTest(pid, id) {
+    Store.setProfile(pid, 'tests', this.getTests(pid).filter(x => x.id !== id));
+  },
+  deleteProject(pid, id) {
+    Store.setProfile(pid, 'projects', this.getProjects(pid).filter(x => x.id !== id));
+  },
+
+  markHomeworkDone(pid, id) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      all[idx].done = true;
+      all[idx].doneAt = new Date().toISOString();
+      Store.setProfile(pid, 'homework', all);
+      Points.add(pid, 5, `Homework done: ${all[idx].title}`, 'school');
+      WinJar.addWin(pid, `Finished homework: ${all[idx].title} 📚`, 'school');
+    }
+  },
+
+  getDueToday(pid) {
+    const today = new Date().toDateString();
+    return [
+      ...this.getHomework(pid).filter(x => !x.done && x.dueDate && new Date(x.dueDate).toDateString() === today),
+      ...this.getTests(pid).filter(x => !x.done && x.date && new Date(x.date).toDateString() === today),
+    ];
+  },
+
+  getUpcoming(pid, days = 7) {
+    const cutoff = new Date(Date.now() + days * 86400000);
+    const today  = new Date();
+    const filter = (items, dateKey) => items.filter(x =>
+      !x.done && x[dateKey] && new Date(x[dateKey]) >= today && new Date(x[dateKey]) <= cutoff
+    );
+    return {
+      homework: filter(this.getHomework(pid), 'dueDate'),
+      tests:    filter(this.getTests(pid),    'date'),
+      projects: filter(this.getProjects(pid), 'dueDate'),
+    };
+  },
+
+  subjectById(id) { return this.SUBJECTS.find(s => s.id === id) || this.SUBJECTS[this.SUBJECTS.length - 1]; },
+};
+
+/* ============================================================
+   REWARD STORE DATA LAYER
+============================================================ */
+const RewardStore = {
+  getRewards()     { return Store.get('reward-store', []); },
+  getRedemptions(pid) { return Store.getProfile(pid, 'redemptions', []); },
+
+  saveReward(reward) {
+    const all = this.getRewards();
+    const idx = all.findIndex(r => r.id === reward.id);
+    const item = { ...reward, id: reward.id || `reward-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.push(item);
+    Store.set('reward-store', all);
+    return item;
+  },
+
+  deleteReward(id) {
+    Store.set('reward-store', this.getRewards().filter(r => r.id !== id));
+  },
+
+  requestRedemption(pid, rewardId) {
+    const reward  = this.getRewards().find(r => r.id === rewardId);
+    if (!reward) return false;
+    const balance = Points.getBalance(pid);
+    if (balance < reward.cost) return false;
+
+    const redemption = {
+      id:       `redeem-${Date.now()}`,
+      profileId: pid,
+      rewardId,
+      rewardName: reward.name,
+      cost:     reward.cost,
+      status:   'pending',
+      requestedAt: new Date().toISOString(),
+    };
+
+    // Hold points (deduct immediately, refund if denied)
+    Points.spend(pid, reward.cost, `Reward request: ${reward.name}`);
+
+    // Add to pending
+    const all = Store.get('reward-redemptions', []);
+    all.unshift(redemption);
+    Store.set('reward-redemptions', all.slice(0, 200));
+
+    // Alert parents
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({
+      id: Date.now(), profileId: pid,
+      type: 'reward-request',
+      data: redemption,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    Store.set('parent-alerts', alerts.slice(0, 200));
+
+    return redemption;
+  },
+
+  approveRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      all[idx].status = 'approved';
+      all[idx].approvedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+    }
+  },
+
+  denyRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      const r = all[idx];
+      r.status = 'denied';
+      r.deniedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+      // Refund points
+      Points.add(r.profileId, r.cost, `Refund: ${r.rewardName}`, 'refund');
+    }
+  },
+
+  getPending()  { return Store.get('reward-redemptions', []).filter(r => r.status === 'pending'); },
+  getForProfile(pid) { return Store.get('reward-redemptions', []).filter(r => r.profileId === pid); },
+
+  seedDefaults() {
+    if (this.getRewards().length === 0) {
+      const defaults = [
+        { id:'r1', name:'30 min extra screen time', emoji:'📱', cost:20,  category:'screen'   },
+        { id:'r2', name:'Choose dinner tonight',     emoji:'🍽️',  cost:30,  category:'food'     },
+        { id:'r3', name:'Stay up 15 min late',       emoji:'🌙', cost:25,  category:'bedtime'  },
+        { id:'r4', name:'Movie night pick',          emoji:'🎬', cost:50,  category:'activity' },
+        { id:'r5', name:'Small treat from store',    emoji:'🍬', cost:40,  category:'treat'    },
+        { id:'r6', name:'Skip one chore (once)',     emoji:'🎉', cost:35,  category:'chores'   },
+        { id:'r7', name:'Friend sleepover',          emoji:'🏕️',  cost:100, category:'social'   },
+        { id:'r8', name:'Game time with a parent',   emoji:'🎮', cost:15,  category:'activity' },
+      ];
+      defaults.forEach(d => this.saveReward(d));
+    }
+  },
+};
+
+/* ============================================================
+   THOUGHT JAR DATA LAYER
+============================================================ */
+const ThoughtJar = {
+  TYPES: [
+    { id:'idea',    emoji:'💡', label:'Idea',    color:'#fbbf24' },
+    { id:'feeling', emoji:'💜', label:'Feeling', color:'#a78bfa' },
+    { id:'worry',   emoji:'😰', label:'Worry',   color:'#f87171' },
+    { id:'win',     emoji:'🏆', label:'Win',     color:'#4ade80' },
+    { id:'question',emoji:'❓', label:'Question',color:'#60a5fa' },
+    { id:'vent',    emoji:'🌋', label:'Vent',    color:'#fb923c' },
+  ],
+
+  getEntries(pid) { return Store.getProfile(pid, 'thoughts', []); },
+
+  add(pid, text, type = 'idea', isUrgent = false) {
+    const entries = this.getEntries(pid);
+    const entry = {
+      id:        `thought-${Date.now()}`,
+      text,
+      type,
+      isUrgent,
+      date:      new Date().toISOString(),
+      routed:    false,
+    };
+    entries.unshift(entry);
+    Store.setProfile(pid, 'thoughts', entries.slice(0, 300));
+
+    if (isUrgent) {
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id: Date.now(), profileId: pid, type: 'urgent-thought', data: entry, date: new Date().toISOString(), read: false });
+      Store.set('parent-alerts', alerts.slice(0, 200));
+    }
+    return entry;
+  },
+
+  delete(pid, id) {
+    Store.setProfile(pid, 'thoughts', this.getEntries(pid).filter(e => e.id !== id));
+  },
+
+  markRouted(pid, id) {
+    const entries = this.getEntries(pid);
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) { entries[idx].routed = true; Store.setProfile(pid, 'thoughts', entries); }
+  },
+};
+
+/* Expose new globals */
+window.School      = School;
+window.RewardStore = RewardStore;
+window.ThoughtJar  = ThoughtJar;
+
+</script>
+<script id="parent-app-script">
+/* ============================================================
+   PARENT DASHBOARD — APP LOGIC
+   Extracts to: parent.js
+============================================================ */
+
+/* ── STATE ── */
+let sessionMins    = 10;
+let sessionTimer   = null;
+let sessionEndAt   = null;
+let pinBuffer      = '';
+let authParent     = null;   // 'a' | 'b' | 'both'
+let pendingAction  = null;   // callback for both-PIN protected actions
+
+/* ── PUSH NOTIFICATION STUB ── */
+const PushNotifications = {
+  /* STUB — replace with Web Push API when PWA ready */
+  _log: [],
+
+  send(title, body, urgency = 'normal') {
+    const entry = { title, body, urgency, ts: new Date().toISOString() };
+    this._log.push(entry);
+    console.log(`[PUSH STUB] ${urgency.toUpperCase()}: ${title} — ${body}`);
+    /* WIRE HERE:
+       if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+         navigator.serviceWorker.ready.then(sw => {
+           sw.showNotification(title, { body, badge: '/icon.png', tag: urgency });
+         });
+       }
+    */
+  },
+
+  requestPermission() {
+    /* WIRE HERE:
+       return Notification.requestPermission();
+    */
+    console.log('[PUSH STUB] Permission would be requested here');
+    return Promise.resolve('stub');
+  },
+};
+
+window.PushNotifications = PushNotifications;
+
+/* ── TOAST ── */
+function toast(msg, type = 'info', dur = 3000) {
+  const c = document.getElementById('toastWrap');
+  const cols = { success:'#4ade80', error:'#f87171', warn:'#fbbf24', info:'#6366f1', star:'#fbbf24' };
+  const ics  = { success:'✅', error:'❌', warn:'⚠️', info:'ℹ️', star:'⭐' };
+  const t = document.createElement('div');
+  t.style.cssText = `background:var(--card);color:var(--text);border:2px solid ${cols[type]||cols.info};border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;pointer-events:all;animation:tIn .3s ease;width:100%;font-family:var(--font-main);`;
+  t.innerHTML = `<span>${ics[type]||'💬'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.animation = 'tOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, dur);
+}
+
+/* ── SCREEN SWITCHING ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goTo(page) {
+  window.location.href = page;
+}
+
+/* ── SESSION MANAGEMENT ── */
+function startSession(mins) {
+  sessionMins  = mins;
+  sessionEndAt = Date.now() + mins * 60 * 1000;
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(tickSession, 1000);
+  tickSession();
+}
+
+function tickSession() {
+  const remaining = sessionEndAt - Date.now();
+  if (remaining <= 0) {
+    clearInterval(sessionTimer);
+    toast('Session expired — please log in again', 'warn');
+    endSession();
+    return;
+  }
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const label = `⏱ ${mins}:${secs.toString().padStart(2,'0')}`;
+  const pill  = document.getElementById('sessionPill');
+  pill.textContent = label;
+  pill.className   = `session-pill${remaining < 120000 ? ' expiring' : ''}`;
+}
+
+function endSession() {
+  clearInterval(sessionTimer);
+  Auth.endSession();
+  showScreen('screenPin');
+  pinBuffer = '';
+  updatePinDots();
+}
+
+/* ── DURATION BUTTONS ── */
+function bindDurationBtns() {
+  document.querySelectorAll('.dur-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      sessionMins = parseInt(btn.dataset.mins);
+    });
+  });
+}
+
+/* ── PIN SYSTEM ── */
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`pd${i}`);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+
+function handlePinKey(k) {
+  if (k === 'del') {
+    pinBuffer = pinBuffer.slice(0, -1);
+  } else if (pinBuffer.length < 4) {
+    pinBuffer += k;
+  }
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
+}
+
+function checkPin() {
+  // Accept either parent A or parent B PIN
+  const validA = Auth.verifyPin('parent-a', pinBuffer);
+  const validB = Auth.verifyPin('parent-b', pinBuffer);
+
+  if (validA || validB) {
+    authParent = validA ? 'a' : 'b';
+    Auth.startSession('parent');
+    startSession(sessionMins);
+    loadDashboard();
+    showScreen('screenDash');
+  } else {
+    document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+    document.getElementById('pinError').textContent = 'Wrong PIN — try again';
+    setTimeout(() => { pinBuffer = ''; updatePinDots(); }, 1000);
+  }
+}
+
+/* ── BOTH PINs FLOW ── */
+function requireBothPins(reason, onSuccess) {
+  document.getElementById('bothPinsReason').textContent = reason.toUpperCase();
+  document.getElementById('bothPinA').value = '';
+  document.getElementById('bothPinB').value = '';
+  document.getElementById('bothPinError').textContent = '';
+  pendingAction = onSuccess;
+  showScreen('screenBothPins');
+}
+
+function checkBothPins() {
+  const pinA = String(document.getElementById('bothPinA').value).trim();
+  const pinB = String(document.getElementById('bothPinB').value).trim();
+  const errEl = document.getElementById('bothPinError');
+
+  if (pinA.length !== 4 || pinB.length !== 4) {
+    errEl.textContent = 'Both PINs must be 4 digits';
+    return;
+  }
+  if (!Auth.verifyBothParentPins(pinA, pinB)) {
+    errEl.textContent = 'One or both PINs are incorrect';
+    return;
+  }
+
+  errEl.textContent = '';
+  showScreen('screenDash');
+
+  if (typeof pendingAction === 'function') {
+    pendingAction();
+    pendingAction = null;
+  }
+}
+
+/* ── LOAD DASHBOARD DATA ── */
+function loadDashboard() {
+  loadProfileCards();
+  loadAlerts();
+  loadStats();
+  checkDeepClean();
+}
+
+function loadProfileCards() {
+  ['elder', 'younger'].forEach(pid => {
+    const profile = Profiles.get(pid);
+    const mascot  = MYHQ.MASCOTS.find(m => m.id === profile.mascot) || MYHQ.MASCOTS[0];
+    const sfx     = pid === 'elder' ? 'Elder' : 'Younger';
+
+    document.getElementById(`pq${sfx}Mascot`).textContent = mascot.emoji;
+    document.getElementById(`pq${sfx}Name`).textContent   = profile.displayName || (pid === 'elder' ? 'Elder' : 'Younger');
+
+    // Mood from today's check-in
+    const checkin  = CheckIn.getToday(pid);
+    const slot     = checkin.morning || checkin.afternoon || checkin.evening;
+    const moodEl   = document.getElementById(`pq${sfx}Mood`);
+    if (slot?.mood) {
+      const mood = MYHQ.MOODS.find(m => m.id === slot.mood);
+      moodEl.textContent = mood ? `${mood.emoji} ${mood.label}` : 'Checked in';
+      moodEl.style.color = mood?.color || 'var(--accent)';
+      moodEl.style.background = (mood?.color || '#a78bfa') + '22';
+    }
+
+    // Chores
+    const allChores  = Chores.getForProfile(pid);
+    const doneChores = Chores.getTodayCompletions(pid);
+    const total      = allChores.filter(c => c.frequency === 'daily' || c.type !== 'bonus').length;
+    const done       = doneChores.length;
+    const pct        = total > 0 ? Math.round(done / total * 100) : 0;
+
+    document.getElementById(`pq${sfx}Chores`).textContent = `${done}/${total}`;
+    document.getElementById(`pq${sfx}Bar`).style.width    = pct + '%';
+
+    // Points
+    document.getElementById(`pq${sfx}Points`).textContent = Points.getBalance(pid);
+
+    // Volcano high-water (from stored data)
+    const volcanoToday = Store.getProfile(pid, `volcano-today-${new Date().toDateString()}`, null);
+    document.getElementById(`pq${sfx}Volcano`).textContent = volcanoToday ? volcanoToday.max : '—';
+  });
+}
+
+function loadStats() {
+  const alerts   = Alerts.getUnread();
+  const pending  = RewardStore.getPending();
+  const allChores = [
+    ...Chores.getTodayCompletions('elder'),
+    ...Chores.getTodayCompletions('younger'),
+  ];
+  const ptsToday = [
+    ...Points.getHistory('elder'),
+    ...Points.getHistory('younger'),
+  ].filter(h => {
+    const today = new Date().toDateString();
+    return new Date(h.date).toDateString() === today && h.type === 'earned';
+  }).reduce((sum, h) => sum + h.amount, 0);
+
+  document.getElementById('statAlerts').textContent   = alerts.length || '0';
+  document.getElementById('statPending').textContent  = pending.length || '0';
+  document.getElementById('statChoresDone').textContent = allChores.length;
+  document.getElementById('statPoints').textContent   = ptsToday || '0';
+
+  // Badge updates
+  const alertBadge = document.getElementById('badgeAlerts');
+  if (alerts.length > 0) {
+    alertBadge.textContent = alerts.length;
+    alertBadge.classList.remove('hidden');
+  }
+
+  const rewardBadge = document.getElementById('badgeRewards');
+  if (pending.length > 0) {
+    rewardBadge.textContent = pending.length;
+    rewardBadge.classList.remove('hidden');
+  }
+
+  const choreCount = Chores.getDefinitions().length;
+  document.getElementById('badgeChores').textContent = choreCount || 'Set up';
+}
+
+function loadAlerts() {
+  const alerts  = Alerts.getAll().slice(0, 5);
+  const preview = document.getElementById('alertsPreview');
+  const banner  = document.getElementById('alertBanner');
+
+  // Check for high-urgency alerts
+  const urgent = Alerts.getUnread().filter(a =>
+    ['volcano-high', 'bully', 'needs-help', 'high-distress'].includes(a.type)
+  );
+
+  if (urgent.length > 0) {
+    const top = urgent[0];
+    const labels = {
+      'volcano-high':   '🌋 High distress alert',
+      'bully':          '🛡️ Bully/hurt feelings reported',
+      'needs-help':     '🆘 Needs help right now',
+      'high-distress':  '💜 High distress flagged',
+    };
+    document.getElementById('alertBannerTitle').textContent = labels[top.type] || 'Alert';
+    document.getElementById('alertBannerSub').textContent   =
+      `${top.profileId === 'elder' ? 'Older girl' : 'Younger girl'} · Just now`;
+    banner.classList.add('show');
+
+    // Push notification stub
+    PushNotifications.send(
+      labels[top.type] || 'Alert from My HQ',
+      `Check the parent dashboard for details`,
+      'urgent'
+    );
+
+    document.getElementById('alertBannerBtn').addEventListener('click', () => {
+      goTo('parent-alerts.html');
+    });
+  }
+
+  if (alerts.length === 0) return;
+
+  preview.innerHTML = '';
+  const TYPE_META = {
+    'volcano-high':   { dot:'danger', label:'Volcano high', icon:'🌋' },
+    'bully':          { dot:'danger', label:'Hurt feelings', icon:'🛡️' },
+    'needs-help':     { dot:'danger', label:'Needs help', icon:'🆘' },
+    'high-distress':  { dot:'warn',   label:'High distress', icon:'💜' },
+    'reward-request': { dot:'info',   label:'Reward request', icon:'⭐' },
+    'urgent-thought': { dot:'warn',   label:'Urgent thought', icon:'💭' },
+    'checkin-distress':{ dot:'warn',  label:'Hard check-in', icon:'😰' },
+  };
+
+  alerts.forEach(alert => {
+    const meta = TYPE_META[alert.type] || { dot:'info', label:alert.type, icon:'🔔' };
+    const who  = alert.profileId === 'elder' ? 'Older girl' : 'Younger girl';
+    const time = formatRelTime(alert.date);
+    const el   = document.createElement('div');
+    el.className = `alert-item${!alert.read ? ' unread' : ''}${meta.dot === 'warn' ? ' warn' : ''}`;
+    el.innerHTML = `
+      <div class="alert-dot ${meta.dot}"></div>
+      <div class="alert-info">
+        <div class="alert-who">${meta.icon} ${who} · ${meta.label}</div>
+        <div class="alert-text">${alert.data?.text || alert.data?.rewardName || 'View details'}</div>
+      </div>
+      <div class="alert-time">${time}</div>
+    `;
+    el.addEventListener('click', () => {
+      Alerts.markRead(alert.id);
+      goTo('parent-alerts.html');
+    });
+    preview.appendChild(el);
+  });
+}
+
+/* ── DEEP CLEAN TRIGGER ── */
+function checkDeepClean() {
+  // Check if any deep clean is active
+  const active = Store.get('deep-clean-active', null);
+  const tile   = document.getElementById('deepCleanTile');
+  if (active) {
+    tile.querySelector('.tile-sub').textContent = `Active for ${active.profileId === 'elder' ? 'older girl' : 'younger girl'} · Tap to confirm done`;
+    tile.style.borderColor = 'var(--tile-color)';
+  }
+}
+
+function triggerDeepClean(profileId) {
+  Store.set('deep-clean-active', {
+    profileId,
+    triggeredAt: new Date().toISOString(),
+    triggeredBy: `parent-${authParent}`,
+  });
+  // This would trigger a dashboard notification on the kid's profile
+  Store.setProfile(profileId, 'deep-clean-pending', true);
+  toast(`Room clean sent to ${profileId === 'elder' ? 'older girl' : 'younger girl'}! 🧹`, 'success');
+  loadDashboard();
+}
+
+/* ── DEEP CLEAN TILE MODAL (simple choice) ── */
+function openDeepCleanModal() {
+  const active = Store.get('deep-clean-active', null);
+  if (active) {
+    // Confirm completion
+    const confirm = window.confirm(`Mark room clean as done or "good enough"?`);
+    if (confirm) {
+      Store.remove('deep-clean-active');
+      Store.setProfile(active.profileId, 'deep-clean-pending', false);
+      WinJar.addWin(active.profileId, 'Room is clean! 🧹✨', 'chore');
+      Points.add(active.profileId, 20, 'Room clean completed! 🧹', 'clean');
+      toast('Great job! Room clean marked done ✅', 'success');
+      loadDashboard();
+    }
+  } else {
+    // Pick which girl
+    const which = window.confirm('Send room clean to:\n\nOK = Older girl\nCancel = Younger girl');
+    triggerDeepClean(which ? 'elder' : 'younger');
+  }
+}
+
+/* ── UTILITIES ── */
+function formatRelTime(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60000)   return 'Just now';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+/* ── INIT ── */
+function init() {
+  bindDurationBtns();
+
+  // PIN keypad
+  document.querySelectorAll('.pin-key').forEach(btn => {
+    btn.addEventListener('click', () => handlePinKey(btn.dataset.k));
+  });
+
+  // Keyboard PIN
+  document.addEventListener('keydown', e => {
+    const screen = document.querySelector('.screen.active');
+    if (screen?.id !== 'screenPin') return;
+    if (e.key >= '0' && e.key <= '9') handlePinKey(e.key);
+    if (e.key === 'Backspace')         handlePinKey('del');
+  });
+
+  // Back from PIN
+  document.getElementById('pinBackBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  // Both PINs
+  document.getElementById('bothPinsSubmit').addEventListener('click', checkBothPins);
+  document.getElementById('bothPinsBack').addEventListener('click',   () => showScreen('screenDash'));
+
+  // Dashboard back → end session
+  document.getElementById('dashBackBtn').addEventListener('click', () => {
+    endSession();
+    window.location.href = 'index.html';
+  });
+
+  // Deep clean tile
+  document.getElementById('deepCleanTile').addEventListener('click', openDeepCleanModal);
+
+  // Check if already have valid parent session
+  const session = Auth.getSession();
+  if (session?.profileId === 'parent') {
+    authParent = 'a'; // default — can't know which PIN was used from prior session
+    startSession(sessionMins);
+    loadDashboard();
+    showScreen('screenDash');
+  }
+
+  // Expose both-PIN trigger globally for sub-pages to call
+  window.requireBothPins = requireBothPins;
+  window.goTo = goTo;
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<!-- END SCRIPTS -->
+
+</body>
+</html>

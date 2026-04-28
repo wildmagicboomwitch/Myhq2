@@ -1,0 +1,3759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>My HQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     STYLES
+     To extract: copy everything between these comment markers
+     into myhq-index.css and replace with <link rel="stylesheet" href="myhq-index.css">
+============================================================ -->
+<style id="myhq-styles">
+
+/* ============================================================
+   RESET & VARIABLES
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0d1a;
+  --surface: #12122a;
+  --card: #1a1a3e;
+  --accent: #a78bfa;
+  --accent2: #34d399;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --star: #fbbf24;
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.3);
+  --font-main: 'Nunito', sans-serif;
+  --font-display: 'Fredoka One', cursive;
+  --nav-height: 70px;
+}
+
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  font-family: var(--font-main);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   BACKGROUND STARS
+============================================================ */
+.stars-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.star-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: var(--max-opacity, 0.8); transform: scale(1); }
+}
+
+/* ============================================================
+   LAYOUT
+============================================================ */
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ============================================================
+   SCREENS
+============================================================ */
+.screen {
+  display: none;
+  width: 100%;
+  max-width: 600px;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 40px;
+  animation: screenIn 0.4s ease;
+}
+
+.screen.active { display: flex; }
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   LOADING SCREEN
+============================================================ */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 9999;
+  transition: opacity 0.5s;
+}
+
+.loading-screen.hidden { opacity: 0; pointer-events: none; }
+
+.loading-logo {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(167,139,250,0.6);
+}
+
+.loading-dots { display: flex; gap: 8px; }
+
+.loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: loadBounce 1.2s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; background: var(--accent2); }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; background: var(--star); }
+
+@keyframes loadBounce {
+  0%, 100% { transform: translateY(0);     opacity: 0.4; }
+  50%       { transform: translateY(-12px); opacity: 1;   }
+}
+
+/* ============================================================
+   PROFILE SELECT
+============================================================ */
+.app-header { text-align: center; margin-bottom: 8px; margin-top: 16px; }
+
+.app-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 10vw, 56px);
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(167,139,250,0.5);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.app-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.profile-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.profile-card {
+  background: var(--card);
+  border: 3px solid transparent;
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.profile-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--card-glow, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.profile-card:hover::before,
+.profile-card:focus::before { opacity: 1; }
+
+.profile-card:hover,
+.profile-card:focus {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--card-accent, var(--accent));
+  outline: none;
+}
+
+.profile-card:active { transform: scale(0.98); }
+
+.profile-mascot {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  transition: transform 0.3s ease;
+}
+
+.profile-card:hover .profile-mascot { transform: scale(1.15) rotate(5deg); }
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-bottom: 4px;
+  color: var(--card-accent, var(--accent));
+}
+
+.profile-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.profile-status {
+  margin-top: 10px;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  font-weight: 700;
+  background: rgba(167,139,250,0.2);
+  color: var(--accent);
+}
+
+/* Profile card variants */
+.profile-card.elder   { --card-accent: #e94560; --card-glow: radial-gradient(circle at center, rgba(233,69,96,0.1), transparent 70%); }
+.profile-card.younger { --card-accent: #c084fc; --card-glow: radial-gradient(circle at center, rgba(192,132,252,0.1), transparent 70%); }
+
+.profile-card.family {
+  grid-column: 1 / -1;
+  --card-accent: #34d399;
+  --card-glow: radial-gradient(circle at center, rgba(52,211,153,0.1), transparent 70%);
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+
+.profile-card.family .profile-mascot { font-size: 40px; margin: 0; flex-shrink: 0; }
+.profile-card.family .profile-info   { flex: 1; }
+
+.profile-card.parent-btn {
+  grid-column: 1 / -1;
+  --card-accent: #64748b;
+  background: rgba(100,116,139,0.1);
+  border: 2px dashed rgba(100,116,139,0.4);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.profile-card.parent-btn .profile-mascot { font-size: 24px; margin: 0; }
+
+.profile-card.parent-btn .profile-name {
+  font-family: var(--font-main);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   PIN SCREEN
+============================================================ */
+.pin-screen-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.pin-back-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px;
+  border-radius: 8px;
+  transition: color 0.2s;
+  font-family: var(--font-main);
+}
+
+.pin-back-btn:hover { color: var(--text); }
+
+.pin-who { text-align: center; }
+
+.pin-mascot {
+  font-size: 72px;
+  display: block;
+  margin-bottom: 12px;
+  animation: bounceMascot 2s ease-in-out infinite;
+}
+
+@keyframes bounceMascot {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.pin-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.pin-subtitle { font-size: 15px; color: var(--text-muted); font-weight: 600; }
+
+.pin-dots { display: flex; gap: 16px; justify-content: center; }
+
+.pin-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.pin-dot.filled {
+  background: var(--accent);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.pin-dot.error {
+  border-color: var(--danger);
+  background: var(--danger);
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-8px); }
+  75%       { transform: translateX(8px); }
+}
+
+.pin-error-msg {
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  min-height: 20px;
+}
+
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.pin-key {
+  background: var(--card);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  padding: 18px 8px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-main);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.pin-key:hover {
+  background: var(--accent);
+  color: #fff;
+  transform: scale(1.05);
+  border-color: var(--accent);
+}
+
+.pin-key:active { transform: scale(0.95); }
+.pin-key.zero   { grid-column: 2; }
+
+.pin-key.delete {
+  background: rgba(248,113,113,0.1);
+  border-color: rgba(248,113,113,0.3);
+  color: var(--danger);
+  font-size: 20px;
+}
+
+.pin-key.delete:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+/* ============================================================
+   SETUP FLOW
+============================================================ */
+.setup-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.setup-step {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  animation: screenIn 0.3s ease;
+}
+
+.setup-step.active { display: flex; }
+
+.setup-heading {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--accent);
+  text-align: center;
+}
+
+.setup-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: center;
+  font-weight: 600;
+}
+
+.setup-sub.hint { font-size: 12px; }
+
+.setup-input {
+  width: 100%;
+  background: var(--card);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-main);
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: center;
+}
+
+.setup-input:focus { border-color: var(--accent); }
+
+.setup-input.pin-input {
+  letter-spacing: 8px;
+  font-size: 24px;
+}
+
+.mascot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.mascot-option {
+  background: var(--card);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 12px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mascot-option:hover { border-color: var(--accent); transform: scale(1.05); }
+
+.mascot-option.selected {
+  border-color: var(--accent);
+  background: rgba(167,139,250,0.15);
+  box-shadow: 0 0 12px rgba(167,139,250,0.3);
+}
+
+.mascot-option .m-emoji { font-size: 32px; display: block; margin-bottom: 4px; }
+.mascot-option .m-name  { font-size: 10px; font-weight: 700; color: var(--text-muted); }
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.theme-option {
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-option:hover     { transform: scale(1.02); }
+.theme-option.selected  { border-color: white; box-shadow: 0 0 16px rgba(255,255,255,0.3); }
+
+.theme-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.theme-name { font-size: 14px; font-weight: 800; }
+
+/* ============================================================
+   PARENT SETUP SCREEN
+============================================================ */
+.parent-setup-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow);
+}
+
+.parent-setup-info {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.pin-field-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn {
+  padding: 16px 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-main);
+  width: 100%;
+  max-width: 300px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(167,139,250,0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(167,139,250,0.5);
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid rgba(255,255,255,0.1);
+}
+
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-success {
+  background: var(--success);
+  color: #052e16;
+  box-shadow: 0 4px 20px rgba(74,222,128,0.3);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(74,222,128,0.4);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-big   { padding: 20px 32px; font-size: 20px; border-radius: var(--radius); }
+.btn-full  { max-width: 100%; }
+.btn-small { padding: 10px 20px; font-size: 14px; }
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+.dashboard-header {
+  width: 100%;
+  text-align: center;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.dash-greeting {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 7vw, 36px);
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.dash-date { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+
+.switch-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--card);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-main);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.switch-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.dash-mascot-area {
+  width: 100%;
+  position: relative;
+  text-align: center;
+}
+
+.dash-mascot-big {
+  font-size: 80px;
+  display: block;
+  text-align: center;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  animation: floatMascot 3s ease-in-out infinite;
+}
+
+@keyframes floatMascot {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%       { transform: translateY(-10px) rotate(-3deg); }
+  66%       { transform: translateY(-6px) rotate(3deg); }
+}
+
+.dash-points-pill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--star);
+  color: #431407;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 2px 12px rgba(251,191,36,0.4);
+}
+
+/* Quick Status */
+.quick-status {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.quick-status::-webkit-scrollbar { display: none; }
+
+.status-chip {
+  flex-shrink: 0;
+  background: var(--card);
+  border-radius: 30px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-chip:hover { border-color: var(--accent); transform: scale(1.04); }
+.status-chip .chip-emoji { font-size: 18px; }
+
+/* Dashboard Grid */
+.dash-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.dash-tile {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--tile-glow, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.dash-tile:hover {
+  transform: translateY(-3px);
+  border-color: var(--tile-color, var(--accent));
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.dash-tile:hover::after { opacity: 1; }
+
+.dash-tile .tile-emoji { font-size: 36px; }
+.dash-tile .tile-label { font-size: 14px; font-weight: 800; color: var(--tile-color, var(--text)); }
+.dash-tile .tile-sub   { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+/* ============================================================
+   CHORE CARDS
+============================================================ */
+.chore-item {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.chore-item.done { opacity: 0.6; border-color: var(--success); }
+
+.chore-emoji { font-size: 28px; flex-shrink: 0; }
+.chore-info  { flex: 1; }
+.chore-name  { font-size: 15px; font-weight: 800; }
+.chore-name.done { text-decoration: line-through; color: var(--text-muted); }
+.chore-points { font-size: 12px; color: var(--star); font-weight: 700; }
+
+.chore-check {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.chore-item.done .chore-check {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+/* ============================================================
+   SECTION HEADERS
+============================================================ */
+.section-hdr {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-title { font-family: var(--font-display); font-size: 20px; color: var(--text); }
+
+.section-more {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: var(--font-main);
+}
+
+/* ============================================================
+   BOTTOM NAV
+============================================================ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  background: var(--surface);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  z-index: 90;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: var(--text-muted);
+  border: none;
+  background: none;
+  font-family: var(--font-main);
+}
+
+.nav-item .nav-emoji { font-size: 22px; }
+.nav-item .nav-label { font-size: 10px; font-weight: 800; }
+
+.nav-item.active { color: var(--accent); }
+.nav-item.active .nav-emoji { filter: drop-shadow(0 0 6px var(--accent)); }
+
+/* ============================================================
+   SOS FLOATING BUTTON
+============================================================ */
+.sos-fab {
+  position: fixed;
+  bottom: 84px;
+  right: 20px;
+  z-index: 100;
+  background: linear-gradient(135deg, #f87171, #e94560);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(233,69,96,0.5);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sosPulse 3s ease-in-out infinite;
+}
+
+@keyframes sosPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(233,69,96,0.5); }
+  50%       { box-shadow: 0 4px 30px rgba(233,69,96,0.8), 0 0 0 8px rgba(233,69,96,0.1); }
+}
+
+.sos-fab:hover {
+  transform: scale(1.1);
+  animation: none;
+  box-shadow: 0 8px 32px rgba(233,69,96,0.6);
+}
+
+/* ============================================================
+   MODAL / BOTTOM SHEET
+============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 28px 28px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: sheetUp 0.3s ease;
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Switch modal options */
+.switch-option {
+  background: var(--card);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  font-family: var(--font-main);
+  color: var(--text);
+  text-align: left;
+}
+
+.switch-option:hover { border-color: var(--accent); }
+.switch-option .sw-emoji  { font-size: 36px; flex-shrink: 0; }
+.switch-option .sw-name   { font-size: 16px; font-weight: 800; }
+.switch-option .sw-sub    { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.switch-option .sw-arrow  { margin-left: auto; color: var(--text-muted); font-size: 18px; }
+
+.switch-signout {
+  background: transparent;
+  border: 2px dashed rgba(255,255,255,0.12);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.switch-signout:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ============================================================
+   BADGE
+============================================================ */
+.badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* ============================================================
+   EMPTY STATES
+============================================================ */
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   UTILITY
+============================================================ */
+.mt-8  { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.w-full { width: 100%; }
+.gap-12 { gap: 12px; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.nav-spacer { height: 90px; flex-shrink: 0; }
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.hidden { display: none !important; }
+
+/* ============================================================
+   ACCESSIBILITY
+============================================================ */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (min-width: 480px) {
+  .mascot-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+@media (max-width: 360px) {
+  .profile-grid { grid-template-columns: 1fr; }
+  .profile-card.family,
+  .profile-card.parent-btn { grid-column: 1; }
+  .dash-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   THEME EDITOR
+============================================================ */
+.theme-editor-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--card);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-main);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-editor-trigger:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Modal is full-height sheet */
+.modal-overlay.theme-modal { align-items: flex-end; }
+.theme-sheet {
+  background: var(--surface);
+  border-radius: 28px 28px 0 0;
+  padding: 20px 0 40px;
+  width: 100%;
+  max-width: 600px;
+  height: 88vh;
+  display: flex;
+  flex-direction: column;
+  animation: sheetUp 0.3s ease;
+  overflow: hidden;
+}
+.theme-sheet-head {
+  padding: 0 20px 16px;
+  flex-shrink: 0;
+}
+.theme-sheet-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 20px 12px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.theme-sheet-tabs::-webkit-scrollbar { display: none; }
+
+.te-tab {
+  flex-shrink: 0;
+  background: var(--card);
+  border: 2px solid transparent;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--text-muted);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.te-tab:hover  { border-color: var(--accent); color: var(--text); }
+.te-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.theme-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+.theme-sheet-body::-webkit-scrollbar { width: 4px; }
+.theme-sheet-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+/* Element section */
+.te-section { display: none; flex-direction: column; gap: 20px; }
+.te-section.active { display: flex; }
+
+.te-element-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 2px solid rgba(255,255,255,0.06);
+  transition: border-color 0.2s;
+}
+.te-element-card:focus-within { border-color: var(--accent); }
+
+.te-element-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.te-element-name {
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.te-element-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Preview swatch */
+.te-preview-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.te-preview-swatch:hover { transform: scale(1.1); }
+.te-preview-swatch.gradient-swatch { background-image: var(--swatch-grad); }
+
+/* Mode toggle: solid vs gradient */
+.te-mode-toggle {
+  display: flex;
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 2px;
+}
+.te-mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.te-mode-btn.active { background: var(--accent); color: #fff; }
+
+/* Solid color panel */
+.te-solid-panel { display: flex; flex-direction: column; gap: 12px; }
+.te-solid-panel.hidden { display: none; }
+
+.te-color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.te-color-input {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 2px;
+  background: transparent;
+  flex-shrink: 0;
+}
+.te-hex-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+  text-transform: uppercase;
+}
+.te-hex-input:focus { border-color: var(--accent); }
+
+/* Quick color palette */
+.te-quick-palette {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.te-quick-color {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.15);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.te-quick-color:hover { transform: scale(1.2); border-color: white; }
+.te-quick-color.selected { border-color: white; box-shadow: 0 0 8px rgba(255,255,255,0.5); transform: scale(1.15); }
+
+/* Gradient panel */
+.te-gradient-panel { display: flex; flex-direction: column; gap: 14px; }
+.te-gradient-panel.hidden { display: none; }
+
+.te-gradient-type-row {
+  display: flex;
+  gap: 6px;
+}
+.te-grad-type-btn {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--text-muted);
+  transition: all 0.2s;
+  text-align: center;
+}
+.te-grad-type-btn:hover  { border-color: var(--accent); color: var(--text); }
+.te-grad-type-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Gradient preview bar */
+.te-gradient-preview-bar {
+  height: 48px;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(255,255,255,0.1);
+  transition: background 0.3s;
+}
+
+/* Color stops */
+.te-stops-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.te-stop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.te-stop-color-input {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px;
+  background: transparent;
+  flex-shrink: 0;
+}
+.te-stop-hex {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  outline: none;
+  text-transform: uppercase;
+}
+.te-stop-hex:focus { border-color: var(--accent); }
+.te-stop-position {
+  width: 52px;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  outline: none;
+  text-align: center;
+}
+.te-stop-position:focus { border-color: var(--accent); }
+.te-stop-remove {
+  background: rgba(248,113,113,0.1);
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.te-stop-remove:hover { background: var(--danger); color: #fff; }
+.te-add-stop-btn {
+  background: rgba(255,255,255,0.04);
+  border: 2px dashed rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-main);
+  transition: all 0.2s;
+  text-align: center;
+  width: 100%;
+}
+.te-add-stop-btn:hover { border-color: var(--accent); color: var(--accent); }
+.te-add-stop-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Preset themes section */
+.te-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.te-preset-card {
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.te-preset-card:hover  { transform: scale(1.02); }
+.te-preset-card.active { border-color: white; box-shadow: 0 0 16px rgba(255,255,255,0.2); }
+
+.te-preset-dots {
+  display: flex;
+  gap: 4px;
+}
+.te-preset-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.te-preset-name { font-size: 13px; font-weight: 800; }
+
+/* Footer buttons */
+.theme-sheet-footer {
+  padding: 16px 20px 0;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  gap: 10px;
+}
+.theme-sheet-footer .btn { flex: 1; max-width: 100%; padding: 14px; font-size: 15px; }
+
+</style>
+
+</head>
+<body>
+
+<!-- ============================================================
+     HTML STRUCTURE
+============================================================ -->
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">✨ My HQ</div>
+  <div class="loading-dots">
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+  </div>
+</div>
+
+<!-- Starfield -->
+<div class="stars-bg" id="starsBg"></div>
+
+<!-- App Root -->
+<div id="app">
+
+  <!-- SCREEN: Profile Select -->
+  <div class="screen active" id="screenSelect">
+    <div class="app-header">
+      <div class="app-title" id="appTitleDisplay">✨ My HQ</div>
+      <div class="app-subtitle">Choose your space</div>
+    </div>
+    <div class="profile-grid">
+      <div class="profile-card elder" id="cardElder" tabindex="0" role="button" aria-label="Elder profile">
+        <span class="profile-mascot" id="elderMascot">⭐</span>
+        <div class="profile-name" id="elderName">My HQ</div>
+        <div class="profile-label">Your Space</div>
+        <div class="profile-status" id="elderMood">Tap to enter</div>
+      </div>
+      <div class="profile-card younger" id="cardYounger" tabindex="0" role="button" aria-label="Younger profile">
+        <span class="profile-mascot" id="youngerMascot">🦄</span>
+        <div class="profile-name" id="youngerName">My HQ</div>
+        <div class="profile-label">Your Space</div>
+        <div class="profile-status" id="youngerMood">Tap to enter</div>
+      </div>
+      <div class="profile-card family" id="cardFamily" tabindex="0" role="button">
+        <span class="profile-mascot">🏠</span>
+        <div class="profile-info">
+          <div class="profile-name" style="color:#34d399">Family Space</div>
+          <div class="profile-label">Bulletin Board · Shared Wins</div>
+        </div>
+      </div>
+      <div class="profile-card parent-btn" id="cardParent" tabindex="0" role="button">
+        <span class="profile-mascot">🔒</span>
+        <div class="profile-name">Parent Dashboard</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: PIN Entry -->
+  <div class="screen" id="screenPin">
+    <div class="pin-screen-inner">
+      <button class="pin-back-btn" id="pinBackBtn">← Back</button>
+      <div class="pin-who">
+        <span class="pin-mascot" id="pinMascot">⭐</span>
+        <div class="pin-title" id="pinTitle">Enter PIN</div>
+        <div class="pin-subtitle" id="pinSubtitle">to enter your space</div>
+      </div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="dot0"></div>
+        <div class="pin-dot" id="dot1"></div>
+        <div class="pin-dot" id="dot2"></div>
+        <div class="pin-dot" id="dot3"></div>
+      </div>
+      <div class="pin-error-msg" id="pinError"></div>
+      <div class="pin-keypad">
+        <button class="pin-key" data-key="1">1</button>
+        <button class="pin-key" data-key="2">2</button>
+        <button class="pin-key" data-key="3">3</button>
+        <button class="pin-key" data-key="4">4</button>
+        <button class="pin-key" data-key="5">5</button>
+        <button class="pin-key" data-key="6">6</button>
+        <button class="pin-key" data-key="7">7</button>
+        <button class="pin-key" data-key="8">8</button>
+        <button class="pin-key" data-key="9">9</button>
+        <button class="pin-key zero" data-key="0">0</button>
+        <button class="pin-key delete" data-key="del">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: First-Time Setup (Kids) -->
+  <div class="screen" id="screenSetup">
+    <div class="setup-inner">
+      <div class="setup-step active" id="setupStep0">
+        <div class="setup-heading">Welcome! 🎉</div>
+        <span class="pin-mascot" id="setupMascotPreview">⭐</span>
+        <div class="setup-sub">Let's make this space yours.</div>
+        <button class="btn btn-primary" id="setupStartBtn">Let's go! ✨</button>
+      </div>
+      <div class="setup-step" id="setupStep1">
+        <div class="setup-heading">What's your name? 👋</div>
+        <div class="setup-sub">This is how My HQ will greet you</div>
+        <input type="text" class="setup-input" id="setupNameInput"
+          placeholder="Your name..." maxlength="20" autocomplete="off">
+        <button class="btn btn-primary" id="setupNameNext">Next →</button>
+      </div>
+      <div class="setup-step" id="setupStep2">
+        <div class="setup-heading">Pick your buddy! 🐾</div>
+        <div class="setup-sub">This little friend lives on your home screen</div>
+        <div class="mascot-grid" id="mascotGrid"></div>
+        <button class="btn btn-primary" id="setupMascotNext">Next →</button>
+      </div>
+      <div class="setup-step" id="setupStep3">
+        <div class="setup-heading">Pick your colors! 🎨</div>
+        <div class="setup-sub">You can always change this later</div>
+        <div class="theme-grid" id="themeGrid"></div>
+        <button class="btn btn-primary" id="openThemeEditorSetup" style="max-width:100%;">
+          🎨 Open Theme Editor
+        </button>
+        <button class="btn btn-secondary" id="setupThemeNext">Skip for now →</button>
+      </div>
+      <div class="setup-step" id="setupStep4">
+        <div class="setup-heading">Name your HQ! 🏠</div>
+        <div class="setup-sub">What should your space be called?</div>
+        <input type="text" class="setup-input" id="setupAppNameInput"
+          placeholder="My HQ" maxlength="24" autocomplete="off">
+        <div class="setup-sub hint">Leave blank for "My HQ"</div>
+        <button class="btn btn-success btn-big" id="setupDoneBtn">I'm ready! 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Parent First-Time Setup -->
+  <div class="screen" id="screenParentSetup">
+    <div class="setup-inner">
+      <div class="setup-heading" style="margin-top:16px;">Parent Setup 🔒</div>
+      <div class="setup-sub">Set up both parent PINs to get started.<br>You only need to do this once.</div>
+
+      <div class="parent-setup-card">
+        <div>
+          <span class="pin-field-label">Parent A PIN (4 digits)</span>
+          <input type="number" class="setup-input pin-input" id="parentPinA"
+            placeholder="••••" maxlength="4" autocomplete="off">
+        </div>
+        <div>
+          <span class="pin-field-label">Parent B PIN (4 digits)</span>
+          <input type="number" class="setup-input pin-input" id="parentPinB"
+            placeholder="••••" maxlength="4" autocomplete="off">
+        </div>
+        <div class="pin-error-msg" id="parentPinError"></div>
+        <button class="btn btn-primary btn-full" id="saveParentPinsBtn">Save PINs 🔒</button>
+        <div class="parent-setup-info">
+          Both PINs are needed to change privacy settings.<br>
+          Either PIN alone can access the Parent Dashboard.<br>
+          PINs must be different from each other.
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" id="parentSetupSkipBtn">
+        Skip for now (set up later)
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Dashboard -->
+  <div class="screen" id="screenDashboard">
+    <div class="dashboard-header">
+      <div class="dash-greeting" id="dashGreeting">Good morning! ✨</div>
+      <div class="dash-date" id="dashDate">Today is...</div>
+      <button class="theme-editor-trigger" id="themeEditorBtn">🎨 Theme</button>
+      <button class="switch-btn" id="switchProfileBtn">🔄 Switch</button>
+    </div>
+
+    <div class="dash-mascot-area">
+      <span class="dash-mascot-big" id="dashMascot">⭐</span>
+      <div class="dash-points-pill" id="dashPoints">⭐ 0</div>
+    </div>
+
+    <div class="quick-status">
+      <div class="status-chip" id="chipMood">
+        <span class="chip-emoji">😊</span>
+        <span id="chipMoodLabel">How are you?</span>
+      </div>
+      <div class="status-chip" id="chipEnergy">
+        <span class="chip-emoji">⚡</span>
+        <span id="chipEnergyLabel">Energy</span>
+      </div>
+      <div class="status-chip" id="chipChores">
+        <span class="chip-emoji">✅</span>
+        <span id="chipChoresLabel">Jobs</span>
+      </div>
+    </div>
+
+    <div class="section-hdr mt-16">
+      <div class="section-title">📋 Today's Jobs</div>
+      <button class="section-more" id="choresSeeAll">See all →</button>
+    </div>
+    <div class="flex-col gap-12 w-full" id="todayChores">
+      <div class="empty-state">No jobs set up yet 🎉</div>
+    </div>
+
+    <div class="section-hdr mt-16">
+      <div class="section-title">🌟 My Stuff</div>
+    </div>
+    <div class="dash-grid" id="dashGrid"></div>
+
+    <div class="nav-spacer"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav hidden" id="bottomNav">
+  <button class="nav-item active" id="navHome">
+    <span class="nav-emoji">🏠</span>
+    <span class="nav-label">Home</span>
+  </button>
+  <a class="nav-item" href="chores.html">
+    <span class="nav-emoji">✅</span>
+    <span class="nav-label">Jobs</span>
+  </a>
+  <a class="nav-item" href="feelings-hub.html">
+    <span class="nav-emoji">💜</span>
+    <span class="nav-label">Feelings</span>
+  </a>
+  <a class="nav-item" href="school.html">
+    <span class="nav-emoji">📚</span>
+    <span class="nav-label">School</span>
+  </a>
+  <a class="nav-item" href="wins.html">
+    <span class="nav-emoji">⭐</span>
+    <span class="nav-label">Wins</span>
+  </a>
+</nav>
+
+<!-- SOS Button -->
+<button class="sos-fab hidden" id="sosFab" title="I need help / Big feelings">🆘</button>
+
+<!-- MODAL: Profile Switch -->
+<div class="modal-overlay" id="modalSwitch">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Switch Profile</div>
+    <div class="flex-col gap-12" id="switchOptions"></div>
+    <button class="btn btn-secondary btn-full mt-16" id="closeSwitchBtn">Cancel</button>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCRIPTS
+     To extract: copy everything between these comment markers
+     into myhq-core.js and myhq-app.js, then replace with:
+     <script>
+
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+
+/* ============================================================
+   SCHOOL DATA LAYER
+============================================================ */
+const School = {
+  SUBJECTS: [
+    { id:'math',    label:'Math',          emoji:'➕', color:'#60a5fa' },
+    { id:'reading', label:'Reading',       emoji:'📖', color:'#a78bfa' },
+    { id:'writing', label:'Writing',       emoji:'✏️',  color:'#f472b6' },
+    { id:'science', label:'Science',       emoji:'🔬', color:'#34d399' },
+    { id:'social',  label:'Social Studies',emoji:'🌎', color:'#fb923c' },
+    { id:'art',     label:'Art',           emoji:'🎨', color:'#e879f9' },
+    { id:'music',   label:'Music',         emoji:'🎵', color:'#fbbf24' },
+    { id:'pe',      label:'PE',            emoji:'🏃', color:'#4ade80' },
+    { id:'other',   label:'Other',         emoji:'📋', color:'#94a3b8' },
+  ],
+
+  getHomework(pid)  { return Store.getProfile(pid, 'homework', []); },
+  getTests(pid)     { return Store.getProfile(pid, 'tests', []); },
+  getProjects(pid)  { return Store.getProfile(pid, 'projects', []); },
+
+  saveHomework(pid, hw) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === hw.id);
+    const item = { ...hw, id: hw.id || `hw-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'homework', all);
+    return item;
+  },
+
+  saveTest(pid, test) {
+    const all = this.getTests(pid);
+    const idx = all.findIndex(x => x.id === test.id);
+    const item = { ...test, id: test.id || `test-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'tests', all);
+    return item;
+  },
+
+  saveProject(pid, proj) {
+    const all = this.getProjects(pid);
+    const idx = all.findIndex(x => x.id === proj.id);
+    const item = { ...proj, id: proj.id || `proj-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'projects', all);
+    return item;
+  },
+
+  deleteHomework(pid, id) {
+    Store.setProfile(pid, 'homework', this.getHomework(pid).filter(x => x.id !== id));
+  },
+  deleteTest(pid, id) {
+    Store.setProfile(pid, 'tests', this.getTests(pid).filter(x => x.id !== id));
+  },
+  deleteProject(pid, id) {
+    Store.setProfile(pid, 'projects', this.getProjects(pid).filter(x => x.id !== id));
+  },
+
+  markHomeworkDone(pid, id) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      all[idx].done = true;
+      all[idx].doneAt = new Date().toISOString();
+      Store.setProfile(pid, 'homework', all);
+      Points.add(pid, 5, `Homework done: ${all[idx].title}`, 'school');
+      WinJar.addWin(pid, `Finished homework: ${all[idx].title} 📚`, 'school');
+    }
+  },
+
+  getDueToday(pid) {
+    const today = new Date().toDateString();
+    return [
+      ...this.getHomework(pid).filter(x => !x.done && x.dueDate && new Date(x.dueDate).toDateString() === today),
+      ...this.getTests(pid).filter(x => !x.done && x.date && new Date(x.date).toDateString() === today),
+    ];
+  },
+
+  getUpcoming(pid, days = 7) {
+    const cutoff = new Date(Date.now() + days * 86400000);
+    const today  = new Date();
+    const filter = (items, dateKey) => items.filter(x =>
+      !x.done && x[dateKey] && new Date(x[dateKey]) >= today && new Date(x[dateKey]) <= cutoff
+    );
+    return {
+      homework: filter(this.getHomework(pid), 'dueDate'),
+      tests:    filter(this.getTests(pid),    'date'),
+      projects: filter(this.getProjects(pid), 'dueDate'),
+    };
+  },
+
+  subjectById(id) { return this.SUBJECTS.find(s => s.id === id) || this.SUBJECTS[this.SUBJECTS.length - 1]; },
+};
+
+/* ============================================================
+   REWARD STORE DATA LAYER
+============================================================ */
+const RewardStore = {
+  getRewards()     { return Store.get('reward-store', []); },
+  getRedemptions(pid) { return Store.getProfile(pid, 'redemptions', []); },
+
+  saveReward(reward) {
+    const all = this.getRewards();
+    const idx = all.findIndex(r => r.id === reward.id);
+    const item = { ...reward, id: reward.id || `reward-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.push(item);
+    Store.set('reward-store', all);
+    return item;
+  },
+
+  deleteReward(id) {
+    Store.set('reward-store', this.getRewards().filter(r => r.id !== id));
+  },
+
+  requestRedemption(pid, rewardId) {
+    const reward  = this.getRewards().find(r => r.id === rewardId);
+    if (!reward) return false;
+    const balance = Points.getBalance(pid);
+    if (balance < reward.cost) return false;
+
+    const redemption = {
+      id:       `redeem-${Date.now()}`,
+      profileId: pid,
+      rewardId,
+      rewardName: reward.name,
+      cost:     reward.cost,
+      status:   'pending',
+      requestedAt: new Date().toISOString(),
+    };
+
+    // Hold points (deduct immediately, refund if denied)
+    Points.spend(pid, reward.cost, `Reward request: ${reward.name}`);
+
+    // Add to pending
+    const all = Store.get('reward-redemptions', []);
+    all.unshift(redemption);
+    Store.set('reward-redemptions', all.slice(0, 200));
+
+    // Alert parents
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({
+      id: Date.now(), profileId: pid,
+      type: 'reward-request',
+      data: redemption,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    Store.set('parent-alerts', alerts.slice(0, 200));
+
+    return redemption;
+  },
+
+  approveRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      all[idx].status = 'approved';
+      all[idx].approvedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+    }
+  },
+
+  denyRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      const r = all[idx];
+      r.status = 'denied';
+      r.deniedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+      // Refund points
+      Points.add(r.profileId, r.cost, `Refund: ${r.rewardName}`, 'refund');
+    }
+  },
+
+  getPending()  { return Store.get('reward-redemptions', []).filter(r => r.status === 'pending'); },
+  getForProfile(pid) { return Store.get('reward-redemptions', []).filter(r => r.profileId === pid); },
+
+  seedDefaults() {
+    if (this.getRewards().length === 0) {
+      const defaults = [
+        { id:'r1', name:'30 min extra screen time', emoji:'📱', cost:20,  category:'screen'   },
+        { id:'r2', name:'Choose dinner tonight',     emoji:'🍽️',  cost:30,  category:'food'     },
+        { id:'r3', name:'Stay up 15 min late',       emoji:'🌙', cost:25,  category:'bedtime'  },
+        { id:'r4', name:'Movie night pick',          emoji:'🎬', cost:50,  category:'activity' },
+        { id:'r5', name:'Small treat from store',    emoji:'🍬', cost:40,  category:'treat'    },
+        { id:'r6', name:'Skip one chore (once)',     emoji:'🎉', cost:35,  category:'chores'   },
+        { id:'r7', name:'Friend sleepover',          emoji:'🏕️',  cost:100, category:'social'   },
+        { id:'r8', name:'Game time with a parent',   emoji:'🎮', cost:15,  category:'activity' },
+      ];
+      defaults.forEach(d => this.saveReward(d));
+    }
+  },
+};
+
+/* ============================================================
+   THOUGHT JAR DATA LAYER
+============================================================ */
+const ThoughtJar = {
+  TYPES: [
+    { id:'idea',    emoji:'💡', label:'Idea',    color:'#fbbf24' },
+    { id:'feeling', emoji:'💜', label:'Feeling', color:'#a78bfa' },
+    { id:'worry',   emoji:'😰', label:'Worry',   color:'#f87171' },
+    { id:'win',     emoji:'🏆', label:'Win',     color:'#4ade80' },
+    { id:'question',emoji:'❓', label:'Question',color:'#60a5fa' },
+    { id:'vent',    emoji:'🌋', label:'Vent',    color:'#fb923c' },
+  ],
+
+  getEntries(pid) { return Store.getProfile(pid, 'thoughts', []); },
+
+  add(pid, text, type = 'idea', isUrgent = false) {
+    const entries = this.getEntries(pid);
+    const entry = {
+      id:        `thought-${Date.now()}`,
+      text,
+      type,
+      isUrgent,
+      date:      new Date().toISOString(),
+      routed:    false,
+    };
+    entries.unshift(entry);
+    Store.setProfile(pid, 'thoughts', entries.slice(0, 300));
+
+    if (isUrgent) {
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id: Date.now(), profileId: pid, type: 'urgent-thought', data: entry, date: new Date().toISOString(), read: false });
+      Store.set('parent-alerts', alerts.slice(0, 200));
+    }
+    return entry;
+  },
+
+  delete(pid, id) {
+    Store.setProfile(pid, 'thoughts', this.getEntries(pid).filter(e => e.id !== id));
+  },
+
+  markRouted(pid, id) {
+    const entries = this.getEntries(pid);
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) { entries[idx].routed = true; Store.setProfile(pid, 'thoughts', entries); }
+  },
+};
+
+/* Expose new globals */
+window.School      = School;
+window.RewardStore = RewardStore;
+window.ThoughtJar  = ThoughtJar;
+
+</script>
+     &lt;script src="myhq-app.js"&gt;&lt;/script&gt;
+============================================================ -->
+<script id="myhq-core-script">
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+</script>
+
+<script id="myhq-app-script">
+/* ============================================================
+   MY HQ — APP LOGIC  (myhq-app.js)
+============================================================ */
+
+/* ============================================================
+   STATE
+============================================================ */
+let currentScreen   = 'Select';
+let targetProfileId = null;
+let setupProfileId  = null;
+let pinBuffer       = '';
+let setupStep       = 0;
+let setupData       = {};
+
+/* ============================================================
+   UTILITIES
+============================================================ */
+function resetThemeDefaults() {
+  document.documentElement.style.setProperty('--bg',         '#0d0d1a');
+  document.documentElement.style.setProperty('--surface',    '#12122a');
+  document.documentElement.style.setProperty('--card',       '#1a1a3e');
+  document.documentElement.style.setProperty('--accent',     '#a78bfa');
+  document.documentElement.style.setProperty('--accent2',    '#34d399');
+  document.documentElement.style.setProperty('--text',       '#f1f5f9');
+  document.documentElement.style.setProperty('--text-muted', '#94a3b8');
+  document.documentElement.style.setProperty('--star',       '#fbbf24');
+}
+
+/* ============================================================
+   STARS BACKGROUND
+============================================================ */
+function buildStars() {
+  const bg = document.getElementById('starsBg');
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    const size = Math.random() * 3 + 1;
+    star.className = 'star-particle';
+    star.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${Math.random()*4+2}s;--delay:${Math.random()*4}s;--max-opacity:${Math.random()*0.6+0.2};`;
+    bg.appendChild(star);
+  }
+}
+
+/* ============================================================
+   SCREEN MANAGEMENT
+============================================================ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen' + id).classList.add('active');
+  currentScreen = id;
+  const isDash = id === 'Dashboard';
+  document.getElementById('bottomNav').classList.toggle('hidden', !isDash);
+  document.getElementById('sosFab').classList.toggle('hidden', !isDash);
+}
+
+/* ============================================================
+   PROFILE SELECT
+============================================================ */
+function initProfileSelect() {
+  const elder   = Profiles.get('elder');
+  const younger = Profiles.get('younger');
+
+  const em = MYHQ.MASCOTS.find(m => m.id === elder.mascot)   || MYHQ.MASCOTS[0];
+  const ym = MYHQ.MASCOTS.find(m => m.id === younger.mascot) || MYHQ.MASCOTS[0];
+
+  document.getElementById('elderMascot').textContent   = em.emoji;
+  document.getElementById('youngerMascot').textContent = ym.emoji;
+  document.getElementById('elderName').textContent     = elder.displayName   || 'My HQ';
+  document.getElementById('youngerName').textContent   = younger.displayName || 'My HQ';
+
+  updateProfileMoodDisplay('elder');
+  updateProfileMoodDisplay('younger');
+
+  // Alert badge on parent card
+  const parentCard = document.getElementById('cardParent');
+  const existingBadge = parentCard.querySelector('.badge');
+  if (existingBadge) existingBadge.remove();
+  const alertCount = Alerts.getCount();
+  if (alertCount > 0) {
+    const badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.textContent = alertCount;
+    parentCard.appendChild(badge);
+  }
+}
+
+function updateProfileMoodDisplay(profileId) {
+  const checkin  = CheckIn.getToday(profileId);
+  const slotData = checkin.morning || checkin.afternoon || checkin.evening;
+  const el       = document.getElementById(profileId === 'elder' ? 'elderMood' : 'youngerMood');
+  if (slotData?.mood) {
+    const mood = MYHQ.MOODS.find(m => m.id === slotData.mood);
+    if (mood) {
+      el.textContent        = `${mood.emoji} ${mood.label}`;
+      el.style.background   = mood.color + '33';
+      el.style.color        = mood.color;
+    }
+  }
+}
+
+/* ============================================================
+   PROFILE ENTRY FLOW
+============================================================ */
+function handleProfileTap(profileId) {
+  const deviceProfile = Auth.getDeviceProfile();
+
+  // Switching to a different profile than device-assigned requires PIN
+  if (deviceProfile && deviceProfile !== profileId && profileId !== 'parent') {
+    requestPin(profileId, 'switch');
+    return;
+  }
+
+  if (Auth.hasPin(profileId)) {
+    requestPin(profileId, 'enter');
+    return;
+  }
+
+  enterProfile(profileId);
+}
+
+function enterProfile(profileId) {
+  if (profileId === 'family') {
+    Auth.startSession('family');
+    Toast.show('Family Space coming soon! 🏠', 'info');
+    return;
+  }
+
+  if (profileId === 'parent') {
+    // Check if parent PINs are set up
+    if (!AppSetup.parentPinsSet()) {
+      showScreen('ParentSetup');
+      return;
+    }
+    Auth.startSession('parent');
+    Toast.show('Parent Dashboard coming soon! 🔒', 'info');
+    return;
+  }
+
+  const profile = Profiles.get(profileId);
+  if (!profile.setupDone) {
+    startSetup(profileId);
+    return;
+  }
+
+  Auth.startSession(profileId);
+  if (!Auth.getDeviceProfile()) Auth.setDeviceProfile(profileId);
+  loadDashboard(profileId);
+}
+
+/* ============================================================
+   PIN SYSTEM
+============================================================ */
+function requestPin(profileId, mode) {
+  targetProfileId = profileId;
+  pinBuffer       = '';
+  updatePinDots();
+
+  const profile = Profiles.get(profileId);
+  const mascot  = MYHQ.MASCOTS.find(m => m.id === profile.mascot) || MYHQ.MASCOTS[0];
+  const isParent = profileId === 'parent';
+
+  document.getElementById('pinMascot').textContent   = isParent ? '🔒' : mascot.emoji;
+  document.getElementById('pinTitle').textContent    = isParent ? 'Parent PIN' : (mode === 'switch' ? `This is ${profile.displayName || 'their'} space` : 'Enter your PIN');
+  document.getElementById('pinSubtitle').textContent = isParent ? 'Enter a parent PIN to continue' : 'Enter your PIN to get in';
+  document.getElementById('pinError').textContent    = '';
+
+  const theme = Profiles.getTheme(profileId);
+  document.documentElement.style.setProperty('--accent', theme.accent);
+
+  showScreen('Pin');
+}
+
+function handlePinKey(key) {
+  if (key === 'del') {
+    pinBuffer = pinBuffer.slice(0, -1);
+  } else if (pinBuffer.length < 4) {
+    pinBuffer += key;
+  }
+  updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+
+function checkPin() {
+  // Parent: accept either parent PIN
+  let valid = false;
+  if (targetProfileId === 'parent') {
+    valid = Auth.verifyPin('parent-a', pinBuffer) || Auth.verifyPin('parent-b', pinBuffer);
+  } else {
+    valid = Auth.verifyPin(targetProfileId, pinBuffer);
+  }
+
+  if (valid) {
+    enterProfile(targetProfileId);
+  } else {
+    for (let i = 0; i < 4; i++) document.getElementById('dot' + i).classList.add('error');
+    document.getElementById('pinError').textContent = 'Wrong PIN — try again';
+    setTimeout(() => { pinBuffer = ''; updatePinDots(); }, 1000);
+  }
+}
+
+/* ============================================================
+   PARENT SETUP SCREEN
+============================================================ */
+function saveParentPins() {
+  const pinA = String(document.getElementById('parentPinA').value).trim();
+  const pinB = String(document.getElementById('parentPinB').value).trim();
+  const errEl = document.getElementById('parentPinError');
+
+  if (pinA.length !== 4 || pinB.length !== 4) {
+    errEl.textContent = 'Both PINs must be exactly 4 digits';
+    return;
+  }
+  if (pinA === pinB) {
+    errEl.textContent = 'Parent PINs must be different from each other';
+    return;
+  }
+
+  Auth.setPin('parent-a', pinA);
+  Auth.setPin('parent-b', pinB);
+  AppSetup.markInitialized();
+  errEl.textContent = '';
+
+  Toast.success('Parent PINs saved! 🔒');
+  setTimeout(() => {
+    resetThemeDefaults();
+    showScreen('Select');
+    initProfileSelect();
+  }, 800);
+}
+
+/* ============================================================
+   KIDS SETUP FLOW
+============================================================ */
+function startSetup(profileId) {
+  setupProfileId = profileId;
+  setupData      = {};
+  setupStep      = 0;
+
+  const profile = Profiles.get(profileId);
+  const mascot  = MYHQ.MASCOTS.find(m => m.id === profile.mascot) || MYHQ.MASCOTS[0];
+  document.getElementById('setupMascotPreview').textContent = mascot.emoji;
+
+  showScreen('Setup');
+  goSetupStep(0);
+  buildMascotGrid();
+  buildThemeGrid(profileId);
+}
+
+function goSetupStep(step) {
+  document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('setupStep' + step).classList.add('active');
+  setupStep = step;
+}
+
+function buildMascotGrid() {
+  const grid = document.getElementById('mascotGrid');
+  grid.innerHTML = '';
+  setupData.mascot = 'star';
+  MYHQ.MASCOTS.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'mascot-option' + (m.id === 'star' ? ' selected' : '');
+    el.dataset.id = m.id;
+    el.innerHTML  = `<span class="m-emoji">${m.emoji}</span><span class="m-name">${m.name}</span>`;
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.mascot-option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      setupData.mascot = m.id;
+      document.getElementById('setupMascotPreview').textContent = m.emoji;
+    });
+    grid.appendChild(el);
+  });
+}
+
+function buildThemeGrid(profileId) {
+  const grid         = document.getElementById('themeGrid');
+  grid.innerHTML     = '';
+  const defaultTheme = profileId === 'elder' ? 'DEFAULT_ELDER' : 'DEFAULT_YOUNGER';
+  setupData.theme    = defaultTheme;
+
+  Object.entries(MYHQ.THEMES).forEach(([key, theme]) => {
+    const el = document.createElement('div');
+    el.className      = 'theme-option' + (key === defaultTheme ? ' selected' : '');
+    el.dataset.key    = key;
+    el.style.background = theme.bg;
+    el.innerHTML      = `<div class="theme-dot" style="background:${theme.accent}"></div><span class="theme-name" style="color:${theme.text}">${theme.name}</span>`;
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.theme-option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      setupData.theme = key;
+      const t = MYHQ.THEMES[key];
+      document.documentElement.style.setProperty('--accent',  t.accent);
+      document.documentElement.style.setProperty('--bg',      t.bg);
+      document.documentElement.style.setProperty('--card',    t.card);
+      document.documentElement.style.setProperty('--text',    t.text);
+    });
+    grid.appendChild(el);
+  });
+}
+
+function completeSetup() {
+  const appName = document.getElementById('setupAppNameInput').value.trim() || 'My HQ';
+  const name    = setupData.name || 'Friend';
+
+  Profiles.save(setupProfileId, {
+    displayName: name,
+    mascot:      setupData.mascot || 'star',
+    theme:       setupData.theme  || (setupProfileId === 'elder' ? 'DEFAULT_ELDER' : 'DEFAULT_YOUNGER'),
+    appName,
+    setupDone:   true,
+  });
+
+  Celebrate.fire('medium');
+  Toast.star(`Welcome to ${appName}, ${name}! 🎉`);
+
+  setTimeout(() => {
+    Auth.startSession(setupProfileId);
+    Auth.setDeviceProfile(setupProfileId);
+    loadDashboard(setupProfileId);
+  }, 1500);
+}
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+function loadDashboard(profileId) {
+  Profiles.applyTheme(profileId);
+
+  const profile = Profiles.get(profileId);
+  const mascot  = MYHQ.MASCOTS.find(m => m.id === profile.mascot) || MYHQ.MASCOTS[0];
+
+  document.getElementById('dashGreeting').textContent = `${TimeUtil.greeting()}, ${profile.displayName || 'Friend'}! ✨`;
+  document.getElementById('dashDate').textContent     = `${TimeUtil.dayName()} · ${TimeUtil.dateDisplay()}`;
+  document.getElementById('dashMascot').textContent   = mascot.emoji;
+  document.getElementById('dashPoints').textContent   = `⭐ ${Points.getBalance(profileId)}`;
+
+  const checkin  = CheckIn.getToday(profileId);
+  const slotData = checkin[CheckIn.getCurrentSlot()] || checkin.morning;
+  if (slotData?.mood) {
+    const mood = MYHQ.MOODS.find(m => m.id === slotData.mood);
+    if (mood) document.getElementById('chipMoodLabel').textContent = `${mood.emoji} ${mood.label}`;
+  }
+
+  loadTodayChores(profileId);
+  buildDashGrid(profileId, profile.complexity);
+  showScreen('Dashboard');
+}
+
+function loadTodayChores(profileId) {
+  const container = document.getElementById('todayChores');
+  const chores    = Chores.getForProfile(profileId).filter(c =>
+    c.frequency === 'daily' || (c.frequency === 'weekly' && c.days?.includes(new Date().getDay()))
+  ).slice(0, 3);
+
+  if (chores.length === 0) {
+    container.innerHTML = '<div class="empty-state">No jobs for today 🎉 All done!</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  chores.forEach(chore => {
+    const done = Chores.isDone(profileId, chore.id);
+    const el   = document.createElement('div');
+    el.className = `chore-item${done ? ' done' : ''}`;
+    el.innerHTML = `
+      <span class="chore-emoji">${chore.emoji || '📋'}</span>
+      <div class="chore-info">
+        <div class="chore-name${done ? ' done' : ''}">${chore.name}</div>
+        <div class="chore-points">+${chore.points || 5} ⭐</div>
+      </div>
+      <div class="chore-check">${done ? '✓' : ''}</div>
+    `;
+    if (!done) {
+      el.addEventListener('click', () => {
+        Chores.markDone(profileId, chore.id);
+        el.classList.add('done');
+        el.querySelector('.chore-name').classList.add('done');
+        const check = el.querySelector('.chore-check');
+        check.textContent   = '✓';
+        check.style.background   = 'var(--success)';
+        check.style.borderColor  = 'var(--success)';
+        document.getElementById('dashPoints').textContent = `⭐ ${Points.getBalance(profileId)}`;
+        Toast.star(`+${chore.points || 5} stars! ⭐`);
+        Celebrate.fire('small');
+      });
+    }
+    container.appendChild(el);
+  });
+}
+
+function buildDashGrid(profileId, complexity) {
+  const grid  = document.getElementById('dashGrid');
+  const tiles = [
+    { emoji:'💜', label:'Feelings',    sub:'How do you feel?',   color:'#a78bfa', href:'feelings.html',     glow:'rgba(167,139,250,0.12)' },
+    { emoji:'📚', label:'School',      sub:'Homework & stuff',   color:'#60a5fa', href:'school.html',       glow:'rgba(96,165,250,0.12)'  },
+    { emoji:'🌈', label:'Reset',       sub:'Big feelings tool',  color:'#f87171', href:'reset-toolkit.html',glow:'rgba(248,113,113,0.12)' },
+    { emoji:'⭐', label:'My Wins',     sub:'See what you did!',  color:'#fbbf24', href:'wins.html',         glow:'rgba(251,191,36,0.12)'  },
+    { emoji:'💭', label:'Thought Jar', sub:'Brain dump',         color:'#34d399', href:'thought-jar.html',  glow:'rgba(52,211,153,0.12)'  },
+    { emoji:'🌙', label:'Dreams',      sub:'Dream log',          color:'#818cf8', href:'dreams.html',       glow:'rgba(129,140,248,0.12)'  },
+    { emoji:'🌿', label:'Fireflies',   sub:'Calm-down game',      color:'#4ade80', href:'firefly.html',      glow:'rgba(74,222,128,0.12)'   },
+    { emoji:'📖', label:'Stickers',    sub:'My trophy collection',  color:'#fbbf24', href:'sticker-book.html', glow:'rgba(251,191,36,0.12)'   },
+  ];
+
+  const visible = complexity === 'simple' ? tiles.slice(0, 4) : tiles;
+  grid.innerHTML = '';
+
+  visible.forEach(tile => {
+    const el = document.createElement('a');
+    el.className = 'dash-tile';
+    el.href      = tile.href;
+    el.style.setProperty('--tile-color', tile.color);
+    el.style.setProperty('--tile-glow',  `radial-gradient(circle, ${tile.glow}, transparent)`);
+    el.innerHTML = `
+      <span class="tile-emoji">${tile.emoji}</span>
+      <span class="tile-label">${tile.label}</span>
+      <span class="tile-sub">${tile.sub}</span>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+/* ============================================================
+   SWITCH PROFILE MODAL
+============================================================ */
+function openSwitchModal() {
+  const currentId = Auth.getCurrentProfile();
+  const container = document.getElementById('switchOptions');
+  container.innerHTML = '';
+
+  const options = [
+    { id:'elder',  sublabel:'Profile' },
+    { id:'younger',sublabel:'Profile' },
+    { id:'family', emoji:'🏠', label:'Family Space',      sublabel:'Shared bulletin board'  },
+    { id:'parent', emoji:'🔒', label:'Parent Dashboard',  sublabel:'Requires parent PIN'    },
+  ];
+
+  options.forEach(opt => {
+    if (opt.id === currentId) return;
+
+    let emoji, label;
+    if (opt.id === 'elder' || opt.id === 'younger') {
+      const p = Profiles.get(opt.id);
+      const m = MYHQ.MASCOTS.find(x => x.id === p.mascot) || MYHQ.MASCOTS[0];
+      emoji   = m.emoji;
+      label   = p.displayName || 'My HQ';
+    } else {
+      emoji = opt.emoji;
+      label = opt.label;
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'switch-option';
+    btn.innerHTML = `
+      <span class="sw-emoji">${emoji}</span>
+      <div>
+        <div class="sw-name">${label}</div>
+        <div class="sw-sub">${opt.sublabel}</div>
+      </div>
+      <span class="sw-arrow">→</span>
+    `;
+    btn.addEventListener('click', () => {
+      closeSwitchModal();
+      resetThemeDefaults();
+      handleProfileTap(opt.id);
+    });
+    container.appendChild(btn);
+  });
+
+  // Theme editor shortcut in switch modal
+  const themeBtn = document.createElement('button');
+  themeBtn.className = 'switch-option';
+  themeBtn.innerHTML = `
+    <span class="sw-emoji">🎨</span>
+    <div>
+      <div class="sw-name">Edit My Theme</div>
+      <div class="sw-sub">Colors, gradients, presets</div>
+    </div>
+    <span class="sw-arrow">→</span>
+  `;
+  themeBtn.addEventListener('click', () => {
+    closeSwitchModal();
+    const pid = Auth.getCurrentProfile();
+    if (pid) ThemeEditor.open(pid);
+  });
+  container.appendChild(themeBtn);
+
+  const signOutBtn = document.createElement('button');
+  signOutBtn.className = 'switch-signout';
+  signOutBtn.textContent = '← Back to Profile Select';
+  signOutBtn.addEventListener('click', () => {
+    closeSwitchModal();
+    Auth.endSession();
+    resetThemeDefaults();
+    showScreen('Select');
+    initProfileSelect();
+  });
+  container.appendChild(signOutBtn);
+
+  document.getElementById('modalSwitch').classList.add('open');
+}
+
+function closeSwitchModal() {
+  document.getElementById('modalSwitch').classList.remove('open');
+}
+
+/* ============================================================
+   PLACEHOLDER HANDLERS
+============================================================ */
+function openCheckin() {
+  Toast.show('Check-in coming soon! 💜', 'info');
+}
+
+function openResetToolkit() {
+  Toast.show('Reset Toolkit coming soon! 🌈', 'info');
+}
+
+/* ============================================================
+   EVENT BINDINGS
+============================================================ */
+function bindEvents() {
+
+  /* --- Profile Select --- */
+  const cards = { cardElder:'elder', cardYounger:'younger', cardFamily:'family', cardParent:'parent' };
+  Object.entries(cards).forEach(([id, profileId]) => {
+    const el = document.getElementById(id);
+    el.addEventListener('click',   () => handleProfileTap(profileId));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') handleProfileTap(profileId); });
+  });
+
+  /* --- PIN Keypad --- */
+  document.querySelectorAll('.pin-key').forEach(key => {
+    key.addEventListener('click', () => handlePinKey(key.dataset.key));
+  });
+
+  document.addEventListener('keydown', e => {
+    if (currentScreen !== 'Pin') return;
+    if (e.key >= '0' && e.key <= '9') handlePinKey(e.key);
+    if (e.key === 'Backspace')         handlePinKey('del');
+  });
+
+  document.getElementById('pinBackBtn').addEventListener('click', () => {
+    resetThemeDefaults();
+    showScreen('Select');
+    initProfileSelect();
+  });
+
+  /* --- Parent Setup Screen --- */
+  document.getElementById('saveParentPinsBtn').addEventListener('click', saveParentPins);
+  document.getElementById('parentSetupSkipBtn').addEventListener('click', () => {
+    AppSetup.markInitialized();
+    resetThemeDefaults();
+    showScreen('Select');
+    initProfileSelect();
+  });
+
+  /* --- Kids Setup Flow --- */
+  document.getElementById('setupStartBtn').addEventListener('click', () => goSetupStep(1));
+
+  document.getElementById('setupNameNext').addEventListener('click', () => {
+    const name = document.getElementById('setupNameInput').value.trim();
+    if (!name) { Toast.error('Tell us your name! 😊'); return; }
+    setupData.name = name;
+    goSetupStep(2);
+  });
+
+  document.getElementById('setupNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('setupNameNext').click();
+  });
+
+  document.getElementById('setupMascotNext').addEventListener('click', () => goSetupStep(3));
+  document.getElementById('setupThemeNext').addEventListener('click',  () => goSetupStep(4));
+  document.getElementById('openThemeEditorSetup').addEventListener('click', () => {
+    // Open theme editor in setup context — save goes back to step 4
+    ThemeEditor._setupMode = true;
+    ThemeEditor._onSetupSave = () => goSetupStep(4);
+    // Temporarily set profileId to the profile being set up
+    ThemeEditor._profileId = setupProfileId;
+    const profile = Profiles.get(setupProfileId);
+    const theme   = Profiles.getTheme(setupProfileId);
+    ThemeEditor._draft = ThemeEditor._themeToVars(theme, profile.theme);
+    ThemeEditor._buildPresets();
+    ThemeEditor._buildAllSections();
+    ThemeEditor._applyDraftToPage();
+    ThemeEditor._switchTab('presets');
+    document.getElementById('modalTheme').classList.add('open');
+  });
+  document.getElementById('setupDoneBtn').addEventListener('click', completeSetup);
+
+  /* --- Dashboard --- */
+  document.getElementById('switchProfileBtn').addEventListener('click', openSwitchModal);
+  document.getElementById('chipMood').addEventListener('click', openCheckin);
+  document.getElementById('choresSeeAll').addEventListener('click', () => Toast.show('Chores page coming soon!', 'info'));
+  document.getElementById('navHome').addEventListener('click', () => {
+    const pid = Auth.getCurrentProfile();
+    if (pid) loadDashboard(pid);
+  });
+  document.getElementById('sosFab').addEventListener('click', openResetToolkit);
+
+  /* --- Switch Modal --- */
+  /* --- Theme Editor --- */
+  document.getElementById('themeEditorBtn').addEventListener('click', () => {
+    const pid = Auth.getCurrentProfile();
+    if (pid) ThemeEditor.open(pid);
+  });
+  document.getElementById('themeSaveBtn').addEventListener('click',  () => ThemeEditor.save());
+  document.getElementById('themeResetBtn').addEventListener('click', () => ThemeEditor.reset());
+  document.getElementById('themeCloseBtn').addEventListener('click', () => ThemeEditor.close());
+  document.getElementById('modalTheme').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalTheme')) ThemeEditor.close();
+  });
+  document.querySelectorAll('.te-tab').forEach(tab => {
+    tab.addEventListener('click', () => ThemeEditor._switchTab(tab.dataset.section));
+  });
+
+    document.getElementById('closeSwitchBtn').addEventListener('click', closeSwitchModal);
+  document.getElementById('modalSwitch').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalSwitch')) closeSwitchModal();
+  });
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+function init() {
+  buildStars();
+  bindEvents();
+
+  // Check for active session
+  const session = Auth.getSession();
+  if (session && session.profileId !== 'parent') {
+    const profile = Profiles.get(session.profileId);
+    if (profile?.setupDone) {
+      loadDashboard(session.profileId);
+    } else {
+      resetThemeDefaults();
+      initProfileSelect();
+    }
+  } else {
+    resetThemeDefaults();
+    initProfileSelect();
+    // Show parent setup on very first run
+    if (AppSetup.isFirstRun()) {
+      showScreen('ParentSetup');
+    }
+  }
+
+  setTimeout(() => {
+    document.getElementById('loadingScreen').classList.add('hidden');
+    setTimeout(() => document.getElementById('loadingScreen').remove(), 500);
+  }, 800);
+}
+
+
+/* ============================================================
+   THEME EDITOR  (ThemeEditor namespace)
+============================================================ */
+const ThemeEditor = {
+  _draft: {},
+  _profileId: null,
+  PALETTE: [
+    '#f87171','#fb923c','#fbbf24','#facc15','#a3e635','#4ade80',
+    '#34d399','#2dd4bf','#38bdf8','#60a5fa','#818cf8','#a78bfa',
+    '#c084fc','#e879f9','#f472b6','#fb7185','#ffffff','#e2e8f0',
+    '#94a3b8','#475569','#1e293b','#0f172a','#000000','#ffd700',
+  ],
+  GRAD_TYPES: [
+    { id:'lr',     label:'→',  css: d => `linear-gradient(to right, ${d})` },
+    { id:'tb',     label:'↓',  css: d => `linear-gradient(to bottom, ${d})` },
+    { id:'diag',   label:'↗',  css: d => `linear-gradient(135deg, ${d})` },
+    { id:'radial', label:'◉',  css: d => `radial-gradient(circle, ${d})` },
+    { id:'conic',  label:'🌀', css: d => `conic-gradient(${d})` },
+  ],
+  open(profileId) {
+    this._profileId = profileId;
+    const profile   = Profiles.get(profileId);
+    const theme     = Profiles.getTheme(profileId);
+    const saved     = Store.getProfile(profileId, 'custom-theme', null);
+    this._draft     = saved ? JSON.parse(JSON.stringify(saved)) : this._themeToVars(theme, profile.theme);
+    this._buildPresets();
+    this._buildAllSections();
+    this._applyDraftToPage();
+    this._switchTab('presets');
+    document.getElementById('modalTheme').classList.add('open');
+  },
+  close() {
+    document.getElementById('modalTheme').classList.remove('open');
+    // If closed without saving in setup mode, still advance
+    if (this._setupMode) {
+      this._setupMode = false;
+      if (typeof this._onSetupSave === 'function') {
+        this._onSetupSave();
+        this._onSetupSave = null;
+      }
+    }
+  },
+  _themeToVars(theme, presetKey) {
+    return {
+      '--bg':         { type:'solid', value:theme.bg,        gradient:null, presetKey },
+      '--surface':    { type:'solid', value:theme.surface,   gradient:null },
+      '--card':       { type:'solid', value:theme.card,      gradient:null },
+      '--accent':     { type:'solid', value:theme.accent,    gradient:null },
+      '--accent2':    { type:'solid', value:theme.accent2,   gradient:null },
+      '--text':       { type:'solid', value:theme.text,      gradient:null },
+      '--text-muted': { type:'solid', value:theme.textMuted, gradient:null },
+      '--star':       { type:'solid', value:theme.star,      gradient:null },
+      '--success':    { type:'solid', value:'#4ade80',        gradient:null },
+      '--danger':     { type:'solid', value:'#f87171',        gradient:null },
+    };
+  },
+  _applyDraftToPage() {
+    const root = document.documentElement;
+    Object.entries(this._draft).forEach(([v, cfg]) => {
+      root.style.setProperty(v, cfg.type === 'gradient' && cfg.gradient ? this._buildGradientCSS(cfg.gradient) : cfg.value);
+    });
+  },
+  _buildGradientCSS(g) {
+    if (!g || !g.stops || g.stops.length < 2) return '#888';
+    const stops = g.stops.map(s => `${s.color} ${s.position}%`).join(', ');
+    const gt    = this.GRAD_TYPES.find(x => x.id === g.type) || this.GRAD_TYPES[0];
+    return gt.css(stops);
+  },
+  _buildPresets() {
+    const grid    = document.getElementById('tePresetGrid');
+    const profile = Profiles.get(this._profileId);
+    grid.innerHTML = '';
+    Object.entries(MYHQ.THEMES).forEach(([key, theme]) => {
+      const card = document.createElement('div');
+      card.className = `te-preset-card${profile.theme === key ? ' active' : ''}`;
+      card.style.background = theme.bg;
+      card.innerHTML = `
+        <div class="te-preset-dots">
+          <div class="te-preset-dot" style="background:${theme.accent}"></div>
+          <div class="te-preset-dot" style="background:${theme.accent2}"></div>
+          <div class="te-preset-dot" style="background:${theme.card}"></div>
+          <div class="te-preset-dot" style="background:${theme.text}"></div>
+        </div>
+        <div class="te-preset-name" style="color:${theme.text}">${theme.name}</div>
+      `;
+      card.addEventListener('click', () => {
+        grid.querySelectorAll('.te-preset-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        this._draft = this._themeToVars(theme, key);
+        this._applyDraftToPage();
+        this._buildAllSections();
+        Profiles.save(this._profileId, { theme: key });
+        Toast.success(`${theme.name} applied! 🎨`);
+      });
+      grid.appendChild(card);
+    });
+  },
+  _buildAllSections() {
+    document.querySelectorAll('.te-section[data-var]').forEach(s => this._buildElementSection(s));
+  },
+  _buildElementSection(sec) {
+    const varName  = sec.dataset.var;
+    const varName2 = sec.dataset.var2 || null;
+    const label    = sec.dataset.label;
+    const desc     = sec.dataset.desc;
+    const supGrad  = sec.dataset.gradient === 'true';
+    const cfg      = this._draft[varName] || { type:'solid', value:'#888888', gradient:null };
+    sec.innerHTML  = '';
+    const card     = document.createElement('div');
+    card.className = 'te-element-card';
+    const hdr = document.createElement('div');
+    hdr.className = 'te-element-header';
+    hdr.innerHTML = `<div><div class="te-element-name">${label}</div><div class="te-element-desc">${desc}</div></div><div class="te-preview-swatch" id="swatch-${varName.replace('--','')}"></div>`;
+    card.appendChild(hdr);
+    const solidPanel = document.createElement('div');
+    solidPanel.className = `te-solid-panel${supGrad && cfg.type !== 'solid' ? ' hidden' : ''}`;
+    solidPanel.appendChild(this._buildSolidPanel(varName, varName2, cfg));
+    let gradPanel = null;
+    if (supGrad) {
+      const modeRow = document.createElement('div');
+      modeRow.className = 'te-mode-toggle';
+      modeRow.innerHTML = `<button class="te-mode-btn${cfg.type==='solid'?' active':''}" data-mode="solid">Solid</button><button class="te-mode-btn${cfg.type==='gradient'?' active':''}" data-mode="gradient">Gradient</button>`;
+      gradPanel = document.createElement('div');
+      gradPanel.className = `te-gradient-panel${cfg.type !== 'gradient' ? ' hidden' : ''}`;
+      gradPanel.appendChild(this._buildGradientPanel(varName, varName2, cfg));
+      modeRow.querySelectorAll('.te-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modeRow.querySelectorAll('.te-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const mode = btn.dataset.mode;
+          cfg.type = mode;
+          if (mode === 'gradient' && !cfg.gradient) {
+            cfg.gradient = { type:'lr', stops:[{color:cfg.value||'#a78bfa',position:0},{color:'#34d399',position:100}] };
+          }
+          solidPanel.classList.toggle('hidden', mode !== 'solid');
+          gradPanel.classList.toggle('hidden',  mode !== 'gradient');
+          this._draft[varName] = cfg;
+          this._updateSwatch(varName, cfg);
+          this._applyVar(varName, cfg);
+          if (varName2) this._applyVar(varName2, cfg);
+        });
+      });
+      card.appendChild(modeRow);
+    }
+    card.appendChild(solidPanel);
+    if (gradPanel) card.appendChild(gradPanel);
+    sec.appendChild(card);
+    this._updateSwatch(varName, cfg);
+  },
+  _buildSolidPanel(varName, varName2, cfg) {
+    const wrap = document.createElement('div');
+    const colorRow = document.createElement('div');
+    colorRow.className = 'te-color-row';
+    const colorIn = document.createElement('input');
+    colorIn.type = 'color'; colorIn.className = 'te-color-input'; colorIn.value = cfg.value || '#888888';
+    const hexIn = document.createElement('input');
+    hexIn.type = 'text'; hexIn.className = 'te-hex-input';
+    hexIn.value = (cfg.value||'#888888').toUpperCase(); hexIn.maxLength = 7; hexIn.placeholder = '#RRGGBB';
+    const update = (val) => {
+      cfg.value = val; this._draft[varName] = cfg;
+      this._updateSwatch(varName, cfg);
+      this._applyVar(varName, cfg);
+      if (varName2) this._applyVar(varName2, cfg);
+    };
+    colorIn.addEventListener('input', () => { hexIn.value = colorIn.value.toUpperCase(); update(colorIn.value); });
+    hexIn.addEventListener('input', () => {
+      if (/^#[0-9a-fA-F]{6}$/.test(hexIn.value)) { colorIn.value = hexIn.value; update(hexIn.value); }
+    });
+    colorRow.appendChild(colorIn); colorRow.appendChild(hexIn); wrap.appendChild(colorRow);
+    const palette = document.createElement('div');
+    palette.className = 'te-quick-palette';
+    this.PALETTE.forEach(color => {
+      const sw = document.createElement('div');
+      sw.className = `te-quick-color${cfg.value===color?' selected':''}`; sw.style.background = color; sw.title = color;
+      sw.addEventListener('click', () => {
+        palette.querySelectorAll('.te-quick-color').forEach(s => s.classList.remove('selected'));
+        sw.classList.add('selected'); colorIn.value = color; hexIn.value = color.toUpperCase(); update(color);
+      });
+      palette.appendChild(sw);
+    });
+    wrap.appendChild(palette);
+    return wrap;
+  },
+  _buildGradientPanel(varName, varName2, cfg) {
+    const wrap = document.createElement('div');
+    if (!cfg.gradient) cfg.gradient = { type:'lr', stops:[{color:'#a78bfa',position:0},{color:'#34d399',position:100}] };
+    const grad = cfg.gradient;
+    const typeRow = document.createElement('div');
+    typeRow.className = 'te-gradient-type-row';
+    const previewBar = document.createElement('div');
+    previewBar.className = 'te-gradient-preview-bar';
+    const stopsList = document.createElement('div');
+    stopsList.className = 'te-stops-list';
+    const addBtn = document.createElement('button');
+    addBtn.className = 'te-add-stop-btn';
+    addBtn.textContent = '+ Add Color Stop';
+    this.GRAD_TYPES.forEach(gt => {
+      const btn = document.createElement('button');
+      btn.className = `te-grad-type-btn${grad.type===gt.id?' active':''}`; btn.textContent = gt.label;
+      btn.addEventListener('click', () => {
+        typeRow.querySelectorAll('.te-grad-type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); grad.type = gt.id;
+        this._refreshGrad(varName, varName2, cfg, previewBar, stopsList);
+      });
+      typeRow.appendChild(btn);
+    });
+    addBtn.addEventListener('click', () => {
+      if (grad.stops.length >= 6) { Toast.warning('Max 6 color stops'); return; }
+      grad.stops.push({color:'#ffffff', position:Math.round(100*(grad.stops.length)/(grad.stops.length+1))});
+      addBtn.disabled = grad.stops.length >= 6;
+      this._refreshGrad(varName, varName2, cfg, previewBar, stopsList);
+    });
+    wrap.appendChild(typeRow); wrap.appendChild(previewBar); wrap.appendChild(stopsList); wrap.appendChild(addBtn);
+    this._renderStops(varName, varName2, cfg, previewBar, stopsList);
+    this._refreshGrad(varName, varName2, cfg, previewBar, stopsList);
+    return wrap;
+  },
+  _renderStops(varName, varName2, cfg, previewBar, stopsList) {
+    const grad = cfg.gradient;
+    stopsList.innerHTML = '';
+    grad.stops.forEach((stop, idx) => {
+      const row   = document.createElement('div'); row.className = 'te-stop-row';
+      const cIn   = document.createElement('input'); cIn.type='color'; cIn.className='te-stop-color-input'; cIn.value=stop.color;
+      const hIn   = document.createElement('input'); hIn.type='text'; hIn.className='te-stop-hex'; hIn.value=stop.color.toUpperCase(); hIn.maxLength=7;
+      const pIn   = document.createElement('input'); pIn.type='number'; pIn.className='te-stop-position'; pIn.value=stop.position; pIn.min=0; pIn.max=100;
+      const rmBtn = document.createElement('button'); rmBtn.className='te-stop-remove'; rmBtn.innerHTML='×'; rmBtn.style.display=grad.stops.length<=2?'none':'';
+      cIn.addEventListener('input', () => { stop.color=cIn.value; hIn.value=cIn.value.toUpperCase(); this._refreshGrad(varName,varName2,cfg,previewBar,stopsList); });
+      hIn.addEventListener('input', () => { if(/^#[0-9a-fA-F]{6}$/.test(hIn.value)){stop.color=hIn.value;cIn.value=hIn.value;this._refreshGrad(varName,varName2,cfg,previewBar,stopsList);} });
+      pIn.addEventListener('input', () => { stop.position=parseInt(pIn.value)||0; this._refreshGrad(varName,varName2,cfg,previewBar,stopsList); });
+      rmBtn.addEventListener('click', () => { grad.stops.splice(idx,1); this._refreshGrad(varName,varName2,cfg,previewBar,stopsList); this._renderStops(varName,varName2,cfg,previewBar,stopsList); });
+      row.appendChild(cIn); row.appendChild(hIn); row.appendChild(pIn); row.appendChild(rmBtn);
+      stopsList.appendChild(row);
+    });
+  },
+  _refreshGrad(varName, varName2, cfg, previewBar, stopsList) {
+    cfg.type = 'gradient'; this._draft[varName] = cfg;
+    previewBar.style.background = this._buildGradientCSS(cfg.gradient);
+    this._updateSwatch(varName, cfg);
+    this._applyVar(varName, cfg);
+    if (varName2) this._applyVar(varName2, cfg);
+    this._renderStops(varName, varName2, cfg, previewBar, stopsList);
+  },
+  _applyVar(varName, cfg) {
+    document.documentElement.style.setProperty(varName, cfg.type==='gradient'&&cfg.gradient ? this._buildGradientCSS(cfg.gradient) : cfg.value);
+  },
+  _updateSwatch(varName, cfg) {
+    const el = document.getElementById('swatch-'+varName.replace('--',''));
+    if (!el) return;
+    el.style.background = cfg.type==='gradient'&&cfg.gradient ? this._buildGradientCSS(cfg.gradient) : cfg.value;
+  },
+  _switchTab(sectionId) {
+    document.querySelectorAll('.te-tab').forEach(t => t.classList.toggle('active', t.dataset.section===sectionId));
+    document.querySelectorAll('.te-section').forEach(s => s.classList.toggle('active', s.id===`te-section-${sectionId}`));
+  },
+  save() {
+    if (!this._profileId) return;
+    Store.setProfile(this._profileId, 'custom-theme', JSON.parse(JSON.stringify(this._draft)));
+    Profiles.save(this._profileId, { theme:'CUSTOM' });
+    this.close();
+    Toast.star('Theme saved! 🎨✨');
+    if (this._setupMode && typeof this._onSetupSave === 'function') {
+      this._setupMode = false;
+      this._onSetupSave();
+      this._onSetupSave = null;
+    }
+  },
+  reset() {
+    if (!this._profileId) return;
+    Store.remove(`profile-${this._profileId}-custom-theme`);
+    const dk = this._profileId==='elder' ? 'DEFAULT_ELDER' : 'DEFAULT_YOUNGER';
+    Profiles.save(this._profileId, { theme:dk });
+    Profiles.applyTheme(this._profileId);
+    this._draft = this._themeToVars(Profiles.getTheme(this._profileId), dk);
+    this._buildPresets(); this._buildAllSections();
+    Toast.success('Theme reset to default');
+  },
+};
+
+/* Patch Profiles.applyTheme to handle CUSTOM theme + gradients */
+const _origApplyTheme = Profiles.applyTheme.bind(Profiles);
+Profiles.applyTheme = function(profileId) {
+  const profile = Profiles.get(profileId);
+  if (profile.theme === 'CUSTOM') {
+    const saved = Store.getProfile(profileId, 'custom-theme', null);
+    if (saved) {
+      const root = document.documentElement;
+      Object.entries(saved).forEach(([v, cfg]) => {
+        root.style.setProperty(v, cfg.type==='gradient'&&cfg.gradient ? ThemeEditor._buildGradientCSS(cfg.gradient) : cfg.value);
+      });
+      return;
+    }
+  }
+  _origApplyTheme(profileId);
+};
+
+window.ThemeEditor = ThemeEditor;
+
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<!-- MODAL: Theme Editor -->
+<div class="modal-overlay theme-modal" id="modalTheme">
+  <div class="theme-sheet">
+    <div class="theme-sheet-head">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="margin-bottom:0">🎨 Theme Editor</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="theme-sheet-tabs" id="themeEditorTabs">
+      <button class="te-tab active" data-section="presets">⭐ Presets</button>
+      <button class="te-tab" data-section="bg">🖼️ Background</button>
+      <button class="te-tab" data-section="card">🃏 Cards</button>
+      <button class="te-tab" data-section="accent">✨ Accent</button>
+      <button class="te-tab" data-section="accent2">💚 Accent 2</button>
+      <button class="te-tab" data-section="text">📝 Text</button>
+      <button class="te-tab" data-section="textMuted">🔇 Muted</button>
+      <button class="te-tab" data-section="star">⭐ Stars</button>
+      <button class="te-tab" data-section="success">✅ Success</button>
+      <button class="te-tab" data-section="danger">🚨 Alert</button>
+    </div>
+
+    <!-- Body -->
+    <div class="theme-sheet-body">
+
+      <!-- PRESETS section -->
+      <div class="te-section active" id="te-section-presets">
+        <div class="te-preset-grid" id="tePresetGrid"></div>
+      </div>
+
+      <!-- Each element section injected by JS -->
+      <div class="te-section" id="te-section-bg"       data-var="--bg"         data-var2="--surface"   data-label="Background"  data-desc="Page + nav/modal backgrounds" data-gradient="true"></div>
+      <div class="te-section" id="te-section-card"     data-var="--card"       data-label="Cards &amp; Inputs" data-desc="All cards, inputs, pin keys, buttons" data-gradient="true"></div>
+      <div class="te-section" id="te-section-accent"   data-var="--accent"     data-label="Main Accent" data-desc="Titles, active nav, borders, selected states" data-gradient="true"></div>
+      <div class="te-section" id="te-section-accent2"  data-var="--accent2"    data-label="Accent 2"    data-desc="Secondary highlights"       data-gradient="false"></div>
+      <div class="te-section" id="te-section-text"     data-var="--text"       data-label="Main Text"   data-desc="Body text, nav labels"       data-gradient="false"></div>
+      <div class="te-section" id="te-section-textMuted"data-var="--text-muted" data-label="Muted Text"  data-desc="Subtitles, inactive nav, hints" data-gradient="false"></div>
+      <div class="te-section" id="te-section-star"     data-var="--star"       data-label="Stars / Points" data-desc="Points pill, chore stars" data-gradient="true"></div>
+      <div class="te-section" id="te-section-success"  data-var="--success"    data-label="Success"     data-desc="Done states, success buttons" data-gradient="false"></div>
+      <div class="te-section" id="te-section-danger"   data-var="--danger"     data-label="Alert"       data-desc="SOS button, errors, delete"  data-gradient="false"></div>
+
+    </div><!-- /theme-sheet-body -->
+
+    <!-- Footer -->
+    <div class="theme-sheet-footer">
+      <button class="btn btn-secondary" id="themeResetBtn">↩ Reset</button>
+      <button class="btn btn-primary"   id="themeSaveBtn">Save Theme ✨</button>
+      <button class="btn btn-secondary" id="themeCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- END SCRIPTS -->
+
+</body>
+</html>

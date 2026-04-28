@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bubble Pop — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#060c1a;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;--accent:#60a5fa;--accent2:#a78bfa;--success:#4ade80;--text:#f1f5f9;--text-muted:#64748b;--star:#fbbf24;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-main);background:var(--bg);color:var(--text);user-select:none;-webkit-user-select:none;touch-action:manipulation;}
+
+/* OCEAN BG */
+body::before{content:'';position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#020c1b 0%,#041529 40%,#061e3a 70%,#04162c 100%);pointer-events:none;}
+
+canvas#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+#gameArea{position:fixed;inset:0;z-index:1;}
+
+/* BUBBLE */
+.bubble{
+  position:absolute;border-radius:50%;cursor:pointer;
+  transform:translate(-50%,-50%);
+  transition:transform .1s;
+  pointer-events:all;
+}
+.bubble:hover{transform:translate(-50%,-50%) scale(1.06);}
+.bubble:active{transform:translate(-50%,-50%) scale(0.9);}
+
+/* POP BURST */
+.pop-burst{
+  position:absolute;border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;z-index:10;
+  animation:popBurst .4s ease-out forwards;
+}
+@keyframes popBurst{
+  0%  {opacity:.9;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(2.5);}
+}
+
+/* +1 float */
+.pop-num{
+  position:absolute;font-family:var(--font-display);font-size:18px;
+  pointer-events:none;z-index:11;
+  transform:translate(-50%,-50%);
+  animation:numFloat .9s ease-out forwards;
+}
+@keyframes numFloat{
+  0%  {opacity:1;transform:translate(-50%,-50%);}
+  100%{opacity:0;transform:translate(-50%,-160%);}
+}
+
+/* UI OVERLAY */
+.ui-overlay{position:fixed;inset:0;z-index:20;pointer-events:none;}
+
+.back-btn{position:absolute;top:16px;left:16px;background:rgba(255,255,255,.08);border:none;border-radius:12px;padding:10px 16px;color:rgba(200,230,255,.7);font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font-main);backdrop-filter:blur(8px);transition:all .2s;pointer-events:all;}
+.back-btn:hover{background:rgba(255,255,255,.15);}
+
+.score-pill{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 16px;font-size:14px;font-weight:800;color:rgba(96,165,250,.9);backdrop-filter:blur(8px);}
+
+.breath-guide{position:absolute;bottom:40%;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;color:rgba(200,230,255,.2);letter-spacing:.1em;text-transform:uppercase;animation:breathe 6s ease-in-out infinite;white-space:nowrap;}
+@keyframes breathe{0%,45%{opacity:0}20%{opacity:.3}50%,95%{opacity:0}70%{opacity:.2}}
+
+.milestone-msg{position:absolute;top:15%;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:22px;color:rgba(96,165,250,.9);text-shadow:0 0 20px rgba(96,165,250,.4);white-space:nowrap;opacity:0;transition:opacity .5s;pointer-events:none;}
+.milestone-msg.show{opacity:1;}
+
+/* DONE SCREEN */
+.done-screen{position:fixed;inset:0;z-index:30;background:rgba(4,12,30,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 24px;text-align:center;}
+.done-screen.show{display:flex;animation:fadeIn .6s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.done-emoji{font-size:72px;animation:bounce 2s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.done-title{font-family:var(--font-display);font-size:32px;color:var(--accent);}
+.done-sub{font-size:15px;font-weight:700;color:var(--text-muted);line-height:1.5;max-width:300px;}
+.done-pts{background:rgba(251,191,36,.12);border:2px solid rgba(251,191,36,.25);border-radius:16px;padding:12px 24px;font-size:16px;font-weight:900;color:var(--star);}
+.done-btn{background:var(--accent);border:none;border-radius:16px;padding:16px 40px;font-size:20px;font-weight:900;color:#fff;cursor:pointer;font-family:var(--font-display);box-shadow:0 4px 24px rgba(96,165,250,.4);transition:all .2s;}
+.done-btn:hover{transform:translateY(-2px);}
+.done-back{background:rgba(255,255,255,.08);border:none;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:800;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.done-back:hover{color:var(--text);}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div id="gameArea"></div>
+
+<div class="ui-overlay">
+  <button class="back-btn" id="backBtn">← Back</button>
+  <div class="score-pill">🫧 <span id="scoreDisplay">0</span></div>
+  <div class="breath-guide" id="breathGuide">breathe out slowly...</div>
+  <div class="milestone-msg" id="milestoneMsg"></div>
+</div>
+
+<div class="done-screen" id="doneScreen">
+  <span class="done-emoji">🫧</span>
+  <div class="done-title">So calm! 🌊</div>
+  <div class="done-sub">You popped 50 bubbles. That's some serious calm right there.</div>
+  <div class="done-pts">+8 ⭐ for staying calm!</div>
+  <button class="done-btn" id="playAgainBtn">Pop more bubbles 🫧</button>
+  <button class="done-back" onclick="window.location.href='calm-corner.html'">← Calm Corner</button>
+</div>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-bubblepop-app">
+/* ============================================================
+   BUBBLE POP — CALM CORNER GAME
+============================================================ */
+
+const GOAL       = 50;
+const MAX_BUBBLES = 8;
+const MILESTONES = { 10:'So peaceful 🌊', 25:'You\'re so calm ✨', 40:'Almost there! 🫧' };
+
+let score      = 0;
+let bubbles    = [];
+let animFrame  = null;
+let profileId  = null;
+
+/* ── BUBBLE COLORS ── */
+const BUBBLE_CONFIGS = [
+  { bg:'rgba(96,165,250,0.25)',  border:'rgba(96,165,250,0.6)',  glow:'rgba(96,165,250,0.3)',  num:'#93c5fd' },
+  { bg:'rgba(167,139,250,0.2)', border:'rgba(167,139,250,0.5)', glow:'rgba(167,139,250,0.25)',num:'#c4b5fd' },
+  { bg:'rgba(52,211,153,0.2)',  border:'rgba(52,211,153,0.5)',  glow:'rgba(52,211,153,0.25)', num:'#6ee7b7' },
+  { bg:'rgba(251,191,36,0.15)', border:'rgba(251,191,36,0.4)',  glow:'rgba(251,191,36,0.2)',  num:'#fcd34d' },
+  { bg:'rgba(244,114,182,0.15)',border:'rgba(244,114,182,0.4)', glow:'rgba(244,114,182,0.2)', num:'#f9a8d4' },
+];
+
+/* ── CANVAS BG (underwater shimmer) ── */
+const canvas = document.getElementById('bgCanvas');
+const ctx    = canvas.getContext('2d');
+let shimmer  = [];
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  buildShimmer();
+}
+
+function buildShimmer() {
+  shimmer = [];
+  for (let i = 0; i < 40; i++) {
+    shimmer.push({
+      x:  Math.random() * canvas.width,
+      y:  Math.random() * canvas.height,
+      r:  Math.random() * 60 + 20,
+      a:  Math.random(),
+      da: (Math.random() * 0.003 + 0.001) * (Math.random() < .5 ? 1 : -1),
+    });
+  }
+}
+
+function drawBg(ts) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  shimmer.forEach(s => {
+    s.a += s.da;
+    if (s.a > 1 || s.a < 0) s.da *= -1;
+    const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+    grad.addColorStop(0,   `rgba(30,80,150,${s.a * 0.06})`);
+    grad.addColorStop(1,   'rgba(30,80,150,0)');
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
+  });
+}
+
+/* ── CREATE BUBBLE ── */
+function createBubble() {
+  const cfg    = BUBBLE_CONFIGS[Math.floor(Math.random() * BUBBLE_CONFIGS.length)];
+  const size   = Math.random() * 50 + 40; // 40-90px
+  const margin = size;
+  const x      = margin + Math.random() * (window.innerWidth  - margin * 2);
+  const y      = margin + Math.random() * (window.innerHeight - margin * 2 - 80);
+  const speed  = Math.random() * 0.3 + 0.05; // very slow
+  const drift  = (Math.random() - 0.5) * 0.2;
+
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.style.cssText = `
+    width:${size}px; height:${size}px;
+    left:${x}px; top:${y}px;
+    background:${cfg.bg};
+    border:2px solid ${cfg.border};
+    box-shadow:0 0 ${size*0.4}px ${cfg.glow}, inset 0 0 ${size*0.3}px rgba(255,255,255,0.1);
+  `;
+
+  // Highlight
+  const highlight = document.createElement('div');
+  highlight.style.cssText = `position:absolute;top:15%;left:20%;width:35%;height:35%;border-radius:50%;background:rgba(255,255,255,0.25);filter:blur(4px);`;
+  el.appendChild(highlight);
+
+  document.getElementById('gameArea').appendChild(el);
+
+  const bubble = { el, x, y, size, speed, drift, cfg, alive:true };
+  bubbles.push(bubble);
+
+  el.addEventListener('click',     () => popBubble(bubble));
+  el.addEventListener('touchstart', e => { e.preventDefault(); popBubble(bubble); }, {passive:false});
+
+  return bubble;
+}
+
+/* ── POP BUBBLE ── */
+function popBubble(bubble) {
+  if (!bubble.alive) return;
+  bubble.alive = false;
+  const { x, y, size, cfg } = bubble;
+
+  // Pop burst
+  const burst = document.createElement('div');
+  burst.className = 'pop-burst';
+  burst.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px;background:${cfg.bg};border:2px solid ${cfg.border};`;
+  document.getElementById('gameArea').appendChild(burst);
+  setTimeout(() => burst.remove(), 450);
+
+  // +1 float
+  const num = document.createElement('div');
+  num.className = 'pop-num';
+  num.textContent = '+1';
+  num.style.cssText = `left:${x}px;top:${y}px;color:${cfg.num};text-shadow:0 0 8px ${cfg.glow};`;
+  document.getElementById('gameArea').appendChild(num);
+  setTimeout(() => num.remove(), 950);
+
+  bubble.el.remove();
+  bubbles = bubbles.filter(b => b !== bubble);
+
+  score++;
+  document.getElementById('scoreDisplay').textContent = score;
+
+  if (MILESTONES[score]) showMilestone(MILESTONES[score]);
+  if (score >= GOAL)     setTimeout(showDone, 500);
+  else                   setTimeout(spawnIfNeeded, 300);
+}
+
+/* ── FLOAT BUBBLES ── */
+function floatBubbles() {
+  bubbles.forEach(b => {
+    if (!b.alive) return;
+    b.y -= b.speed;
+    b.x += b.drift;
+    // Wrap vertically
+    if (b.y < -b.size) { b.y = window.innerHeight + b.size; }
+    if (b.x < -b.size) { b.x = window.innerWidth + b.size; }
+    if (b.x > window.innerWidth + b.size) { b.x = -b.size; }
+    b.el.style.left = b.x + 'px';
+    b.el.style.top  = b.y + 'px';
+  });
+}
+
+/* ── SPAWN ── */
+function spawnIfNeeded() {
+  if (score >= GOAL) return;
+  while (bubbles.filter(b => b.alive).length < MAX_BUBBLES) {
+    createBubble();
+  }
+}
+
+/* ── MILESTONE ── */
+function showMilestone(msg) {
+  const el = document.getElementById('milestoneMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ── BREATHE GUIDE ── */
+function tickBreathGuide(ts) {
+  const phase = (ts % 12000) / 12000;
+  const guide = document.getElementById('breathGuide');
+  guide.textContent = phase < 0.5 ? 'breathe in slowly...' : 'breathe out slowly...';
+}
+
+/* ── GAME LOOP ── */
+function gameLoop(ts) {
+  animFrame = requestAnimationFrame(gameLoop);
+  drawBg(ts);
+  floatBubbles();
+  tickBreathGuide(ts);
+}
+
+/* ── DONE ── */
+function showDone() {
+  cancelAnimationFrame(animFrame);
+  document.getElementById('doneScreen').classList.add('show');
+  if (typeof Points !== 'undefined' && profileId) {
+    Points.add(profileId, 8, 'Bubble Pop calm session 🫧', 'game');
+    WinJar.addWin(profileId, 'Popped 50 bubbles to stay calm! 🫧', 'calm');
+  }
+  // Confetti
+  const emojis = ['🫧','💙','✨','🌊','💜'];
+  if (!document.querySelector('#conf-style')) {
+    const s = document.createElement('style'); s.id='conf-style';
+    s.textContent='@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  for (let i=0;i<40;i++) setTimeout(()=>{const el=document.createElement('div');el.textContent=emojis[Math.floor(Math.random()*emojis.length)];el.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*14+14}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;document.body.appendChild(el);setTimeout(()=>el.remove(),3500);},Math.random()*1000);
+}
+
+/* ── RESET ── */
+function resetGame() {
+  score = 0;
+  document.getElementById('scoreDisplay').textContent = '0';
+  document.getElementById('doneScreen').classList.remove('show');
+  bubbles.forEach(b => b.el?.remove());
+  bubbles = [];
+  animFrame = requestAnimationFrame(gameLoop);
+  setTimeout(spawnIfNeeded, 300);
+}
+
+/* ── INIT ── */
+function init() {
+  if (typeof Auth !== 'undefined') {
+    const session = Auth.getSession();
+    if (session && ['elder','younger'].includes(session.profileId)) {
+      profileId = session.profileId;
+      if (typeof Profiles !== 'undefined') Profiles.applyTheme(profileId);
+    }
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  animFrame = requestAnimationFrame(gameLoop);
+  setTimeout(spawnIfNeeded, 600);
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    cancelAnimationFrame(animFrame);
+    window.location.href = 'calm-corner.html';
+  });
+  document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dream Log — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#060818;--surface:#0a0e22;--card:#10163a;--accent:#818cf8;--accent2:#c084fc;--text:#f1f5f9;--text-muted:#64748b;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(129,140,248,0.12) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.add-btn{background:var(--accent);border:none;border-radius:var(--radius-sm);padding:8px 16px;color:#fff;font-size:14px;font-weight:900;cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.add-btn:hover{transform:scale(1.04);}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:14px;}
+
+/* TABS */
+.tabs{display:flex;background:var(--card);border-radius:var(--radius-sm);padding:4px;gap:4px;}
+.tab{flex:1;background:transparent;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:800;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.tab.active{background:var(--accent);color:#fff;}
+
+/* ADD FORM */
+.add-form{background:var(--card);border:2px solid rgba(129,140,248,.2);border-radius:var(--radius);padding:20px;display:none;animation:slideDown .3s ease;}
+.add-form.open{display:block;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.form-title{font-family:var(--font-display);font-size:19px;color:var(--accent);margin-bottom:14px;}
+.f-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.f-row.two{flex-direction:row;gap:10px;}
+.f-row.two>*{flex:1;}
+.f-label{font-size:11px;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+.f-input,.f-select{width:100%;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:11px 14px;font-size:15px;color:var(--text);font-family:var(--font-main);outline:none;transition:border-color .2s;}
+.f-input:focus,.f-select:focus{border-color:var(--accent);}
+.f-select option{background:var(--surface);}
+.f-textarea{width:100%;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;color:var(--text);font-family:var(--font-main);outline:none;resize:none;min-height:80px;line-height:1.5;transition:border-color .2s;}
+.f-textarea:focus{border-color:var(--accent);}
+.f-textarea::placeholder{color:rgba(255,255,255,.18);}
+
+/* Symbol chips */
+.symbol-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.sym-btn{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.06);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);transition:all .2s;}
+.sym-btn:hover{border-color:var(--accent);}
+.sym-btn.selected{border-color:var(--accent);background:rgba(129,140,248,.15);color:var(--text);}
+
+/* Quality stars */
+.star-row{display:flex;gap:6px;}
+.star-btn{font-size:28px;background:none;border:none;cursor:pointer;transition:transform .2s;opacity:.3;}
+.star-btn.active{opacity:1;}
+.star-btn:hover{transform:scale(1.2);}
+
+.form-btns{display:flex;gap:10px;margin-top:4px;}
+.btn-save{flex:1;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:13px;font-size:15px;font-weight:900;color:#fff;cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.btn-save:hover{transform:translateY(-1px);}
+.btn-cancel{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:13px 18px;font-size:14px;font-weight:700;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);}
+
+/* DREAM CARDS */
+.dreams-list{display:flex;flex-direction:column;gap:10px;}
+.dream-card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:16px;transition:all .2s;cursor:pointer;animation:cardIn .3s ease;}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dream-card:hover{border-color:var(--accent);}
+.dc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.dc-icon{font-size:28px;flex-shrink:0;}
+.dc-info{flex:1;}
+.dc-title{font-size:15px;font-weight:900;margin-bottom:3px;}
+.dc-meta{display:flex;gap:6px;flex-wrap:wrap;}
+.dc-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--text-muted);}
+.dc-stars{color:var(--star);font-size:13px;}
+.dc-desc{font-size:13px;font-weight:600;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dc-symbols{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.dc-sym{font-size:16px;}
+.dc-del{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0;}
+.dc-del:hover{color:var(--danger);}
+
+/* EXPANDED STATE */
+.dream-card.expanded .dc-desc{-webkit-line-clamp:unset;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted);}
+.empty-emoji{font-size:56px;display:block;margin-bottom:12px;}
+.empty-title{font-family:var(--font-display);font-size:22px;margin-bottom:6px;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">🌙 Dream Log</div>
+  <button class="add-btn" id="addBtn">+ Log Dream</button>
+</div>
+<main class="page">
+
+  <div class="tabs">
+    <button class="tab active" data-tab="log">🌙 My Dreams</button>
+    <button class="tab"        data-tab="symbols">✨ Symbols</button>
+  </div>
+
+  <!-- Add form -->
+  <div class="add-form" id="addForm">
+    <div class="form-title">Log a Dream 🌙</div>
+
+    <div class="f-row">
+      <div class="f-label">Dream title</div>
+      <input type="text" class="f-input" id="dreamTitle" placeholder="Give your dream a name..." maxlength="60">
+    </div>
+
+    <div class="f-row two">
+      <div>
+        <div class="f-label">Type</div>
+        <select class="f-select" id="dreamType">
+          <option value="normal">😊 Normal</option>
+          <option value="vivid">🌈 Vivid</option>
+          <option value="lucid">🔮 Lucid</option>
+          <option value="recurring">🔁 Recurring</option>
+          <option value="nightmare">😰 Nightmare</option>
+          <option value="weird">🤪 Weird</option>
+          <option value="hazy">🌫️ Hazy</option>
+        </select>
+      </div>
+      <div>
+        <div class="f-label">Feeling</div>
+        <select class="f-select" id="dreamFeeling">
+          <option value="good">😊 Good</option>
+          <option value="weird">😕 Weird</option>
+          <option value="scared">😨 Scared</option>
+          <option value="happy">😄 Happy</option>
+          <option value="sad">😢 Sad</option>
+          <option value="exciting">🚀 Exciting</option>
+          <option value="confusing">😵 Confusing</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-label">How good was it? ⭐</div>
+      <div class="star-row" id="starRow"></div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-label">Symbols I remember</div>
+      <div class="symbol-chips" id="symbolChips"></div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-label">What happened?</div>
+      <textarea class="f-textarea" id="dreamDesc" placeholder="Write what you remember, even just a little bit..."></textarea>
+    </div>
+
+    <div class="form-btns">
+      <button class="btn-save"   id="saveDreamBtn">Save Dream 🌙</button>
+      <button class="btn-cancel" id="cancelDreamBtn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Log tab -->
+  <div id="tabLog">
+    <div class="dreams-list" id="dreamsList"></div>
+  </div>
+
+  <!-- Symbols tab -->
+  <div id="tabSymbols" style="display:none">
+    <div id="symbolStats"></div>
+  </div>
+
+</main>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-dreams-app">
+let profileId  = null;
+let starRating = 3;
+let selSymbols = [];
+let activeTab  = 'log';
+
+const DREAM_SYMBOLS = [
+  '🌊 Water','🔥 Fire','🐍 Snake','🦋 Butterfly','🏠 House','🚗 Car',
+  '✈️ Flying','🌙 Moon','☀️ Sun','🐺 Animal','🎓 School','👨‍👩‍👧 Family',
+  '💀 Danger','🔑 Key','🌳 Trees','🌊 Ocean','🏃 Running','😨 Chase',
+  '💫 Magic','🪄 Powers','🎁 Gift','👻 Ghost','⏰ Late','😢 Crying',
+  '❤️ Love','🐉 Monster','🌈 Rainbow','🎠 Play','📚 Learning','🎵 Music',
+];
+
+const TYPE_ICONS = {
+  normal:'😊', vivid:'🌈', lucid:'🔮', recurring:'🔁',
+  nightmare:'😰', weird:'🤪', hazy:'🌫️',
+};
+const FEELING_COLORS = {
+  good:'#4ade80', weird:'#a78bfa', scared:'#f87171',
+  happy:'#fbbf24', sad:'#818cf8', exciting:'#fb923c', confusing:'#94a3b8',
+};
+
+function getDreams() { return Store.getProfile(profileId, 'dreams', []); }
+function saveDreams(d) { Store.setProfile(profileId, 'dreams', d); }
+
+function buildStars() {
+  const row = document.getElementById('starRow');
+  row.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = `star-btn${i <= starRating ? ' active' : ''}`;
+    btn.textContent = '⭐';
+    btn.dataset.v = i;
+    btn.addEventListener('click', () => {
+      starRating = i;
+      buildStars();
+    });
+    row.appendChild(btn);
+  }
+}
+
+function buildSymbolChips() {
+  const wrap = document.getElementById('symbolChips');
+  wrap.innerHTML = '';
+  DREAM_SYMBOLS.forEach(sym => {
+    const btn = document.createElement('button');
+    btn.className = `sym-btn${selSymbols.includes(sym) ? ' selected' : ''}`;
+    btn.textContent = sym;
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('selected');
+      if (btn.classList.contains('selected')) { if (!selSymbols.includes(sym)) selSymbols.push(sym); }
+      else selSymbols = selSymbols.filter(s => s !== sym);
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function renderDreams() {
+  const list   = document.getElementById('dreamsList');
+  const dreams = getDreams();
+  list.innerHTML = '';
+
+  if (dreams.length === 0) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-emoji">🌙</span><div class="empty-title">No dreams yet</div><div style="font-size:13px;font-weight:700;">Log your first dream when you wake up!</div></div>`;
+    return;
+  }
+
+  dreams.forEach(dream => {
+    const icon    = TYPE_ICONS[dream.type] || '🌙';
+    const feeling = FEELING_COLORS[dream.feeling] || '#818cf8';
+    const stars   = '⭐'.repeat(dream.quality || 3);
+    const date    = new Date(dream.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+    const card = document.createElement('div');
+    card.className = 'dream-card';
+    card.innerHTML = `
+      <div class="dc-top">
+        <span class="dc-icon">${icon}</span>
+        <div class="dc-info">
+          <div class="dc-title">${dream.title || 'Untitled dream'}</div>
+          <div class="dc-meta">
+            <span class="dc-tag" style="color:${feeling};background:${feeling}18">${dream.type}</span>
+            <span class="dc-stars">${stars}</span>
+            <span class="dc-tag">${date}</span>
+          </div>
+        </div>
+        <button class="dc-del" data-id="${dream.id}">🗑</button>
+      </div>
+      ${dream.desc ? `<div class="dc-desc">${dream.desc}</div>` : ''}
+      ${dream.symbols?.length ? `<div class="dc-symbols">${dream.symbols.map(s=>s.split(' ')[0]).join(' ')}</div>` : ''}
+    `;
+
+    card.addEventListener('click', e => { if (!e.target.classList.contains('dc-del')) card.classList.toggle('expanded'); });
+    card.querySelector('.dc-del').addEventListener('click', e => {
+      e.stopPropagation();
+      saveDreams(getDreams().filter(d => d.id !== dream.id));
+      card.style.opacity = '0'; card.style.transition = 'opacity .2s';
+      setTimeout(() => renderDreams(), 200);
+    });
+    list.appendChild(card);
+  });
+}
+
+function renderSymbols() {
+  const container = document.getElementById('symbolStats');
+  const dreams    = getDreams();
+  const symCount  = {};
+  dreams.forEach(d => d.symbols?.forEach(s => { symCount[s] = (symCount[s]||0)+1; }));
+  const sorted = Object.entries(symCount).sort((a,b) => b[1]-a[1]);
+
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="empty-state"><span class="empty-emoji">✨</span><div class="empty-title">No symbols yet</div><div style="font-size:13px;font-weight:700;">Log dreams with symbols to see patterns!</div></div>';
+    return;
+  }
+
+  const max = sorted[0][1];
+  container.innerHTML = `<div style="font-family:var(--font-display);font-size:18px;margin-bottom:12px">Your dream symbols ✨</div>` +
+    sorted.map(([sym, count]) => `
+      <div style="background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:20px;flex-shrink:0">${sym.split(' ')[0]}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;margin-bottom:4px">${sym}</div>
+          <div style="background:rgba(255,255,255,.06);border-radius:20px;height:6px;overflow:hidden">
+            <div style="height:100%;border-radius:20px;background:var(--accent);width:${Math.round(count/max*100)}%;transition:width .5s ease"></div>
+          </div>
+        </div>
+        <span style="font-size:12px;font-weight:900;color:var(--accent)">${count}×</span>
+      </div>
+    `).join('');
+}
+
+function saveDream() {
+  const title = document.getElementById('dreamTitle').value.trim() || 'Dream';
+  const dream = {
+    id:      `dream-${Date.now()}`,
+    title,
+    type:    document.getElementById('dreamType').value,
+    feeling: document.getElementById('dreamFeeling').value,
+    quality: starRating,
+    symbols: [...selSymbols],
+    desc:    document.getElementById('dreamDesc').value.trim(),
+    date:    new Date().toISOString(),
+  };
+  const dreams = getDreams();
+  dreams.unshift(dream);
+  saveDreams(dreams.slice(0, 200));
+
+  // Reset
+  document.getElementById('dreamTitle').value = '';
+  document.getElementById('dreamDesc').value  = '';
+  selSymbols = []; starRating = 3;
+  buildStars(); buildSymbolChips();
+  document.getElementById('addForm').classList.remove('open');
+  renderDreams();
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  buildStars();
+  buildSymbolChips();
+  renderDreams();
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      document.getElementById('tabLog').style.display     = activeTab === 'log'     ? '' : 'none';
+      document.getElementById('tabSymbols').style.display = activeTab === 'symbols' ? '' : 'none';
+      if (activeTab === 'symbols') renderSymbols();
+    });
+  });
+
+  document.getElementById('addBtn').addEventListener('click',       () => { buildSymbolChips(); buildStars(); document.getElementById('addForm').classList.toggle('open'); });
+  document.getElementById('saveDreamBtn').addEventListener('click',  saveDream);
+  document.getElementById('cancelDreamBtn').addEventListener('click',() => document.getElementById('addForm').classList.remove('open'));
+  document.getElementById('backBtn').addEventListener('click',       () => window.location.href = 'index.html');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

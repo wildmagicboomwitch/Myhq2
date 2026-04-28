@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chore Builder — Parent HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="parent-chores-styles">
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#080c18; --surface:#0d1220; --card:#131929; --card2:#1a2235;
+  --border:rgba(255,255,255,0.07); --accent:#6366f1; --accent2:#34d399;
+  --danger:#f87171; --warning:#fbbf24; --success:#4ade80;
+  --elder:#e94560; --younger:#c084fc;
+  --text:#f1f5f9; --text-muted:#64748b;
+  --radius:18px; --radius-sm:10px;
+  --font-main:'Nunito',sans-serif; --font-disp:'Fredoka One',cursive;
+}
+html,body { min-height:100vh; font-family:var(--font-main); background:var(--bg); color:var(--text); overflow-x:hidden; }
+body::before { content:''; position:fixed; inset:0; z-index:0; background:radial-gradient(ellipse 60% 40% at 20% 0%,rgba(99,102,241,0.1) 0%,transparent 70%),var(--bg); pointer-events:none; }
+#app { position:relative; z-index:1; max-width:640px; margin:0 auto; }
+
+/* TOPBAR */
+.topbar { position:sticky; top:0; z-index:50; background:var(--bg); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:10px; backdrop-filter:blur(12px); }
+.back-btn { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text-muted); font-size:13px; font-weight:800; cursor:pointer; font-family:var(--font-main); transition:all .2s; }
+.back-btn:hover { color:var(--text); border-color:var(--accent); }
+.topbar-title { font-family:var(--font-disp); font-size:20px; color:var(--accent); flex:1; }
+.add-btn { background:var(--accent); border:none; border-radius:var(--radius-sm); padding:8px 16px; color:#fff; font-size:14px; font-weight:900; cursor:pointer; font-family:var(--font-main); transition:all .2s; }
+.add-btn:hover { transform:scale(1.04); }
+
+.page { padding:16px 16px 100px; }
+
+/* ASSIGN TABS */
+.assign-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.assign-tab { flex:1; background:var(--card); border:2px solid var(--border); border-radius:var(--radius-sm); padding:10px 8px; text-align:center; cursor:pointer; font-family:var(--font-main); color:var(--text-muted); font-size:13px; font-weight:800; transition:all .2s; }
+.assign-tab:hover { border-color:var(--accent); }
+.assign-tab.active { background:rgba(99,102,241,0.15); border-color:var(--accent); color:var(--text); }
+.assign-tab.elder   { --tc:var(--elder); }
+.assign-tab.younger { --tc:var(--younger); }
+.assign-tab.both    { --tc:var(--accent2); }
+.assign-tab.active.elder   { border-color:var(--elder);  background:rgba(233,69,96,0.1); }
+.assign-tab.active.younger { border-color:var(--younger);background:rgba(192,132,252,0.1); }
+.assign-tab.active.both    { border-color:var(--accent2);background:rgba(52,211,153,0.1); }
+
+/* ADD FORM */
+.add-form { background:var(--card); border:2px solid var(--accent); border-radius:var(--radius); padding:20px; margin-bottom:16px; display:none; animation:slideDown .3s ease; }
+.add-form.open { display:block; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+.form-title { font-family:var(--font-disp); font-size:19px; color:var(--accent); margin-bottom:16px; }
+.form-row { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.form-row.two { flex-direction:row; gap:10px; }
+.form-row.two > * { flex:1; }
+.field-label { font-size:11px; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+.field-input, .field-select {
+  width:100%; background:rgba(255,255,255,0.05); border:2px solid var(--border);
+  border-radius:var(--radius-sm); padding:11px 14px; font-size:15px; color:var(--text);
+  font-family:var(--font-main); outline:none; transition:border-color .2s;
+}
+.field-input:focus,.field-select:focus { border-color:var(--accent); }
+.field-select option { background:var(--surface); }
+
+/* Emoji picker strip */
+.emoji-strip { display:flex; flex-wrap:wrap; gap:6px; }
+.e-btn { background:rgba(255,255,255,0.05); border:2px solid transparent; border-radius:8px; padding:6px 8px; font-size:20px; cursor:pointer; transition:all .2s; }
+.e-btn:hover, .e-btn.selected { border-color:var(--accent); background:rgba(99,102,241,0.15); transform:scale(1.1); }
+
+/* Assign pills */
+.assign-pills { display:flex; gap:8px; }
+.assign-pill { flex:1; background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:20px; padding:8px 10px; font-size:12px; font-weight:800; cursor:pointer; font-family:var(--font-main); color:var(--text-muted); text-align:center; transition:all .2s; }
+.assign-pill.elder   { }
+.assign-pill.younger { }
+.assign-pill.both    { }
+.assign-pill.active.elder   { border-color:var(--elder);  background:rgba(233,69,96,0.15);  color:var(--elder); }
+.assign-pill.active.younger { border-color:var(--younger);background:rgba(192,132,252,0.15);color:var(--younger); }
+.assign-pill.active.both    { border-color:var(--accent2);background:rgba(52,211,153,0.15); color:var(--accent2); }
+
+/* Days picker */
+.days-row { display:flex; gap:6px; flex-wrap:wrap; }
+.day-btn { background:rgba(255,255,255,0.05); border:2px solid var(--border); border-radius:20px; padding:6px 10px; font-size:12px; font-weight:800; cursor:pointer; font-family:var(--font-main); color:var(--text-muted); transition:all .2s; }
+.day-btn.active { border-color:var(--accent); background:rgba(99,102,241,0.15); color:var(--text); }
+
+/* Toggles */
+.toggle-row { display:flex; align-items:center; gap:10px; cursor:pointer; }
+.toggle-label { font-size:13px; font-weight:700; color:var(--text-muted); flex:1; }
+.toggle-switch { width:40px; height:22px; background:rgba(255,255,255,0.1); border-radius:20px; position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; }
+.toggle-switch.on { background:var(--accent); }
+.toggle-switch::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
+.toggle-switch.on::after { transform:translateX(18px); }
+
+/* Form buttons */
+.form-btns { display:flex; gap:10px; margin-top:16px; }
+.btn-save { flex:1; background:var(--accent); border:none; border-radius:var(--radius-sm); padding:13px; font-size:15px; font-weight:900; color:#fff; cursor:pointer; font-family:var(--font-main); transition:all .2s; }
+.btn-save:hover { transform:translateY(-1px); }
+.btn-cancel { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:13px 18px; font-size:14px; font-weight:700; color:var(--text-muted); cursor:pointer; font-family:var(--font-main); transition:all .2s; }
+.btn-cancel:hover { border-color:var(--accent); color:var(--accent); }
+
+/* PRESETS STRIP */
+.presets-strip { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; }
+.presets-strip::-webkit-scrollbar { display:none; }
+.preset-chip { flex-shrink:0; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:7px 14px; font-size:12px; font-weight:800; color:var(--text-muted); cursor:pointer; font-family:var(--font-main); transition:all .2s; white-space:nowrap; }
+.preset-chip:hover { border-color:var(--accent); color:var(--text); }
+
+/* SECTION HEADER */
+.section-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; margin-top:4px; }
+.section-title { font-family:var(--font-disp); font-size:17px; }
+.section-badge { background:var(--accent); color:#fff; border-radius:20px; padding:2px 10px; font-size:12px; font-weight:900; }
+
+/* CHORE CARDS */
+.chores-list { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+.chore-card {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; display:flex; align-items:center; gap:12px;
+  transition:all .2s; position:relative; overflow:hidden;
+}
+.chore-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--cc,var(--accent)); }
+.chore-card:hover { border-color:var(--cc,var(--accent)); }
+.cc-emoji { font-size:26px; flex-shrink:0; }
+.cc-body  { flex:1; min-width:0; }
+.cc-name  { font-size:14px; font-weight:800; margin-bottom:4px; }
+.cc-meta  { display:flex; gap:6px; flex-wrap:wrap; }
+.cc-tag   { font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; background:rgba(255,255,255,0.06); color:var(--text-muted); }
+.cc-tag.elder   { color:var(--elder);  background:rgba(233,69,96,0.1); }
+.cc-tag.younger { color:var(--younger);background:rgba(192,132,252,0.1); }
+.cc-tag.both    { color:var(--accent2);background:rgba(52,211,153,0.1); }
+.cc-tag.bonus   { color:var(--warning);background:rgba(251,191,36,0.1); }
+.cc-tag.pts     { color:var(--warning); }
+.cc-actions { display:flex; gap:6px; flex-shrink:0; }
+.cc-edit, .cc-del {
+  background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer;
+  font-family:var(--font-main); transition:all .2s; color:var(--text-muted);
+}
+.cc-edit:hover { border-color:var(--accent); color:var(--accent); }
+.cc-del:hover  { border-color:var(--danger); color:var(--danger); }
+
+/* COMPLETION HISTORY */
+.history-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+.hist-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.hist-row:last-child { border-bottom:none; }
+.hist-who  { font-size:12px; font-weight:800; color:var(--text-muted); width:80px; flex-shrink:0; }
+.hist-bar-wrap { flex:1; background:rgba(255,255,255,0.06); border-radius:20px; height:8px; overflow:hidden; }
+.hist-bar { height:100%; border-radius:20px; background:linear-gradient(90deg,var(--hc,var(--accent)),var(--accent2)); transition:width .6s ease; }
+.hist-pct { font-size:12px; font-weight:900; color:var(--text-muted); width:36px; text-align:right; flex-shrink:0; }
+
+/* EMPTY */
+.empty-state { text-align:center; padding:32px 20px; color:var(--text-muted); }
+.empty-emoji { font-size:48px; display:block; margin-bottom:10px; }
+.empty-title { font-family:var(--font-disp); font-size:20px; margin-bottom:6px; }
+
+/* NAV */
+.bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:640px; background:var(--surface); border-top:1px solid var(--border); display:flex; z-index:90; padding:8px 0 max(8px,env(safe-area-inset-bottom)); }
+.bnav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; cursor:pointer; text-decoration:none; color:var(--text-muted); border:none; background:none; font-family:var(--font-main); transition:color .2s; }
+.bnav-item .bn-emoji { font-size:20px; }
+.bnav-item .bn-label { font-size:9px; font-weight:800; text-transform:uppercase; }
+.bnav-item.active { color:var(--accent); }
+#toastWrap { position:fixed; bottom:72px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:8px; width:90%; max-width:400px; pointer-events:none; }
+@keyframes tIn  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes tOut { from{opacity:1} to{opacity:0;transform:translateY(8px)} }
+@keyframes confettiFall { to{transform:translateY(110vh) rotate(720deg);opacity:0} }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="topbar">
+  <button class="back-btn" id="backBtn">← Parent HQ</button>
+  <div class="topbar-title">✅ Chore Builder</div>
+  <button class="add-btn" id="addBtn">+ Add Chore</button>
+</div>
+
+<main class="page">
+
+  <!-- Completion history quick view -->
+  <div class="section-hdr">
+    <div class="section-title">Today's Completion</div>
+  </div>
+  <div class="history-card" style="margin-bottom:20px;">
+    <div class="hist-row">
+      <div class="hist-who" id="histElderName" style="color:var(--elder)">Older</div>
+      <div class="hist-bar-wrap"><div class="hist-bar" id="histElderBar" style="--hc:var(--elder);width:0%"></div></div>
+      <div class="hist-pct" id="histElderPct">0%</div>
+    </div>
+    <div class="hist-row">
+      <div class="hist-who" id="histYoungerName" style="color:var(--younger)">Younger</div>
+      <div class="hist-bar-wrap"><div class="hist-bar" id="histYoungerBar" style="--hc:var(--younger);width:0%"></div></div>
+      <div class="hist-pct" id="histYoungerPct">0%</div>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="assign-tabs">
+    <div class="assign-tab both active"    data-filter="all">All Chores</div>
+    <div class="assign-tab elder"          data-filter="elder">Older Only</div>
+    <div class="assign-tab younger"        data-filter="younger">Younger Only</div>
+    <div class="assign-tab"               data-filter="bonus">⚡ Bonus</div>
+  </div>
+
+  <!-- Presets strip -->
+  <div class="presets-strip" id="presetsStrip"></div>
+
+  <!-- Add/Edit form -->
+  <div class="add-form" id="addForm">
+    <div class="form-title" id="formTitle">Add Chore ✅</div>
+
+    <!-- Emoji picker -->
+    <div class="form-row">
+      <div class="field-label">Emoji</div>
+      <div class="emoji-strip" id="emojiStrip"></div>
+    </div>
+
+    <!-- Name -->
+    <div class="form-row">
+      <div class="field-label">Chore name</div>
+      <input type="text" class="field-input" id="choreName" placeholder="e.g. Make my bed" maxlength="40">
+    </div>
+
+    <!-- Assign to + Type -->
+    <div class="form-row two">
+      <div>
+        <div class="field-label">Assign to</div>
+        <div class="assign-pills">
+          <button class="assign-pill elder active"   data-assign="elder">Older</button>
+          <button class="assign-pill younger"        data-assign="younger">Younger</button>
+          <button class="assign-pill both"           data-assign="both">Both</button>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Type</div>
+        <select class="field-select" id="choreType">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="oneoff">One-off</option>
+          <option value="bonus">⚡ Bonus</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Weekly days (shown when weekly selected) -->
+    <div class="form-row" id="daysRow" style="display:none">
+      <div class="field-label">Which days?</div>
+      <div class="days-row" id="daysRow">
+        <button class="day-btn" data-day="1">Mon</button>
+        <button class="day-btn" data-day="2">Tue</button>
+        <button class="day-btn" data-day="3">Wed</button>
+        <button class="day-btn" data-day="4">Thu</button>
+        <button class="day-btn" data-day="5">Fri</button>
+        <button class="day-btn" data-day="6">Sat</button>
+        <button class="day-btn" data-day="0">Sun</button>
+      </div>
+    </div>
+
+    <!-- Points + Difficulty -->
+    <div class="form-row two">
+      <div>
+        <div class="field-label">Stars earned</div>
+        <input type="number" class="field-input" id="chorePoints" value="5" min="1" max="50">
+      </div>
+      <div>
+        <div class="field-label">Difficulty</div>
+        <select class="field-select" id="choreDifficulty">
+          <option value="easy">😊 Easy</option>
+          <option value="medium" selected>😐 Medium</option>
+          <option value="hard">😤 Hard</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Toggles -->
+    <div class="form-row" style="gap:12px;">
+      <label class="toggle-row">
+        <span class="toggle-label">📸 Photo proof required</span>
+        <div class="toggle-switch" id="togglePhoto"></div>
+      </label>
+      <label class="toggle-row">
+        <span class="toggle-label">👀 Parent must verify</span>
+        <div class="toggle-switch" id="toggleVerify"></div>
+      </label>
+    </div>
+
+    <div class="form-btns">
+      <button class="btn-save"   id="saveChoreBtn">Save Chore ✅</button>
+      <button class="btn-cancel" id="cancelChoreBtn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Chore list -->
+  <div class="section-hdr">
+    <div class="section-title" id="listTitle">All Chores</div>
+    <span class="section-badge" id="listBadge">0</span>
+  </div>
+  <div class="chores-list" id="choresList"></div>
+
+</main>
+
+<nav class="bottom-nav">
+  <a class="bnav-item" href="parent.html"><span class="bn-emoji">🏠</span><span class="bn-label">Home</span></a>
+  <a class="bnav-item" href="parent-alerts.html"><span class="bn-emoji">🔔</span><span class="bn-label">Alerts</span></a>
+  <button class="bnav-item active"><span class="bn-emoji">✅</span><span class="bn-label">Chores</span></button>
+  <a class="bnav-item" href="parent-rewards.html"><span class="bn-emoji">⭐</span><span class="bn-label">Rewards</span></a>
+  <a class="bnav-item" href="parent-settings.html"><span class="bn-emoji">⚙️</span><span class="bn-label">Settings</span></a>
+</nav>
+
+<div id="toastWrap"></div>
+
+</div>
+<script>
+
+/* ============================================================
+   MY HQ — CORE LIBRARY  (myhq-core.js)
+============================================================ */
+
+const MYHQ = {
+  VERSION: '1.0.0',
+  PREFIX: 'myhq-',
+  PROFILES: { ELDER: 'elder', YOUNGER: 'younger', FAMILY: 'family', PARENT: 'parent' },
+  THEMES: {
+    DEFAULT_ELDER:   { name: 'Starlight',    bg:'#1a1a2e', surface:'#16213e', card:'#0f3460', accent:'#e94560', accent2:'#533483', text:'#eaeaea', textMuted:'#a0a0b0', star:'#ffd700' },
+    DEFAULT_YOUNGER: { name: 'Cotton Candy', bg:'#f8f0ff', surface:'#fff0f8', card:'#ffffff', accent:'#c084fc', accent2:'#fb7185', text:'#2d1b69', textMuted:'#7c3aed',  star:'#fbbf24' },
+    CALM:            { name: 'Calm',         bg:'#f0f4f0', surface:'#e8f0e8', card:'#ffffff', accent:'#4ade80', accent2:'#60a5fa', text:'#1a2e1a', textMuted:'#4b7a4b',  star:'#fbbf24' },
+    OCEAN:           { name: 'Ocean',        bg:'#0d1b2a', surface:'#1b263b', card:'#415a77', accent:'#00b4d8', accent2:'#90e0ef', text:'#e0fbfc', textMuted:'#a8dadc',  star:'#ffd700' },
+    SUNSET:          { name: 'Sunset',       bg:'#fff7ed', surface:'#fef3c7', card:'#ffffff', accent:'#f97316', accent2:'#ec4899', text:'#431407', textMuted:'#92400e',  star:'#fbbf24' },
+    NIGHT:           { name: 'Night Sky',    bg:'#0a0a1a', surface:'#111128', card:'#1a1a38', accent:'#818cf8', accent2:'#34d399', text:'#f1f5f9', textMuted:'#94a3b8',  star:'#fbbf24' },
+    FOREST:          { name: 'Forest',       bg:'#f0fdf4', surface:'#dcfce7', card:'#ffffff', accent:'#16a34a', accent2:'#65a30d', text:'#14532d', textMuted:'#166534',  star:'#fbbf24' },
+    BUBBLEGUM:       { name: 'Bubblegum',    bg:'#fff0f8', surface:'#fce7f3', card:'#ffffff', accent:'#ec4899', accent2:'#a855f7', text:'#500724', textMuted:'#9d174d',  star:'#fbbf24' },
+  },
+  MOODS: [
+    { id:'rad',         emoji:'🤩', label:'Rad!',     color:'#fbbf24' },
+    { id:'good',        emoji:'😊', label:'Good',     color:'#4ade80' },
+    { id:'okay',        emoji:'😐', label:'Okay',     color:'#60a5fa' },
+    { id:'meh',         emoji:'😕', label:'Meh',      color:'#a78bfa' },
+    { id:'sad',         emoji:'😢', label:'Sad',      color:'#818cf8' },
+    { id:'mad',         emoji:'😠', label:'Mad',      color:'#f87171' },
+    { id:'scared',      emoji:'😨', label:'Scared',   color:'#fb923c' },
+    { id:'tired',       emoji:'😴', label:'Tired',    color:'#94a3b8' },
+    { id:'overwhelmed', emoji:'🤯', label:'Too Much', color:'#e879f9' },
+    { id:'silly',       emoji:'🤪', label:'Silly',    color:'#34d399' },
+  ],
+  ENERGY: [
+    { id:1, emoji:'🪫', label:'Empty' },
+    { id:2, emoji:'😴', label:'Low' },
+    { id:3, emoji:'😐', label:'Okay' },
+    { id:4, emoji:'😊', label:'Good' },
+    { id:5, emoji:'🚀', label:'Full Power' },
+  ],
+  MASCOTS: [
+    { id:'star',      emoji:'⭐', name:'Star' },
+    { id:'moon',      emoji:'🌙', name:'Moon' },
+    { id:'sun',       emoji:'☀️',  name:'Sun' },
+    { id:'rainbow',   emoji:'🌈', name:'Rainbow' },
+    { id:'unicorn',   emoji:'🦄', name:'Unicorn' },
+    { id:'dragon',    emoji:'🐉', name:'Dragon' },
+    { id:'butterfly', emoji:'🦋', name:'Butterfly' },
+    { id:'cat',       emoji:'🐱', name:'Cat' },
+    { id:'fox',       emoji:'🦊', name:'Fox' },
+    { id:'owl',       emoji:'🦉', name:'Owl' },
+    { id:'penguin',   emoji:'🐧', name:'Penguin' },
+    { id:'bear',      emoji:'🐻', name:'Bear' },
+    { id:'bunny',     emoji:'🐰', name:'Bunny' },
+    { id:'panda',     emoji:'🐼', name:'Panda' },
+    { id:'frog',      emoji:'🐸', name:'Frog' },
+    { id:'axolotl',   emoji:'🦎', name:'Axolotl' },
+    { id:'mushroom',  emoji:'🍄', name:'Mushroom' },
+    { id:'flower',    emoji:'🌸', name:'Flower' },
+    { id:'crystal',   emoji:'💎', name:'Crystal' },
+    { id:'robot',     emoji:'🤖', name:'Robot' },
+  ]
+};
+
+/* --- STORAGE --- */
+const Store = {
+  get(key, fallback = null) {
+    try { const v = localStorage.getItem(MYHQ.PREFIX + key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(MYHQ.PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; }
+  },
+  remove(key) { localStorage.removeItem(MYHQ.PREFIX + key); },
+  getProfile(pid, key, fallback = null) { return this.get(`profile-${pid}-${key}`, fallback); },
+  setProfile(pid, key, value)           { return this.set(`profile-${pid}-${key}`, value); },
+};
+
+/* --- AUTH --- */
+const Auth = {
+  SESSION_KEY: 'session',
+  SESSION_DURATION: 4 * 60 * 60 * 1000,
+  hashPin(pin) {
+    let hash = 0;
+    const str = pin + 'myhq-salt-2024';
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  },
+  setPin(profileId, pin) {
+    if (!pin || pin.length < 4) return false;
+    const profiles = Store.get('auth-profiles', {});
+    profiles[profileId] = { pinHash: this.hashPin(pin), hasPin: true, setAt: Date.now() };
+    Store.set('auth-profiles', profiles);
+    return true;
+  },
+  hasPin(profileId) { return Store.get('auth-profiles', {})[profileId]?.hasPin === true; },
+  verifyPin(profileId, pin) {
+    const p = Store.get('auth-profiles', {})[profileId];
+    if (!p?.hasPin) return true;
+    return p.pinHash === this.hashPin(pin);
+  },
+  verifyBothParentPins(pinA, pinB) {
+    return this.verifyPin('parent-a', pinA) && this.verifyPin('parent-b', pinB);
+  },
+  startSession(profileId) {
+    const session = { profileId, startedAt: Date.now(), expiresAt: Date.now() + this.SESSION_DURATION };
+    Store.set(this.SESSION_KEY, session);
+    return session;
+  },
+  getSession() {
+    const s = Store.get(this.SESSION_KEY);
+    if (!s) return null;
+    if (Date.now() > s.expiresAt) { this.endSession(); return null; }
+    return s;
+  },
+  getCurrentProfile() { return this.getSession()?.profileId || null; },
+  endSession()        { Store.remove(this.SESSION_KEY); },
+  isParent()          { const p = this.getCurrentProfile(); return p === 'parent-a' || p === 'parent-b' || p === 'parent'; },
+  getDeviceProfile()  { return Store.get('device-profile', null); },
+  setDeviceProfile(profileId) { Store.set('device-profile', profileId); },
+};
+
+/* --- PROFILES --- */
+const Profiles = {
+  DEFAULTS: {
+    elder:   { id:'elder',   displayName:'My HQ', age:10, mascot:'star',    theme:'DEFAULT_ELDER',   appName:'My HQ', color:'#e94560', complexity:'full',   setupDone:false, parentControls:{ canChangeComplexity:true,  canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    younger: { id:'younger', displayName:'My HQ', age:7,  mascot:'unicorn', theme:'DEFAULT_YOUNGER', appName:'My HQ', color:'#c084fc', complexity:'simple', setupDone:false, parentControls:{ canChangeComplexity:false, canChangeTheme:true, canChangeMascot:true, canChangeAppName:true, selfGuidanceMode:false } },
+    family:  { id:'family',  displayName:'Family Space', theme:'FOREST', setupDone:false },
+  },
+  get(profileId) {
+    const stored   = Store.getProfile(profileId, 'data', null);
+    const defaults = this.DEFAULTS[profileId] || {};
+    return stored ? { ...defaults, ...stored } : { ...defaults };
+  },
+  save(profileId, data) {
+    const current = this.get(profileId);
+    Store.setProfile(profileId, 'data', { ...current, ...data });
+  },
+  getMascot(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.MASCOTS.find(m => m.id === p.mascot) || MYHQ.MASCOTS[0];
+  },
+  getTheme(profileId) {
+    const p = this.get(profileId);
+    return MYHQ.THEMES[p.theme] || MYHQ.THEMES.CALM;
+  },
+  applyTheme(profileId) {
+    const t    = this.getTheme(profileId);
+    const root = document.documentElement;
+    root.style.setProperty('--bg',         t.bg);
+    root.style.setProperty('--surface',    t.surface);
+    root.style.setProperty('--card',       t.card);
+    root.style.setProperty('--accent',     t.accent);
+    root.style.setProperty('--accent2',    t.accent2);
+    root.style.setProperty('--text',       t.text);
+    root.style.setProperty('--text-muted', t.textMuted);
+    root.style.setProperty('--star',       t.star);
+    const isDark = isColorDark(t.bg);
+    root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
+  },
+};
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+/* --- TOAST --- */
+const Toast = {
+  _container: null,
+  _init() {
+    if (this._container) return;
+    this._container = document.createElement('div');
+    this._container.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:400px;';
+    document.body.appendChild(this._container);
+    if (!document.querySelector('#toast-styles')) {
+      const s = document.createElement('style');
+      s.id = 'toast-styles';
+      s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px)}}';
+      document.head.appendChild(s);
+    }
+  },
+  show(message, type = 'info', duration = 3000) {
+    this._init();
+    const icons  = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', star:'⭐' };
+    const colors = { success:'#4ade80', error:'#f87171', warning:'#fbbf24', info:'#60a5fa', star:'#fbbf24' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:var(--card,#fff);color:var(--text,#000);border:2px solid ${colors[type]||colors.info};border-radius:16px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;pointer-events:all;cursor:pointer;animation:toastIn .3s ease;width:100%;font-family:var(--font-main,sans-serif);`;
+    t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${message}</span>`;
+    t.addEventListener('click', () => t.remove());
+    this._container.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m)   { this.show(m, 'error'); },
+  warning(m) { this.show(m, 'warning'); },
+  star(m)    { this.show(m, 'star', 4000); },
+};
+
+/* --- CELEBRATE --- */
+const Celebrate = {
+  fire(intensity = 'medium') {
+    const count = { small:40, medium:80, large:150 }[intensity] || 80;
+    if (!document.querySelector('#confetti-styles')) {
+      const s = document.createElement('style');
+      s.id = 'confetti-styles';
+      s.textContent = '@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌈','❤️','💜','💛'];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-20px;font-size:${Math.random()*20+16}px;z-index:9998;pointer-events:none;animation:confettiFall ${Math.random()*2+1.5}s ease-in forwards;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, Math.random()*1000);
+    }
+  },
+};
+
+/* --- POINTS --- */
+const Points = {
+  getBalance(pid) { return Store.getProfile(pid, 'points-balance', 0); },
+  getHistory(pid) { return Store.getProfile(pid, 'points-history', []); },
+  add(pid, amount, reason, source = 'manual') {
+    const balance = this.getBalance(pid) + amount;
+    Store.setProfile(pid, 'points-balance', balance);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'earned', amount, reason, source, balance, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return balance;
+  },
+  spend(pid, amount, reason) {
+    const balance = this.getBalance(pid);
+    if (balance < amount) return false;
+    const nb = balance - amount;
+    Store.setProfile(pid, 'points-balance', nb);
+    const h = this.getHistory(pid);
+    h.unshift({ id:Date.now(), type:'spent', amount, reason, balance:nb, date:new Date().toISOString() });
+    Store.setProfile(pid, 'points-history', h.slice(0,500));
+    return nb;
+  },
+};
+
+/* --- CHECKIN --- */
+const CheckIn = {
+  getToday(pid) {
+    const key = `checkin-${new Date().toDateString()}`;
+    return Store.getProfile(pid, key, { morning:null, afternoon:null, evening:null });
+  },
+  saveSlot(pid, slot, data) {
+    const key = `checkin-${new Date().toDateString()}`;
+    const today = this.getToday(pid);
+    today[slot] = { ...data, savedAt:Date.now() };
+    Store.setProfile(pid, key, today);
+    Points.add(pid, 2, `Check-in: ${slot}`, 'checkin');
+  },
+  getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
+  },
+};
+
+/* --- CHORES --- */
+const Chores = {
+  getDefinitions()       { return Store.get('chore-definitions', []); },
+  getForProfile(pid)     { return this.getDefinitions().filter(c => c.assignedTo === pid || c.assignedTo === 'both'); },
+  getTodayCompletions(pid) {
+    return Store.getProfile(pid, `chores-done-${new Date().toDateString()}`, []);
+  },
+  markDone(pid, choreId) {
+    const key  = `chores-done-${new Date().toDateString()}`;
+    const done = this.getTodayCompletions(pid);
+    if (!done.includes(choreId)) {
+      done.push(choreId);
+      Store.setProfile(pid, key, done);
+      const chore = this.getDefinitions().find(c => c.id === choreId);
+      if (chore) Points.add(pid, chore.points || 5, `Chore: ${chore.name}`, 'chore');
+      return true;
+    }
+    return false;
+  },
+  isDone(pid, choreId) { return this.getTodayCompletions(pid).includes(choreId); },
+  saveDefinition(chore) {
+    const all = this.getDefinitions();
+    const idx = all.findIndex(c => c.id === chore.id);
+    if (idx >= 0) all[idx] = chore; else all.push({ ...chore, id: chore.id || `chore-${Date.now()}` });
+    Store.set('chore-definitions', all);
+  },
+  deleteDefinition(choreId) { Store.set('chore-definitions', this.getDefinitions().filter(c => c.id !== choreId)); },
+};
+
+/* --- TIME UTILS --- */
+const TimeUtil = {
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening';
+  },
+  dayName()     { return new Date().toLocaleDateString('en-US', { weekday:'long' }); },
+  dateDisplay() { return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric' }); },
+};
+
+/* --- WIN JAR --- */
+const WinJar = {
+  getWins(pid)  { return Store.getProfile(pid, 'wins', []); },
+  addWin(pid, text, category = 'general', isShared = false) {
+    const wins = this.getWins(pid);
+    const win  = { id:Date.now(), text, category, isShared, date:new Date().toISOString(), emoji:this.categoryEmoji(category) };
+    wins.unshift(win);
+    Store.setProfile(pid, 'wins', wins.slice(0,200));
+    Points.add(pid, 3, `Win: ${text.slice(0,30)}`, 'win');
+    if (isShared) this.shareToFamily(pid, win);
+    return win;
+  },
+  shareToFamily(pid, win) {
+    const shared = Store.get('family-shared-wins', []);
+    shared.unshift({ ...win, sharedBy:pid, sharedAt:Date.now() });
+    Store.set('family-shared-wins', shared.slice(0,100));
+  },
+  categoryEmoji(cat) {
+    return { general:'⭐', school:'📚', brave:'💪', kind:'💚', chore:'✅', feeling:'💜', social:'👫', creative:'🎨', hard_day:'🌈', health:'🏃' }[cat] || '⭐';
+  },
+};
+
+/* --- RESET TOOLKIT --- */
+const ResetToolkit = {
+  getPersonalTools(pid) {
+    return Store.getProfile(pid, 'coping-tools', [
+      { id:1, label:'Deep breaths',          emoji:'🫁', active:true  },
+      { id:2, label:'Squeeze something soft', emoji:'🧸', active:true  },
+      { id:3, label:'Drink water',            emoji:'💧', active:true  },
+      { id:4, label:'Go somewhere quiet',     emoji:'🏠', active:true  },
+      { id:5, label:'Listen to music',        emoji:'🎵', active:false },
+      { id:6, label:'Draw or color',          emoji:'🎨', active:false },
+      { id:7, label:'Jump or move body',      emoji:'🏃', active:false },
+      { id:8, label:'Ask for a hug',          emoji:'🤗', active:false },
+    ]);
+  },
+  logEvent(pid, data) {
+    const events = Store.getProfile(pid, 'reset-events', []);
+    events.unshift({ id:Date.now(), ...data, date:new Date().toISOString() });
+    Store.setProfile(pid, 'reset-events', events.slice(0,100));
+    Points.add(pid, 5, 'Used Reset Toolkit 💜', 'reset');
+    if (data.completed) WinJar.addWin(pid, 'I got through a big feeling! 🌈', 'hard_day');
+    if (data.feelingLevel >= 4 || data.needsHelp || data.bullyFlag) this._alertParents(pid, data);
+  },
+  _alertParents(pid, data) {
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({ id:Date.now(), profileId:pid, type: data.bullyFlag ? 'bully' : data.needsHelp ? 'needs-help' : 'high-distress', data, date:new Date().toISOString(), read:false });
+    Store.set('parent-alerts', alerts.slice(0,200));
+  },
+};
+
+/* --- ALERTS --- */
+const Alerts = {
+  getAll()      { return Store.get('parent-alerts', []); },
+  getUnread()   { return this.getAll().filter(a => !a.read); },
+  getCount()    { return this.getUnread().length; },
+  markRead(id)  {
+    const alerts = this.getAll();
+    const idx    = alerts.findIndex(a => a.id === id);
+    if (idx >= 0) { alerts[idx].read = true; Store.set('parent-alerts', alerts); }
+  },
+};
+
+/* --- APP SETUP --- */
+const AppSetup = {
+  isFirstRun()          { return !Store.get('app-initialized', false); },
+  markInitialized()     { Store.set('app-initialized', true); Store.set('init-date', new Date().toISOString()); },
+  isProfileSetup(pid)   { return Profiles.get(pid)?.setupDone === true; },
+  parentPinsSet()       { return Auth.hasPin('parent-a') && Auth.hasPin('parent-b'); },
+};
+
+/* Expose globals */
+window.MYHQ         = MYHQ;
+window.Store        = Store;
+window.Auth         = Auth;
+window.Profiles     = Profiles;
+window.Toast        = Toast;
+window.Celebrate    = Celebrate;
+window.Points       = Points;
+window.CheckIn      = CheckIn;
+window.Chores       = Chores;
+window.TimeUtil     = TimeUtil;
+window.WinJar       = WinJar;
+window.ResetToolkit = ResetToolkit;
+window.Alerts       = Alerts;
+window.AppSetup     = AppSetup;
+window.isColorDark  = isColorDark;
+
+console.log(`✨ My HQ Core v${MYHQ.VERSION} loaded`);
+
+/* ============================================================
+   SCHOOL DATA LAYER
+============================================================ */
+const School = {
+  SUBJECTS: [
+    { id:'math',    label:'Math',          emoji:'➕', color:'#60a5fa' },
+    { id:'reading', label:'Reading',       emoji:'📖', color:'#a78bfa' },
+    { id:'writing', label:'Writing',       emoji:'✏️',  color:'#f472b6' },
+    { id:'science', label:'Science',       emoji:'🔬', color:'#34d399' },
+    { id:'social',  label:'Social Studies',emoji:'🌎', color:'#fb923c' },
+    { id:'art',     label:'Art',           emoji:'🎨', color:'#e879f9' },
+    { id:'music',   label:'Music',         emoji:'🎵', color:'#fbbf24' },
+    { id:'pe',      label:'PE',            emoji:'🏃', color:'#4ade80' },
+    { id:'other',   label:'Other',         emoji:'📋', color:'#94a3b8' },
+  ],
+
+  getHomework(pid)  { return Store.getProfile(pid, 'homework', []); },
+  getTests(pid)     { return Store.getProfile(pid, 'tests', []); },
+  getProjects(pid)  { return Store.getProfile(pid, 'projects', []); },
+
+  saveHomework(pid, hw) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === hw.id);
+    const item = { ...hw, id: hw.id || `hw-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'homework', all);
+    return item;
+  },
+
+  saveTest(pid, test) {
+    const all = this.getTests(pid);
+    const idx = all.findIndex(x => x.id === test.id);
+    const item = { ...test, id: test.id || `test-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'tests', all);
+    return item;
+  },
+
+  saveProject(pid, proj) {
+    const all = this.getProjects(pid);
+    const idx = all.findIndex(x => x.id === proj.id);
+    const item = { ...proj, id: proj.id || `proj-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.unshift(item);
+    Store.setProfile(pid, 'projects', all);
+    return item;
+  },
+
+  deleteHomework(pid, id) {
+    Store.setProfile(pid, 'homework', this.getHomework(pid).filter(x => x.id !== id));
+  },
+  deleteTest(pid, id) {
+    Store.setProfile(pid, 'tests', this.getTests(pid).filter(x => x.id !== id));
+  },
+  deleteProject(pid, id) {
+    Store.setProfile(pid, 'projects', this.getProjects(pid).filter(x => x.id !== id));
+  },
+
+  markHomeworkDone(pid, id) {
+    const all = this.getHomework(pid);
+    const idx = all.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      all[idx].done = true;
+      all[idx].doneAt = new Date().toISOString();
+      Store.setProfile(pid, 'homework', all);
+      Points.add(pid, 5, `Homework done: ${all[idx].title}`, 'school');
+      WinJar.addWin(pid, `Finished homework: ${all[idx].title} 📚`, 'school');
+    }
+  },
+
+  getDueToday(pid) {
+    const today = new Date().toDateString();
+    return [
+      ...this.getHomework(pid).filter(x => !x.done && x.dueDate && new Date(x.dueDate).toDateString() === today),
+      ...this.getTests(pid).filter(x => !x.done && x.date && new Date(x.date).toDateString() === today),
+    ];
+  },
+
+  getUpcoming(pid, days = 7) {
+    const cutoff = new Date(Date.now() + days * 86400000);
+    const today  = new Date();
+    const filter = (items, dateKey) => items.filter(x =>
+      !x.done && x[dateKey] && new Date(x[dateKey]) >= today && new Date(x[dateKey]) <= cutoff
+    );
+    return {
+      homework: filter(this.getHomework(pid), 'dueDate'),
+      tests:    filter(this.getTests(pid),    'date'),
+      projects: filter(this.getProjects(pid), 'dueDate'),
+    };
+  },
+
+  subjectById(id) { return this.SUBJECTS.find(s => s.id === id) || this.SUBJECTS[this.SUBJECTS.length - 1]; },
+};
+
+/* ============================================================
+   REWARD STORE DATA LAYER
+============================================================ */
+const RewardStore = {
+  getRewards()     { return Store.get('reward-store', []); },
+  getRedemptions(pid) { return Store.getProfile(pid, 'redemptions', []); },
+
+  saveReward(reward) {
+    const all = this.getRewards();
+    const idx = all.findIndex(r => r.id === reward.id);
+    const item = { ...reward, id: reward.id || `reward-${Date.now()}` };
+    if (idx >= 0) all[idx] = item; else all.push(item);
+    Store.set('reward-store', all);
+    return item;
+  },
+
+  deleteReward(id) {
+    Store.set('reward-store', this.getRewards().filter(r => r.id !== id));
+  },
+
+  requestRedemption(pid, rewardId) {
+    const reward  = this.getRewards().find(r => r.id === rewardId);
+    if (!reward) return false;
+    const balance = Points.getBalance(pid);
+    if (balance < reward.cost) return false;
+
+    const redemption = {
+      id:       `redeem-${Date.now()}`,
+      profileId: pid,
+      rewardId,
+      rewardName: reward.name,
+      cost:     reward.cost,
+      status:   'pending',
+      requestedAt: new Date().toISOString(),
+    };
+
+    // Hold points (deduct immediately, refund if denied)
+    Points.spend(pid, reward.cost, `Reward request: ${reward.name}`);
+
+    // Add to pending
+    const all = Store.get('reward-redemptions', []);
+    all.unshift(redemption);
+    Store.set('reward-redemptions', all.slice(0, 200));
+
+    // Alert parents
+    const alerts = Store.get('parent-alerts', []);
+    alerts.unshift({
+      id: Date.now(), profileId: pid,
+      type: 'reward-request',
+      data: redemption,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    Store.set('parent-alerts', alerts.slice(0, 200));
+
+    return redemption;
+  },
+
+  approveRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      all[idx].status = 'approved';
+      all[idx].approvedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+    }
+  },
+
+  denyRedemption(redemptionId) {
+    const all = Store.get('reward-redemptions', []);
+    const idx = all.findIndex(r => r.id === redemptionId);
+    if (idx >= 0) {
+      const r = all[idx];
+      r.status = 'denied';
+      r.deniedAt = new Date().toISOString();
+      Store.set('reward-redemptions', all);
+      // Refund points
+      Points.add(r.profileId, r.cost, `Refund: ${r.rewardName}`, 'refund');
+    }
+  },
+
+  getPending()  { return Store.get('reward-redemptions', []).filter(r => r.status === 'pending'); },
+  getForProfile(pid) { return Store.get('reward-redemptions', []).filter(r => r.profileId === pid); },
+
+  seedDefaults() {
+    if (this.getRewards().length === 0) {
+      const defaults = [
+        { id:'r1', name:'30 min extra screen time', emoji:'📱', cost:20,  category:'screen'   },
+        { id:'r2', name:'Choose dinner tonight',     emoji:'🍽️',  cost:30,  category:'food'     },
+        { id:'r3', name:'Stay up 15 min late',       emoji:'🌙', cost:25,  category:'bedtime'  },
+        { id:'r4', name:'Movie night pick',          emoji:'🎬', cost:50,  category:'activity' },
+        { id:'r5', name:'Small treat from store',    emoji:'🍬', cost:40,  category:'treat'    },
+        { id:'r6', name:'Skip one chore (once)',     emoji:'🎉', cost:35,  category:'chores'   },
+        { id:'r7', name:'Friend sleepover',          emoji:'🏕️',  cost:100, category:'social'   },
+        { id:'r8', name:'Game time with a parent',   emoji:'🎮', cost:15,  category:'activity' },
+      ];
+      defaults.forEach(d => this.saveReward(d));
+    }
+  },
+};
+
+/* ============================================================
+   THOUGHT JAR DATA LAYER
+============================================================ */
+const ThoughtJar = {
+  TYPES: [
+    { id:'idea',    emoji:'💡', label:'Idea',    color:'#fbbf24' },
+    { id:'feeling', emoji:'💜', label:'Feeling', color:'#a78bfa' },
+    { id:'worry',   emoji:'😰', label:'Worry',   color:'#f87171' },
+    { id:'win',     emoji:'🏆', label:'Win',     color:'#4ade80' },
+    { id:'question',emoji:'❓', label:'Question',color:'#60a5fa' },
+    { id:'vent',    emoji:'🌋', label:'Vent',    color:'#fb923c' },
+  ],
+
+  getEntries(pid) { return Store.getProfile(pid, 'thoughts', []); },
+
+  add(pid, text, type = 'idea', isUrgent = false) {
+    const entries = this.getEntries(pid);
+    const entry = {
+      id:        `thought-${Date.now()}`,
+      text,
+      type,
+      isUrgent,
+      date:      new Date().toISOString(),
+      routed:    false,
+    };
+    entries.unshift(entry);
+    Store.setProfile(pid, 'thoughts', entries.slice(0, 300));
+
+    if (isUrgent) {
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id: Date.now(), profileId: pid, type: 'urgent-thought', data: entry, date: new Date().toISOString(), read: false });
+      Store.set('parent-alerts', alerts.slice(0, 200));
+    }
+    return entry;
+  },
+
+  delete(pid, id) {
+    Store.setProfile(pid, 'thoughts', this.getEntries(pid).filter(e => e.id !== id));
+  },
+
+  markRouted(pid, id) {
+    const entries = this.getEntries(pid);
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) { entries[idx].routed = true; Store.setProfile(pid, 'thoughts', entries); }
+  },
+};
+
+/* Expose new globals */
+window.School      = School;
+window.RewardStore = RewardStore;
+window.ThoughtJar  = ThoughtJar;
+
+</script>
+<script id="parent-chores-script">
+/* ============================================================
+   PARENT CHORE BUILDER
+   Extracts to: parent-chores.js
+============================================================ */
+
+let editingId      = null;
+let selectedEmoji  = '📋';
+let selectedAssign = 'elder';
+let selectedDays   = [];
+let photoRequired  = false;
+let verifyRequired = false;
+let activeFilter   = 'all';
+
+const PRESET_CHORES = [
+  { name:'Make bed',       emoji:'🛏️', points:5,  difficulty:'easy',   frequency:'daily' },
+  { name:'Brush teeth',    emoji:'🦷', points:3,  difficulty:'easy',   frequency:'daily' },
+  { name:'Put away toys',  emoji:'🧸', points:5,  difficulty:'easy',   frequency:'daily' },
+  { name:'Help set table', emoji:'🍽️', points:5,  difficulty:'easy',   frequency:'daily' },
+  { name:'Feed pet',       emoji:'🐱', points:8,  difficulty:'easy',   frequency:'daily' },
+  { name:'Tidy bedroom',   emoji:'🛋️', points:10, difficulty:'medium', frequency:'daily' },
+  { name:'Vacuum',         emoji:'🧹', points:12, difficulty:'medium', frequency:'weekly' },
+  { name:'Take out trash', emoji:'🗑️', points:8,  difficulty:'easy',   frequency:'weekly' },
+  { name:'Laundry',        emoji:'👗', points:15, difficulty:'hard',   frequency:'weekly' },
+  { name:'Dishes',         emoji:'🍽️', points:8,  difficulty:'medium', frequency:'daily' },
+  { name:'Wipe counters',  emoji:'🧽', points:5,  difficulty:'easy',   frequency:'daily' },
+  { name:'Read 20 min',    emoji:'📚', points:10, difficulty:'easy',   frequency:'daily',  type:'bonus' },
+];
+
+const CHORE_EMOJIS = ['📋','🛏️','🦷','🧸','🍽️','🐱','🧹','🗑️','🧽','👗','🌱','💊','🎒','🥛','🍎','✏️','🎨','🎵','🏃','🛋️','💻','📱','🪣','🧺'];
+
+function toast(msg, type='info', dur=3000) {
+  const c=document.getElementById('toastWrap');
+  const col={success:'#4ade80',error:'#f87171',warn:'#fbbf24',info:'#6366f1'};
+  const ic={success:'✅',error:'❌',warn:'⚠️',info:'ℹ️'};
+  const t=document.createElement('div');
+  t.style.cssText=`background:var(--card);color:var(--text);border:2px solid ${col[type]||col.info};border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;pointer-events:all;animation:tIn .3s ease;width:100%;font-family:var(--font-main);`;
+  t.innerHTML=`<span>${ic[type]||'💬'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.animation='tOut .3s ease forwards';setTimeout(()=>t.remove(),300);},dur);
+}
+
+/* ── BUILD EMOJI STRIP ── */
+function buildEmojiStrip() {
+  const wrap = document.getElementById('emojiStrip');
+  wrap.innerHTML = '';
+  CHORE_EMOJIS.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = `e-btn${e === selectedEmoji ? ' selected' : ''}`;
+    btn.textContent = e;
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.e-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedEmoji = e;
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+/* ── BUILD PRESETS ── */
+function buildPresets() {
+  const strip = document.getElementById('presetsStrip');
+  strip.innerHTML = '<div style="font-size:11px;font-weight:800;color:var(--text-muted);padding:7px 4px;flex-shrink:0;align-self:center;">Quick add:</div>';
+  PRESET_CHORES.forEach(p => {
+    const chip = document.createElement('button');
+    chip.className = 'preset-chip';
+    chip.textContent = `${p.emoji} ${p.name}`;
+    chip.addEventListener('click', () => {
+      // Quick-add the preset
+      const chore = {
+        ...p,
+        id:         `chore-${Date.now()}`,
+        assignedTo: 'both',
+        type:       p.type || p.frequency,
+        days:       [],
+        photoRequired: false,
+        verifyRequired: false,
+      };
+      Chores.saveDefinition(chore);
+      toast(`Added: ${p.emoji} ${p.name} ✅`, 'success');
+      renderChores();
+      updateHistory();
+    });
+    strip.appendChild(chip);
+  });
+}
+
+/* ── TOGGLE ── */
+function bindToggle(id, onChange) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', () => {
+    el.classList.toggle('on');
+    onChange(el.classList.contains('on'));
+  });
+}
+
+/* ── RENDER CHORES ── */
+function renderChores() {
+  const list   = document.getElementById('choresList');
+  let   chores = Chores.getDefinitions();
+
+  if (activeFilter !== 'all') {
+    if (activeFilter === 'bonus') {
+      chores = chores.filter(c => c.type === 'bonus');
+    } else {
+      chores = chores.filter(c => c.assignedTo === activeFilter || c.assignedTo === 'both');
+    }
+  }
+
+  document.getElementById('listBadge').textContent = chores.length;
+
+  if (chores.length === 0) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-emoji">📋</span><div class="empty-title">No chores yet</div><div style="font-size:13px;color:var(--text-muted);font-weight:600;">Use the presets above or tap + Add Chore</div></div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  chores.forEach(chore => {
+    const assignColors = { elder:'var(--elder)', younger:'var(--younger)', both:'var(--accent2)' };
+    const typeLabels   = { daily:'Daily', weekly:'Weekly', oneoff:'One-off', bonus:'Bonus' };
+    const diffEmojis   = { easy:'😊', medium:'😐', hard:'😤' };
+    const color        = assignColors[chore.assignedTo] || 'var(--accent)';
+
+    const card = document.createElement('div');
+    card.className = 'chore-card';
+    card.style.setProperty('--cc', color);
+
+    const tags = [
+      `<span class="cc-tag ${chore.assignedTo}">${chore.assignedTo === 'elder' ? 'Older' : chore.assignedTo === 'younger' ? 'Younger' : 'Both'}</span>`,
+      `<span class="cc-tag${chore.type === 'bonus' ? ' bonus' : ''}">${typeLabels[chore.type] || chore.type}</span>`,
+      `<span class="cc-tag pts">+${chore.points || 5} ⭐</span>`,
+      `<span class="cc-tag">${diffEmojis[chore.difficulty] || '😐'}</span>`,
+      chore.photoRequired  ? `<span class="cc-tag">📸</span>` : '',
+      chore.verifyRequired ? `<span class="cc-tag">👀</span>` : '',
+    ].filter(Boolean).join('');
+
+    card.innerHTML = `
+      <div class="cc-emoji">${chore.emoji || '📋'}</div>
+      <div class="cc-body">
+        <div class="cc-name">${chore.name}</div>
+        <div class="cc-meta">${tags}</div>
+      </div>
+      <div class="cc-actions">
+        <button class="cc-edit" data-id="${chore.id}">✏️</button>
+        <button class="cc-del"  data-id="${chore.id}">🗑</button>
+      </div>
+    `;
+
+    card.querySelector('.cc-edit').addEventListener('click', () => openEdit(chore));
+    card.querySelector('.cc-del').addEventListener('click',  () => deleteChore(chore.id, card));
+    list.appendChild(card);
+  });
+}
+
+/* ── UPDATE HISTORY BARS ── */
+function updateHistory() {
+  ['elder','younger'].forEach(pid => {
+    const profile  = Profiles.get(pid);
+    const allC     = Chores.getForProfile(pid).filter(c => c.frequency === 'daily' || c.type !== 'bonus');
+    const done     = Chores.getTodayCompletions(pid);
+    const pct      = allC.length ? Math.round(done.length / allC.length * 100) : 0;
+    const sfx      = pid === 'elder' ? 'Elder' : 'Younger';
+
+    document.getElementById(`hist${sfx}Name`).textContent = profile.displayName || sfx;
+    document.getElementById(`hist${sfx}Bar`).style.width  = pct + '%';
+    document.getElementById(`hist${sfx}Pct`).textContent  = pct + '%';
+  });
+}
+
+/* ── OPEN FORM ── */
+function openAdd() {
+  editingId = null;
+  selectedEmoji  = '📋';
+  selectedAssign = 'elder';
+  selectedDays   = [];
+  photoRequired  = false;
+  verifyRequired = false;
+
+  document.getElementById('formTitle').textContent = 'Add Chore ✅';
+  document.getElementById('choreName').value       = '';
+  document.getElementById('chorePoints').value     = '5';
+  document.getElementById('choreType').value       = 'daily';
+  document.getElementById('choreDifficulty').value = 'medium';
+  document.getElementById('togglePhoto').classList.remove('on');
+  document.getElementById('toggleVerify').classList.remove('on');
+  document.getElementById('daysRow').style.display = 'none';
+
+  document.querySelectorAll('.assign-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('.assign-pill.elder').classList.add('active');
+
+  buildEmojiStrip();
+  document.getElementById('addForm').classList.add('open');
+  document.getElementById('choreName').focus();
+}
+
+function openEdit(chore) {
+  editingId      = chore.id;
+  selectedEmoji  = chore.emoji || '📋';
+  selectedAssign = chore.assignedTo || 'elder';
+  selectedDays   = chore.days || [];
+  photoRequired  = chore.photoRequired  || false;
+  verifyRequired = chore.verifyRequired || false;
+
+  document.getElementById('formTitle').textContent      = 'Edit Chore ✏️';
+  document.getElementById('choreName').value            = chore.name;
+  document.getElementById('chorePoints').value          = chore.points || 5;
+  document.getElementById('choreType').value            = chore.type || 'daily';
+  document.getElementById('choreDifficulty').value      = chore.difficulty || 'medium';
+  document.getElementById('togglePhoto').classList.toggle('on',  photoRequired);
+  document.getElementById('toggleVerify').classList.toggle('on', verifyRequired);
+
+  document.querySelectorAll('.assign-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.assign === selectedAssign);
+  });
+
+  buildEmojiStrip();
+  document.getElementById('addForm').classList.add('open');
+}
+
+/* ── SAVE ── */
+function saveChore() {
+  const name = document.getElementById('choreName').value.trim();
+  if (!name) { toast('Give the chore a name!', 'warn'); return; }
+
+  const chore = {
+    id:             editingId || `chore-${Date.now()}`,
+    name,
+    emoji:          selectedEmoji,
+    assignedTo:     selectedAssign,
+    type:           document.getElementById('choreType').value,
+    frequency:      document.getElementById('choreType').value === 'daily' ? 'daily' : 'weekly',
+    days:           selectedDays,
+    points:         parseInt(document.getElementById('chorePoints').value) || 5,
+    difficulty:     document.getElementById('choreDifficulty').value,
+    photoRequired,
+    verifyRequired,
+    createdAt:      editingId ? undefined : new Date().toISOString(),
+  };
+
+  Chores.saveDefinition(chore);
+  closeForm();
+  toast(editingId ? 'Chore updated! ✅' : 'Chore added! ✅', 'success');
+  renderChores();
+}
+
+function closeForm() {
+  document.getElementById('addForm').classList.remove('open');
+  editingId = null;
+}
+
+/* ── DELETE ── */
+function deleteChore(id, card) {
+  card.style.opacity = '0.4';
+  card.style.transform = 'translateX(20px)';
+  card.style.transition = 'all .2s';
+  setTimeout(() => {
+    Chores.deleteDefinition(id);
+    renderChores();
+    toast('Chore removed', 'info');
+  }, 200);
+}
+
+/* ── INIT ── */
+function init() {
+  // Auth check
+  const session = Auth.getSession();
+  if (!session || session.profileId !== 'parent') {
+    window.location.href = 'parent.html'; return;
+  }
+
+  buildPresets();
+  renderChores();
+  updateHistory();
+
+  // Filter tabs
+  document.querySelectorAll('.assign-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.assign-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeFilter = tab.dataset.filter;
+      renderChores();
+    });
+  });
+
+  // Add btn
+  document.getElementById('addBtn').addEventListener('click', openAdd);
+  document.getElementById('saveChoreBtn').addEventListener('click',   saveChore);
+  document.getElementById('cancelChoreBtn').addEventListener('click', closeForm);
+
+  // Assign pills
+  document.querySelectorAll('.assign-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.assign-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedAssign = pill.dataset.assign;
+    });
+  });
+
+  // Chore type change → show/hide days
+  document.getElementById('choreType').addEventListener('change', e => {
+    document.getElementById('daysRow').style.display = e.target.value === 'weekly' ? '' : 'none';
+  });
+
+  // Day buttons
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const day = parseInt(btn.dataset.day);
+      btn.classList.toggle('active');
+      if (btn.classList.contains('active')) {
+        if (!selectedDays.includes(day)) selectedDays.push(day);
+      } else {
+        selectedDays = selectedDays.filter(d => d !== day);
+      }
+    });
+  });
+
+  // Toggles
+  bindToggle('togglePhoto',  v => { photoRequired  = v; });
+  bindToggle('toggleVerify', v => { verifyRequired = v; });
+
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'parent.html');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

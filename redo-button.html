@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Redo Button — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0a18;--surface:#120e22;--card:#1a1530;--accent:#c084fc;--accent2:#818cf8;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 70% 0%,rgba(192,132,252,0.1) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 60px;display:flex;flex-direction:column;gap:16px;}
+
+.private-badge{background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.2);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--accent);display:inline-flex;align-items:center;gap:6px;align-self:center;}
+
+.step{display:none;flex-direction:column;gap:14px;animation:fadeIn .4s ease;}
+.step.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.progress-row{display:flex;gap:6px;}
+.prog-dot{flex:1;height:6px;border-radius:20px;background:rgba(255,255,255,.08);transition:background .3s;}
+.prog-dot.done{background:var(--accent);}
+.prog-dot.active{background:var(--accent2);}
+
+.step-card{background:var(--card);border:2px solid rgba(192,132,252,.12);border-radius:var(--radius);padding:22px 20px;}
+.step-num{font-size:11px;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.step-q{font-family:var(--font-display);font-size:20px;color:var(--text);margin-bottom:8px;line-height:1.3;}
+.step-hint{font-size:13px;font-weight:700;color:var(--text-muted);line-height:1.5;margin-bottom:12px;}
+
+/* Warmth box */
+.warmth-box{background:rgba(192,132,252,.06);border:1px solid rgba(192,132,252,.12);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;font-weight:700;color:rgba(192,132,252,.8);line-height:1.5;margin-bottom:12px;}
+
+.step-textarea{width:100%;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px;font-size:15px;color:var(--text);font-family:var(--font-main);resize:none;outline:none;min-height:90px;transition:border-color .2s;line-height:1.5;}
+.step-textarea:focus{border-color:var(--accent);}
+.step-textarea::placeholder{color:rgba(255,255,255,.2);}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip-btn{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);transition:all .2s;}
+.chip-btn:hover{border-color:var(--accent);color:var(--text);}
+.chip-btn.selected{border-color:var(--accent);background:rgba(192,132,252,.15);color:var(--text);}
+
+.next-btn{width:100%;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:16px;font-size:16px;font-weight:900;color:#fff;cursor:pointer;font-family:var(--font-main);transition:all .2s;box-shadow:0 4px 20px rgba(192,132,252,.3);}
+.next-btn:hover{transform:translateY(-1px);}
+.skip-btn{background:none;border:none;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);padding:6px;text-align:center;width:100%;}
+
+/* DONE */
+.done-card{background:linear-gradient(135deg,rgba(192,132,252,.12),rgba(129,140,248,.06));border:2px solid rgba(192,132,252,.2);border-radius:var(--radius);padding:24px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;}
+.done-emoji{font-size:56px;}
+.done-title{font-family:var(--font-display);font-size:24px;color:var(--accent);}
+.done-sub{font-size:14px;font-weight:700;color:var(--text-muted);line-height:1.5;max-width:280px;}
+.done-kind{font-size:15px;font-weight:800;color:var(--text);font-style:italic;background:rgba(192,132,252,.08);border-radius:var(--radius-sm);padding:12px 16px;width:100%;}
+.done-btns{display:flex;flex-direction:column;gap:8px;width:100%;}
+.d-btn{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:var(--font-main);color:var(--text);transition:all .2s;text-decoration:none;text-align:center;display:block;}
+.d-btn:hover{border-color:var(--accent);color:var(--accent);}
+.d-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">↩️ Redo Button</div>
+</div>
+<main class="page">
+
+  <div class="private-badge">🔐 Just for you — always private</div>
+
+  <div class="progress-row" id="progressRow"></div>
+
+  <!-- STEP 0: What happened? -->
+  <div class="step active" id="step0">
+    <div class="step-card">
+      <div class="step-num">Step 1 of 4</div>
+      <div class="step-q">I wish I hadn't done that.</div>
+      <div class="warmth-box">This is a safe space. No one will see what you write here. You're not in trouble. You're just being honest with yourself. That takes real courage. 💜</div>
+      <div class="step-hint">What happened that you wish you could redo?</div>
+      <textarea class="step-textarea" id="s0input" placeholder="Something happened..."></textarea>
+    </div>
+    <button class="next-btn" id="s0next">Next →</button>
+    <button class="skip-btn" onclick="goStep(1)">Skip this part</button>
+  </div>
+
+  <!-- STEP 1: Why did I do it? -->
+  <div class="step" id="step1">
+    <div class="step-card">
+      <div class="step-num">Step 2 of 4</div>
+      <div class="step-q">Why did it happen?</div>
+      <div class="step-hint">Understanding WHY helps. You're not making excuses — you're figuring yourself out. Pick anything that fits.</div>
+      <div class="chip-row" id="whyChips"></div>
+      <textarea class="step-textarea" id="s1input" placeholder="Or write your own reason..." style="margin-top:12px;min-height:60px;"></textarea>
+    </div>
+    <button class="next-btn" id="s1next">Next →</button>
+    <button class="skip-btn" onclick="goStep(2)">Skip</button>
+  </div>
+
+  <!-- STEP 2: What I wish I'd done -->
+  <div class="step" id="step2">
+    <div class="step-card">
+      <div class="step-num">Step 3 of 4</div>
+      <div class="step-q">What could I do differently next time?</div>
+      <div class="step-hint">Not to punish yourself — but so you know for next time. Even a tiny idea counts.</div>
+      <div class="chip-row" id="nextTimeChips"></div>
+      <textarea class="step-textarea" id="s2input" placeholder="Next time I could..." style="margin-top:12px;min-height:60px;"></textarea>
+    </div>
+    <button class="next-btn" id="s2next">Next →</button>
+    <button class="skip-btn" onclick="goStep(3)">Skip</button>
+  </div>
+
+  <!-- STEP 3: Something kind -->
+  <div class="step" id="step3">
+    <div class="step-card">
+      <div class="step-num">Step 4 of 4</div>
+      <div class="step-q">Now close with something kind.</div>
+      <div class="warmth-box">You are a person who makes mistakes — just like every single person who has ever lived. Mistakes don't define you. What you do with them does. 💜</div>
+      <div class="step-hint">Pick something to say to yourself:</div>
+      <div class="chip-row" id="kindChips"></div>
+      <textarea class="step-textarea" id="s3input" placeholder="Something kind..." style="margin-top:12px;min-height:50px;"></textarea>
+    </div>
+    <button class="next-btn" id="s3done">I'm done 💜</button>
+  </div>
+
+  <!-- DONE -->
+  <div class="step" id="stepDone">
+    <div class="done-card">
+      <span class="done-emoji">↩️</span>
+      <div class="done-title">That took guts.</div>
+      <div class="done-sub">Looking honestly at a hard moment — and not running from it — is one of the most mature things a person can do. You just did that.</div>
+      <div class="done-kind" id="doneKindDisplay"></div>
+      <div class="done-btns">
+        <a class="d-btn primary" href="feelings-hub.html">← Back to Feelings Hub</a>
+        <a class="d-btn" href="wins.html">Add this as a win ⭐</a>
+        <button class="d-btn" onclick="startOver()">Do it again</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-redo-app">
+/* ============================================================
+   REDO BUTTON — 10yo only, fully private
+   Parents see: used/timestamp only
+============================================================ */
+let profileId   = null;
+let currentStep = 0;
+let responses   = {};
+const TOTAL_STEPS = 4;
+
+const WHY_CHIPS = [
+  'I was really frustrated', 'I was overwhelmed', 'I acted without thinking',
+  'I was tired', 'My feelings were too big', 'I didn\'t know what else to do',
+  'I was trying to protect myself', 'I said something I didn\'t mean',
+  'Someone else did something first', 'I was having a really hard day',
+];
+
+const NEXT_TIME_CHIPS = [
+  'Walk away before I react', 'Take three deep breaths first',
+  'Say how I feel instead of acting', 'Ask for help sooner',
+  'Use my calm corner', 'Count to ten', 'Tell a trusted adult',
+  'Remember that my feelings will pass',
+];
+
+const KIND_CHIPS = [
+  'I am still a good person', 'Everyone makes mistakes',
+  'I learned something today', 'I am trying my best',
+  'I am allowed to be imperfect', 'I can make things better',
+  'I forgive myself', 'Tomorrow is a new start',
+];
+
+function buildProgress() {
+  const row = document.getElementById('progressRow');
+  row.innerHTML = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.createElement('div');
+    dot.className = `prog-dot${i < currentStep ? ' done' : i === currentStep ? ' active' : ''}`;
+    row.appendChild(dot);
+  }
+}
+
+function buildChips(containerId, chips, onSelect) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  chips.forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'chip-btn';
+    btn.textContent = text;
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('selected');
+      onSelect(text, btn.classList.contains('selected'));
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(n === 'done' ? 'stepDone' : `step${n}`);
+  el?.classList.add('active');
+  currentStep = typeof n === 'number' ? n : TOTAL_STEPS;
+  buildProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function saveEntry() {
+  const entries = Store.getProfile(profileId, 'redo-button-private', []);
+  entries.unshift({ id:Date.now(), date:new Date().toISOString(), responses });
+  Store.setProfile(profileId, 'redo-button-private', entries.slice(0, 50));
+
+  // Audit only
+  const audit = Store.getProfile(profileId, 'redo-button-audit', []);
+  audit.unshift({ date:new Date().toISOString(), used:true });
+  Store.setProfile(profileId, 'redo-button-audit', audit.slice(0, 200));
+
+  Points.add(profileId, 8, 'Used Redo Button ↩️', 'private');
+}
+
+function startOver() {
+  responses   = {};
+  currentStep = 0;
+  ['s0input','s1input','s2input','s3input'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
+  goStep(0);
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || session.profileId !== 'elder') {
+    window.location.href = 'index.html'; return;
+  }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+  buildProgress();
+
+  buildChips('whyChips',      WHY_CHIPS,      () => {});
+  buildChips('nextTimeChips', NEXT_TIME_CHIPS, () => {});
+  buildChips('kindChips', KIND_CHIPS, (text, sel) => {
+    if (sel) document.getElementById('s3input').value = text;
+  });
+
+  document.getElementById('s0next').addEventListener('click', () => {
+    responses.whatHappened = document.getElementById('s0input').value;
+    goStep(1);
+  });
+  document.getElementById('s1next').addEventListener('click', () => {
+    const chips = [...document.querySelectorAll('#whyChips .chip-btn.selected')].map(b => b.textContent);
+    responses.why = [...chips, document.getElementById('s1input').value].filter(Boolean);
+    goStep(2);
+  });
+  document.getElementById('s2next').addEventListener('click', () => {
+    const chips = [...document.querySelectorAll('#nextTimeChips .chip-btn.selected')].map(b => b.textContent);
+    responses.nextTime = [...chips, document.getElementById('s2input').value].filter(Boolean);
+    goStep(3);
+  });
+  document.getElementById('s3done').addEventListener('click', () => {
+    const chips = [...document.querySelectorAll('#kindChips .chip-btn.selected')].map(b => b.textContent);
+    responses.kind = chips[0] || document.getElementById('s3input').value || 'I am still a good person.';
+    document.getElementById('doneKindDisplay').textContent = `"${responses.kind}"`;
+    saveEntry();
+    goStep('done');
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'feelings-hub.html');
+}
+
+window.goStep   = goStep;
+window.startOver = startOver;
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

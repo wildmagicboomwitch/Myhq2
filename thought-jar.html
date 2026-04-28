@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Thought Jar — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d1a;--surface:#12122a;--card:#1a1a3e;--accent:#34d399;--accent2:#a78bfa;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 30% 0%,rgba(52,211,153,0.08) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;}
+.back-btn:hover{background:var(--accent);color:#052e16;}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:14px;}
+
+/* DUMP BOX */
+.dump-card{background:var(--card);border:2px solid rgba(52,211,153,.15);border-radius:var(--radius);padding:18px;}
+.dump-label{font-size:12px;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.dump-textarea{width:100%;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px;font-size:16px;color:var(--text);font-family:var(--font-main);resize:none;outline:none;min-height:80px;transition:border-color .2s;line-height:1.5;}
+.dump-textarea:focus{border-color:var(--accent);}
+.dump-textarea::placeholder{color:rgba(255,255,255,.2);}
+
+/* TYPE PICKER */
+.type-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-top:10px;}
+.type-row::-webkit-scrollbar{display:none;}
+.type-btn{flex-shrink:0;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);transition:all .2s;display:flex;align-items:center;gap:5px;}
+.type-btn:hover{border-color:var(--accent);}
+.type-btn.selected{border-color:var(--tb-color,var(--accent));background:rgba(52,211,153,.1);color:var(--text);}
+
+.urgent-row{display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;}
+.urgent-label{font-size:13px;font-weight:700;color:var(--text-muted);}
+.urgent-toggle{width:36px;height:20px;background:rgba(255,255,255,.1);border-radius:20px;position:relative;transition:background .2s;flex-shrink:0;}
+.urgent-toggle.on{background:var(--danger);}
+.urgent-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;}
+.urgent-toggle.on::after{transform:translateX(16px);}
+
+.send-btn{width:100%;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:15px;font-size:16px;font-weight:900;color:#052e16;cursor:pointer;font-family:var(--font-main);transition:all .2s;margin-top:10px;}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(52,211,153,.3);}
+.send-btn:active{transform:scale(.98);}
+
+/* SECTION */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;}
+.section-title{font-family:var(--font-display);font-size:18px;}
+.filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;}
+.filter-row::-webkit-scrollbar{display:none;}
+.f-chip{flex-shrink:0;background:var(--card);border:2px solid rgba(255,255,255,.06);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);transition:all .2s;}
+.f-chip:hover{border-color:var(--accent);}
+.f-chip.active{background:var(--accent);border-color:var(--accent);color:#052e16;}
+
+/* THOUGHT CARDS */
+.thoughts-list{display:flex;flex-direction:column;gap:10px;}
+.thought-card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:all .2s;position:relative;overflow:hidden;animation:cardIn .3s ease;}
+@keyframes cardIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.thought-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc,var(--accent));}
+.thought-card.urgent::before{background:var(--danger);}
+.tc-icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+.tc-body{flex:1;min-width:0;}
+.tc-text{font-size:14px;font-weight:700;line-height:1.5;margin-bottom:5px;}
+.tc-meta{display:flex;gap:6px;flex-wrap:wrap;}
+.tc-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--text-muted);}
+.tc-tag.urgent{color:var(--danger);background:rgba(248,113,113,.1);}
+.tc-del{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0;transition:all .2s;}
+.tc-del:hover{color:var(--danger);background:rgba(248,113,113,.1);}
+
+/* ROUTE MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:28px 28px 0 0;padding:24px 20px 40px;width:100%;max-width:600px;animation:sheetUp .3s ease;}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-family:var(--font-display);font-size:22px;color:var(--accent);text-align:center;margin-bottom:16px;}
+.route-options{display:flex;flex-direction:column;gap:10px;}
+.route-opt{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;font-family:var(--font-main);}
+.route-opt:hover{border-color:var(--accent);}
+.ro-emoji{font-size:22px;flex-shrink:0;}
+.ro-info .ro-title{font-size:14px;font-weight:800;}
+.ro-info .ro-sub{font-size:12px;font-weight:600;color:var(--text-muted);margin-top:2px;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">💭 Thought Jar</div>
+</div>
+<main class="page">
+
+  <!-- Dump box -->
+  <div class="dump-card">
+    <div class="dump-label">What's on your mind?</div>
+    <textarea class="dump-textarea" id="dumpInput" placeholder="Just get it out. No one is judging. Write anything." maxlength="300"></textarea>
+
+    <div class="type-row" id="typeRow"></div>
+
+    <label class="urgent-row" id="urgentRow">
+      <div class="urgent-toggle" id="urgentToggle"></div>
+      <span class="urgent-label">🚨 This feels urgent — tell a parent</span>
+    </label>
+
+    <button class="send-btn" id="sendBtn">Put it in the jar 💭</button>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-row" id="filterRow"></div>
+
+  <!-- Thoughts list -->
+  <div class="section-hdr">
+    <div class="section-title">Your jar</div>
+  </div>
+  <div class="thoughts-list" id="thoughtsList"></div>
+
+</main>
+</div>
+
+<!-- Route modal -->
+<div class="modal-overlay" id="routeModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">What do you want to do with this?</div>
+    <div class="route-options" id="routeOptions"></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-thoughtjar-app">
+let profileId   = null;
+let isUrgent    = false;
+let selectedType = 'thought';
+let activeFilter = 'all';
+let pendingEntry = null;
+
+const TYPES = [
+  { id:'thought',  emoji:'💭', label:'Thought',  color:'#a78bfa' },
+  { id:'idea',     emoji:'💡', label:'Idea',      color:'#fbbf24' },
+  { id:'feeling',  emoji:'💜', label:'Feeling',   color:'#f472b6' },
+  { id:'worry',    emoji:'😰', label:'Worry',     color:'#fb923c' },
+  { id:'win',      emoji:'🏆', label:'Win!',      color:'#4ade80' },
+  { id:'question', emoji:'❓', label:'Question',  color:'#60a5fa' },
+];
+
+const ROUTE_OPTIONS = [
+  { id:'keep',    emoji:'🫙', title:'Just keep it here',    sub:'Stay in the jar, that\'s fine' },
+  { id:'win',     emoji:'⭐', title:'Save as a win',        sub:'Add it to my Win Jar' },
+  { id:'school',  emoji:'📚', title:'It\'s about school',   sub:'Send to School Brain', href:'school.html' },
+  { id:'parent',  emoji:'💜', title:'I want to tell a parent', sub:'Flag this for a parent to see' },
+];
+
+function buildTypeRow() {
+  const row = document.getElementById('typeRow');
+  TYPES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = `type-btn${t.id === selectedType ? ' selected' : ''}`;
+    btn.style.setProperty('--tb-color', t.color);
+    btn.innerHTML = `${t.emoji} ${t.label}`;
+    btn.addEventListener('click', () => {
+      row.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedType = t.id;
+    });
+    row.appendChild(btn);
+  });
+}
+
+function buildFilters() {
+  const row = document.getElementById('filterRow');
+  const all  = [{ id:'all', label:'All' }, ...TYPES.map(t => ({ id:t.id, label:`${t.emoji} ${t.label}` }))];
+  all.forEach(f => {
+    const chip = document.createElement('button');
+    chip.className = `f-chip${f.id === activeFilter ? ' active' : ''}`;
+    chip.textContent = f.label;
+    chip.addEventListener('click', () => {
+      row.querySelectorAll('.f-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeFilter = f.id;
+      renderThoughts();
+    });
+    row.appendChild(chip);
+  });
+}
+
+function renderThoughts() {
+  const list    = document.getElementById('thoughtsList');
+  let   entries = ThoughtJar.getEntries(profileId);
+  if (activeFilter !== 'all') entries = entries.filter(e => e.type === activeFilter);
+
+  list.innerHTML = '';
+  if (entries.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;font-weight:700;">The jar is empty 🫙<br>Write something!</div>';
+    return;
+  }
+
+  entries.forEach(entry => {
+    const t     = TYPES.find(x => x.id === entry.type) || TYPES[0];
+    const date  = new Date(entry.date);
+    const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const card  = document.createElement('div');
+    card.className = `thought-card${entry.isUrgent ? ' urgent' : ''}`;
+    card.style.setProperty('--tc', t.color);
+    card.innerHTML = `
+      <span class="tc-icon">${t.emoji}</span>
+      <div class="tc-body">
+        <div class="tc-text">${entry.text}</div>
+        <div class="tc-meta">
+          <span class="tc-tag" style="color:${t.color};background:${t.color}18">${t.label}</span>
+          ${entry.isUrgent ? '<span class="tc-tag urgent">🚨 Urgent</span>' : ''}
+          <span class="tc-tag">${dateStr}</span>
+          ${entry.routed ? '<span class="tc-tag">↗ Shared</span>' : ''}
+        </div>
+      </div>
+      <button class="tc-del" data-id="${entry.id}">🗑</button>
+    `;
+    card.querySelector('.tc-del').addEventListener('click', () => {
+      ThoughtJar.delete(profileId, entry.id);
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(20px)';
+      card.style.transition = 'all .2s';
+      setTimeout(() => renderThoughts(), 200);
+    });
+    // Tap to route
+    card.querySelector('.tc-body').addEventListener('click', () => openRouteModal(entry));
+    list.appendChild(card);
+  });
+}
+
+function addEntry() {
+  const text = document.getElementById('dumpInput').value.trim();
+  if (!text) return;
+
+  const entry = ThoughtJar.add(profileId, text, selectedType, isUrgent);
+  document.getElementById('dumpInput').value = '';
+
+  // If win type, auto-add to win jar
+  if (selectedType === 'win') {
+    WinJar.addWin(profileId, text, 'general');
+  }
+
+  // Reset urgent
+  isUrgent = false;
+  document.getElementById('urgentToggle').classList.remove('on');
+
+  renderThoughts();
+
+  // Show route modal for non-urgent entries after a moment
+  if (!isUrgent) {
+    pendingEntry = entry;
+    setTimeout(() => openRouteModal(entry), 600);
+  }
+}
+
+function openRouteModal(entry) {
+  pendingEntry = entry;
+  const opts   = document.getElementById('routeOptions');
+  opts.innerHTML = '';
+  ROUTE_OPTIONS.forEach(opt => {
+    const el = document.createElement('div');
+    el.className = 'route-opt';
+    el.innerHTML = `<span class="ro-emoji">${opt.emoji}</span><div class="ro-info"><div class="ro-title">${opt.title}</div><div class="ro-sub">${opt.sub}</div></div>`;
+    el.addEventListener('click', () => {
+      handleRoute(opt.id, entry);
+      document.getElementById('routeModal').classList.remove('open');
+    });
+    opts.appendChild(el);
+  });
+  document.getElementById('routeModal').classList.add('open');
+}
+
+function handleRoute(routeId, entry) {
+  switch (routeId) {
+    case 'keep': break;
+    case 'win':
+      WinJar.addWin(profileId, entry.text, 'general');
+      ThoughtJar.markRouted(profileId, entry.id);
+      break;
+    case 'parent':
+      ThoughtJar.markRouted(profileId, entry.id);
+      // Alert parent
+      const alerts = Store.get('parent-alerts', []);
+      alerts.unshift({ id:Date.now(), profileId, type:'urgent-thought', data:{text:entry.text, type:entry.type}, date:new Date().toISOString(), read:false });
+      Store.set('parent-alerts', alerts.slice(0,200));
+      break;
+    case 'school':
+      ThoughtJar.markRouted(profileId, entry.id);
+      window.location.href = 'school.html';
+      break;
+  }
+  renderThoughts();
+}
+
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+
+  buildTypeRow();
+  buildFilters();
+  renderThoughts();
+
+  document.getElementById('urgentRow').addEventListener('click', () => {
+    isUrgent = !isUrgent;
+    document.getElementById('urgentToggle').classList.toggle('on', isUrgent);
+  });
+
+  document.getElementById('sendBtn').addEventListener('click', addEntry);
+  document.getElementById('dumpInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.metaKey) addEntry();
+  });
+
+  document.getElementById('routeModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('routeModal')) document.getElementById('routeModal').classList.remove('open');
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'index.html');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

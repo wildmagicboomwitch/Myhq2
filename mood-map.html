@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mood Map — My HQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style id="myhq-styles">
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d1a;--surface:#12122a;--card:#1a1a3e;--accent:#a78bfa;--accent2:#34d399;--text:#f1f5f9;--text-muted:#94a3b8;--star:#fbbf24;--danger:#f87171;--success:#4ade80;--radius:20px;--radius-sm:12px;--font-main:'Nunito',sans-serif;--font-display:'Fredoka One',cursive;}
+html,body{min-height:100vh;font-family:var(--font-main);background:var(--bg);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(167,139,250,0.1) 0%,transparent 70%),var(--bg);pointer-events:none;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.topbar{padding:16px 20px 0;display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--card);border:none;border-radius:10px;padding:8px 12px;color:var(--text);font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.back-btn:hover{background:var(--accent);}
+.topbar-title{font-family:var(--font-display);font-size:22px;color:var(--accent);flex:1;}
+.page{padding:16px 20px 100px;display:flex;flex-direction:column;gap:16px;}
+
+/* VIEW TOGGLE */
+.view-toggle{display:flex;background:var(--card);border-radius:var(--radius-sm);padding:4px;gap:4px;}
+.vt-btn{flex:1;background:transparent;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:800;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);transition:all .2s;}
+.vt-btn.active{background:var(--accent);color:#fff;}
+
+/* WEEK NAVIGATOR */
+.week-nav{display:flex;align-items:center;gap:8px;}
+.week-arrow{background:var(--card);border:none;border-radius:8px;padding:8px 14px;font-size:18px;color:var(--text-muted);cursor:pointer;transition:all .2s;}
+.week-arrow:hover{color:var(--accent);border-color:var(--accent);}
+.week-label{flex:1;text-align:center;font-size:14px;font-weight:800;color:var(--text-muted);}
+
+/* OVERVIEW MAP — one color per day */
+.overview-map{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.day-block{border-radius:var(--radius-sm);padding:10px 4px;text-align:center;transition:all .2s;cursor:pointer;border:2px solid transparent;position:relative;}
+.day-block:hover{transform:scale(1.06);}
+.day-block.selected{border-color:rgba(255,255,255,.4);box-shadow:0 0 12px rgba(255,255,255,.2);}
+.day-block.today{box-shadow:0 0 0 2px var(--accent);}
+.db-name{font-size:10px;font-weight:900;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:6px;}
+.db-emoji{font-size:22px;display:block;margin-bottom:4px;}
+.db-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);margin:0 auto;}
+.db-dot.filled{background:rgba(255,255,255,.8);}
+.db-empty{width:100%;aspect-ratio:1;background:rgba(255,255,255,.04);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;color:rgba(255,255,255,.15);}
+
+/* DETAIL MAP — individual slots */
+.detail-map{display:flex;flex-direction:column;gap:10px;}
+.detail-day{background:var(--card);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;gap:12px;border:2px solid rgba(255,255,255,.04);}
+.detail-day.today{border-color:var(--accent);}
+.dd-name{font-size:12px;font-weight:900;color:var(--text-muted);width:36px;flex-shrink:0;}
+.dd-slots{display:flex;gap:6px;flex:1;}
+.dd-slot{flex:1;border-radius:8px;padding:8px 4px;text-align:center;}
+.dd-slot-label{font-size:9px;font-weight:900;color:rgba(255,255,255,.5);text-transform:uppercase;}
+.dd-slot-emoji{font-size:20px;display:block;margin-top:3px;}
+.dd-slot.empty{background:rgba(255,255,255,.04);}
+
+/* DAY DETAIL PANEL */
+.day-detail{background:var(--card);border-radius:var(--radius);padding:20px;border:2px solid rgba(255,255,255,.06);display:none;animation:fadeIn .3s ease;}
+.day-detail.show{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dd-title{font-family:var(--font-display);font-size:20px;color:var(--accent);margin-bottom:12px;}
+.slot-detail{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.slot-detail:last-child{border-bottom:none;}
+.sd-emoji{font-size:28px;flex-shrink:0;}
+.sd-info{flex:1;}
+.sd-slot{font-size:11px;font-weight:900;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;}
+.sd-mood{font-size:14px;font-weight:800;}
+.sd-body{font-size:12px;font-weight:600;color:var(--text-muted);margin-top:2px;}
+.sd-notes{font-size:12px;font-style:italic;color:var(--text-muted);margin-top:2px;}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--text-muted);}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:32px 20px;color:var(--text-muted);}
+.empty-emoji{font-size:48px;display:block;margin-bottom:10px;}
+.empty-title{font-family:var(--font-display);font-size:20px;margin-bottom:6px;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:var(--surface);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:90;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;text-decoration:none;color:var(--text-muted);border:none;background:none;font-family:var(--font-main);transition:color .2s;}
+.nav-item .nav-emoji{font-size:22px;}.nav-item .nav-label{font-size:10px;font-weight:800;}
+.nav-item.active{color:var(--accent);}
+.sos-fab{position:fixed;bottom:84px;right:20px;z-index:100;background:linear-gradient(135deg,#f87171,#e94560);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,69,96,.5);display:flex;align-items:center;justify-content:center;animation:sosPulse 3s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 20px rgba(233,69,96,.5)}50%{box-shadow:0 4px 30px rgba(233,69,96,.8),0 0 0 8px rgba(233,69,96,.1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="topbar-title">🗺️ Mood Map</div>
+</div>
+<main class="page">
+
+  <!-- View toggle -->
+  <div class="view-toggle">
+    <button class="vt-btn active" data-view="overview">🌈 Daily Colors</button>
+    <button class="vt-btn"        data-view="detail">📋 All Slots</button>
+  </div>
+
+  <!-- Week navigator -->
+  <div class="week-nav">
+    <button class="week-arrow" id="prevWeek">‹</button>
+    <div class="week-label" id="weekLabel">This week</div>
+    <button class="week-arrow" id="nextWeek">›</button>
+  </div>
+
+  <!-- Overview grid -->
+  <div id="viewOverview">
+    <div class="overview-map" id="overviewMap"></div>
+    <div class="day-detail" id="dayDetail"></div>
+    <div class="legend" id="moodLegend"></div>
+  </div>
+
+  <!-- Detail view -->
+  <div id="viewDetail" style="display:none">
+    <div class="detail-map" id="detailMap"></div>
+  </div>
+
+</main>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-emoji">🏠</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="chores.html"><span class="nav-emoji">✅</span><span class="nav-label">Jobs</span></a>
+  <a class="nav-item active" href="feelings-hub.html"><span class="nav-emoji">💜</span><span class="nav-label">Feelings</span></a>
+  <a class="nav-item" href="school.html"><span class="nav-emoji">📚</span><span class="nav-label">School</span></a>
+  <a class="nav-item" href="wins.html"><span class="nav-emoji">⭐</span><span class="nav-label">Wins</span></a>
+</nav>
+<button class="sos-fab" onclick="window.location.href='volcano.html'">🆘</button>
+
+<script src="myhq-core.js"></script>
+<script id="myhq-moodmap-app">
+/* ============================================================
+   MOOD MAP
+============================================================ */
+let profileId   = null;
+let activeView  = 'overview';
+let weekOffset  = 0; // 0 = this week, -1 = last week, etc.
+let selectedDay = null;
+
+const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const SLOT_NAMES = ['morning','afternoon','evening'];
+const SLOT_EMOJIS = { morning:'🌅', afternoon:'☀️', evening:'🌙' };
+
+/* ── GET WEEK DATES ── */
+function getWeekDates(offset = 0) {
+  const now   = new Date();
+  const day   = now.getDay(); // 0=Sun
+  const mon   = new Date(now);
+  mon.setDate(now.getDate() - day + 1 + offset * 7);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function weekLabel(dates) {
+  if (weekOffset === 0) return 'This week';
+  if (weekOffset === -1) return 'Last week';
+  const s = dates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const e = dates[6].toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `${s} – ${e}`;
+}
+
+/* ── GET CHECK-IN DATA FOR DATE ── */
+function getCheckinForDate(date) {
+  const key = `checkin-${date.toDateString()}`;
+  return Store.getProfile(profileId, key, { morning:null, afternoon:null, evening:null });
+}
+
+/* ── DOMINANT MOOD FOR DAY ── */
+function dominantMood(checkin) {
+  const slots = SLOT_NAMES.map(s => checkin[s]).filter(Boolean);
+  if (slots.length === 0) return null;
+  // Use last slot of day, or morning if only one
+  const last = slots[slots.length - 1];
+  return MYHQ.MOODS.find(m => m.id === last.mood) || null;
+}
+
+/* ── GET CUSTOM MOOD COLOR (from profile customize) ── */
+function moodColor(moodId) {
+  // Check for custom colors set by girl in Customize
+  const custom = Store.getProfile(profileId, 'mood-colors', {});
+  if (custom[moodId]) return custom[moodId];
+  return MYHQ.MOODS.find(m => m.id === moodId)?.color || '#94a3b8';
+}
+
+/* ── BUILD OVERVIEW MAP ── */
+function buildOverview() {
+  const dates  = getWeekDates(weekOffset);
+  const map    = document.getElementById('overviewMap');
+  const today  = new Date().toDateString();
+  map.innerHTML = '';
+
+  document.getElementById('weekLabel').textContent = weekLabel(dates);
+
+  dates.forEach(date => {
+    const checkin = getCheckinForDate(date);
+    const mood    = dominantMood(checkin);
+    const isToday = date.toDateString() === today;
+    const block   = document.createElement('div');
+    block.className = `day-block${isToday ? ' today' : ''}`;
+
+    if (mood) {
+      const color = moodColor(mood.id);
+      block.style.background = color + '33';
+      block.style.borderColor = color + '55';
+      block.innerHTML = `
+        <div class="db-name">${DAY_NAMES[date.getDay()]}</div>
+        <span class="db-emoji">${mood.emoji}</span>
+        <div class="db-dot filled" style="background:${color}"></div>
+      `;
+    } else {
+      block.innerHTML = `
+        <div class="db-name">${DAY_NAMES[date.getDay()]}</div>
+        <div class="db-empty">•</div>
+      `;
+    }
+
+    block.addEventListener('click', () => showDayDetail(date, checkin, block));
+    map.appendChild(block);
+  });
+
+  buildLegend();
+}
+
+/* ── DAY DETAIL PANEL ── */
+function showDayDetail(date, checkin, blockEl) {
+  document.querySelectorAll('.day-block').forEach(b => b.classList.remove('selected'));
+  blockEl.classList.add('selected');
+
+  const panel = document.getElementById('dayDetail');
+  const title = date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  panel.classList.add('show');
+
+  const slots = SLOT_NAMES.map(s => ({ slot:s, data:checkin[s] }));
+  const hasAny = slots.some(s => s.data);
+
+  if (!hasAny) {
+    panel.innerHTML = `<div class="dd-title">${title}</div><div style="color:var(--text-muted);font-size:13px;font-weight:700;">No check-ins recorded for this day.</div>`;
+    return;
+  }
+
+  const slotsHtml = slots.map(({slot, data}) => {
+    if (!data) return `<div class="slot-detail"><span class="sd-emoji">${SLOT_EMOJIS[slot]}</span><div class="sd-info"><div class="sd-slot">${slot}</div><div class="sd-mood" style="color:var(--text-muted)">Not checked in</div></div></div>`;
+    const mood   = MYHQ.MOODS.find(m => m.id === data.mood);
+    const energy = MYHQ.ENERGY.find(e => e.id == data.energy);
+    const body   = data.body?.slice(0,3).join(', ') || '';
+    return `
+      <div class="slot-detail">
+        <span class="sd-emoji">${mood?.emoji || SLOT_EMOJIS[slot]}</span>
+        <div class="sd-info">
+          <div class="sd-slot">${slot}</div>
+          <div class="sd-mood" style="color:${moodColor(data.mood)}">${mood?.label || 'Checked in'} ${energy ? `· ${energy.emoji}` : ''}</div>
+          ${body ? `<div class="sd-body">${body}</div>` : ''}
+          ${data.notes ? `<div class="sd-notes">"${data.notes}"</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  panel.innerHTML = `<div class="dd-title">${title}</div>${slotsHtml}`;
+}
+
+/* ── BUILD DETAIL VIEW ── */
+function buildDetail() {
+  const dates = getWeekDates(weekOffset);
+  const map   = document.getElementById('detailMap');
+  const today = new Date().toDateString();
+  map.innerHTML = '';
+
+  dates.forEach(date => {
+    const checkin = getCheckinForDate(date);
+    const isToday = date.toDateString() === today;
+    const row = document.createElement('div');
+    row.className = `detail-day${isToday ? ' today' : ''}`;
+
+    const slotsHtml = SLOT_NAMES.map(slot => {
+      const data = checkin[slot];
+      if (!data?.mood) return `<div class="dd-slot empty"><div class="dd-slot-label">${slot.slice(0,3)}</div><span class="dd-slot-emoji">·</span></div>`;
+      const mood  = MYHQ.MOODS.find(m => m.id === data.mood);
+      const color = moodColor(data.mood);
+      return `<div class="dd-slot" style="background:${color}22;"><div class="dd-slot-label" style="color:${color}88">${slot.slice(0,3)}</div><span class="dd-slot-emoji">${mood?.emoji || '•'}</span></div>`;
+    }).join('');
+
+    row.innerHTML = `<div class="dd-name">${DAY_NAMES[date.getDay()]}<br><span style="font-size:9px">${date.getDate()}</span></div><div class="dd-slots">${slotsHtml}</div>`;
+    map.appendChild(row);
+  });
+}
+
+/* ── LEGEND ── */
+function buildLegend() {
+  const legend = document.getElementById('moodLegend');
+  legend.innerHTML = '';
+  MYHQ.MOODS.forEach(mood => {
+    const color = moodColor(mood.id);
+    const item  = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="legend-dot" style="background:${color}"></div>${mood.emoji} ${mood.label}`;
+    legend.appendChild(item);
+  });
+}
+
+/* ── RENDER ── */
+function render() {
+  if (activeView === 'overview') buildOverview();
+  else buildDetail();
+}
+
+/* ── INIT ── */
+function init() {
+  const session = Auth.getSession();
+  if (!session || !['elder','younger'].includes(session.profileId)) { window.location.href = 'index.html'; return; }
+  profileId = session.profileId;
+  Profiles.applyTheme(profileId);
+  render();
+
+  document.querySelectorAll('.vt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeView = btn.dataset.view;
+      document.getElementById('viewOverview').style.display = activeView === 'overview' ? '' : 'none';
+      document.getElementById('viewDetail').style.display   = activeView === 'detail'   ? '' : 'none';
+      render();
+    });
+  });
+
+  document.getElementById('prevWeek').addEventListener('click', () => { weekOffset--; document.getElementById('dayDetail').classList.remove('show'); render(); });
+  document.getElementById('nextWeek').addEventListener('click', () => { if (weekOffset < 0) { weekOffset++; document.getElementById('dayDetail').classList.remove('show'); render(); } });
+  document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'feelings-hub.html');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
